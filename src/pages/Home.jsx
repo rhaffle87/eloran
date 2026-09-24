@@ -33,7 +33,7 @@ function SpecRow({ label, value, accent }) {
   );
 }
 
-function ModuleCard({ icon: CardIcon, title, description, features, to, accent, badge }) { // eslint-disable-line no-unused-vars
+function ModuleCard({ icon: CardIcon, title, description, features, to, accent, badge }) {
   const accentColor = accent === 'eloran' ? 'var(--color-eloran)' : 'var(--color-loran-c)';
   const accentBg    = accent === 'eloran' ? 'rgba(6,182,212,0.07)' : 'rgba(245,158,11,0.07)';
   const accentBorder= accent === 'eloran' ? 'rgba(6,182,212,0.2)'  : 'rgba(245,158,11,0.2)';

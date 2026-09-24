@@ -6,6 +6,10 @@ import { haversineDistance, destinationPoint, initialBearing } from '../../lib/g
 import { computeGDOPAtPoint } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS } from '../../lib/tiles.js';
 
+function isMapStyleReady(map) {
+  return Boolean(map && map.style && typeof map.isStyleLoaded === 'function' && map.isStyleLoaded());
+}
+
 export default function MapView({ onMapClick, isELoran = false }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -15,7 +19,45 @@ export default function MapView({ onMapClick, isELoran = false }) {
   onMapClickRef.current = onMapClick;
 
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
-  const [activeTileProvider, setActiveTileProvider] = useState('carto-dark');
+  const [activeTileProvider, setActiveTileProvider] = useState(() => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_offline_radar') === 'true') {
+        return 'offline-radar';
+      }
+    } catch {
+      // ignore
+    }
+    return 'carto-dark';
+  });
+  const [showFallbackNotice, setShowFallbackNotice] = useState(false);
+
+  const tileErrorsRef = useRef([]);
+  const hasTileLoadedRef = useRef(false);
+  const activeTileProviderRef = useRef(activeTileProvider);
+  activeTileProviderRef.current = activeTileProvider;
+
+  const triggerRadarFallback = useCallback(() => {
+    if (activeTileProviderRef.current === 'offline-radar') return;
+    console.warn('LORAN LAB: Basemap tiles failed to load (>= 8 errors in 5s). Auto-switched to offline Radar Canvas fallback.');
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('loran_offline_radar', 'true');
+      }
+    } catch {
+      // ignore
+    }
+    setActiveTileProvider('offline-radar');
+    setShowFallbackNotice(true);
+    const map = mapRef.current;
+    if (map) {
+      setIsStyleLoaded(false);
+      try {
+        map.setStyle(getMapLibreStyle('offline-radar'));
+      } catch (err) {
+        console.warn('Error applying offline radar style:', err);
+      }
+    }
+  }, []);
 
   const {
     masters,
@@ -58,7 +100,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       mapInstance.addControl(new maplibregl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-left');
 
       const handleStyleReady = () => {
-        if (mapInstance && mapInstance.isStyleLoaded()) {
+        if (isMapStyleReady(mapInstance)) {
           setIsStyleLoaded(true);
         }
       };
@@ -66,12 +108,44 @@ export default function MapView({ onMapClick, isELoran = false }) {
       mapInstance.on('load', handleStyleReady);
       mapInstance.on('styledata', handleStyleReady);
 
+      if (isMapStyleReady(mapInstance)) {
+        setIsStyleLoaded(true);
+      }
+
+      let tileSummaryLogged = false;
       mapInstance.on('error', (e) => {
-        // Intercept tile network loading warnings to keep console clean
-        if (e && e.error && e.error.message && e.error.message.includes('tile')) {
-          console.warn('LORAN LAB: Basemap tile notice:', e.error.message);
+        const isTileError = Boolean(
+          e && (
+            (e.error && (e.error.status || (e.error.message && /tile|fetch|failed|blocked|csp/i.test(e.error.message)))) ||
+            e.tile ||
+            e.sourceId === 'basemap-tiles'
+          )
+        );
+
+        if (isTileError && activeTileProviderRef.current !== 'offline-radar') {
+          const now = Date.now();
+          tileErrorsRef.current.push(now);
+          tileErrorsRef.current = tileErrorsRef.current.filter((t) => now - t <= 5000);
+
+          if (!tileSummaryLogged) {
+            tileSummaryLogged = true;
+            console.warn('LORAN LAB: Basemap tile loading issues detected. Monitoring for offline fallback.');
+          }
+
+          if (tileErrorsRef.current.length >= 8 && !hasTileLoadedRef.current) {
+            triggerRadarFallback();
+          }
         }
       });
+
+      const handleTileLoaded = (e) => {
+        if ((e.sourceId === 'basemap-tiles' || e.dataType === 'source') && (e.tile?.state === 'loaded' || e.isSourceLoaded)) {
+          hasTileLoadedRef.current = true;
+        }
+      };
+
+      mapInstance.on('sourcedata', handleTileLoaded);
+      mapInstance.on('data', handleTileLoaded);
 
       mapInstance.on('mousemove', (e) => {
         const { lat, lng } = e.lngLat;
@@ -259,7 +333,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
   // Safe removal helper for MapLibre layers and sources
   const safeRemoveLayerAndSource = useCallback((map, layerId, sourceId) => {
-    if (!map || !map.isStyleLoaded()) return;
+    if (!isMapStyleReady(map)) return;
     try {
       if (map.getLayer(layerId)) {
         map.removeLayer(layerId);
@@ -275,7 +349,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
   // Render Baselines Layer safely once style is fully loaded
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isStyleLoaded || !map.isStyleLoaded()) return;
+    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
 
     const sourceId = 'loran-baselines-source';
     const layerId = 'loran-baselines-layer';
@@ -340,7 +414,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
   // Render Hyperbolic LOP Contours Layer safely once style is fully loaded
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isStyleLoaded || !map.isStyleLoaded()) return;
+    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
 
     const sourceId = 'loran-lops-source';
     const layerId = 'loran-lops-layer';
@@ -405,7 +479,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       return () => {
         try {
-          map.off('click', layerId, clickHandler);
+          if (isMapStyleReady(map)) {
+            map.off('click', layerId, clickHandler);
+          }
         } catch {
           // ignore
         }
@@ -422,6 +498,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (!map) return;
     setActiveTileProvider(providerKey);
     setIsStyleLoaded(false);
+    if (providerKey !== 'offline-radar') {
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          sessionStorage.removeItem('loran_offline_radar');
+        }
+      } catch {
+        // ignore
+      }
+      hasTileLoadedRef.current = false;
+      tileErrorsRef.current = [];
+    }
+    setShowFallbackNotice(false);
     try {
       map.setStyle(getMapLibreStyle(providerKey));
     } catch (err) {
@@ -432,6 +520,23 @@ export default function MapView({ onMapClick, isELoran = false }) {
   return (
     <div className="relative w-full h-full min-h-[500px] bg-zinc-950 overflow-hidden select-none">
       <div ref={mapContainer} className="w-full h-full" />
+
+      {/* Dismissible Offline Radar Fallback Notice */}
+      {showFallbackNotice && (
+        <div
+          data-testid="radar-fallback-notice"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/50 text-amber-300 text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
+        >
+          <span>Basemap tiles unavailable. Switched to offline Radar Canvas.</span>
+          <button
+            onClick={() => setShowFallbackNotice(false)}
+            className="text-zinc-400 hover:text-zinc-100 font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition leading-none cursor-pointer"
+            aria-label="Dismiss notice"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Real-time telemetry HUD overlay */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">

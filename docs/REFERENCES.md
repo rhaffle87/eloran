@@ -14,7 +14,7 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 | **eLoran System Definition** | International Loran Association (ILA, 2007) | Core definition of Enhanced Loran as an independent, resilient terrestrial PNT alternative to GNSS. |
 | **Lo et al. (2009)** | ILA-38 Proceedings (2009) | *eLoran Definitions*. Conference definitions paper presenting technical terminology and candidate propagation models (not an official regulatory standard). |
 | **ITU-R P.368-10** | International Telecommunication Union (08/2022) | Ground-wave propagation curves for frequencies between $10\text{ kHz}$ and $30\text{ MHz}$, including Millington's mixed-path method. |
-| **ITU-R P.832-4** | International Telecommunication Union (08/2023) | World atlas of ground conductivity ($\sigma$) and relative permittivity ($\varepsilon_r$). |
+| **ITU-R P.832-4** | International Telecommunication Union (07/2015) | World atlas of ground conductivity ($\sigma$) and relative permittivity ($\varepsilon_r$). Approved July 2015. |
 | **ITU-R P.372-17** | International Telecommunication Union (08/2024) | Standard models for atmospheric radio noise, man-made noise, and galactic background in LF bands. |
 | **ITU-R M.589-3** | International Telecommunication Union (11/2001) | Technical characteristics of methods of data transmission in the $70\text{–}130\text{ kHz}$ band. |
 
@@ -26,34 +26,34 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
    - The foundational text establishing pulsed hyperbolic radio-navigation, envelope timing, and geometric dilution of precision.
 2. **Forssell, B. (1991 / 2008 reissued).** *Radionavigation Systems*. Artech House.
    - Mathematical treatment of hyperbolic positioning, circular vs. hyperbolic lines of position, GDOP covariance transformations, and skywave contamination.
-3. **Pelgrum, W. (2006).** *New Potential of Low-Frequency Radionavigation in the 21st Century*. PhD dissertation, Delft University of Technology.
+3. **Pelgrum, W. (2006).** *New Potential of Low-Frequency Radionavigation in the 21st Century*. PhD dissertation, Delft University of Technology. ISBN 90-807957-3-1.
    - Sourced modern analysis of the error budget (transmitter, mixed-path ASF propagation, H-field antennas, receiver DSP).
-4. **Offermans, G. W. A. (2000).** *Integrated Navigation System Eurofix: Vision, Concept, Design, Implementation & Test*. PhD dissertation, Delft University of Technology.
+4. **Offermans, G. W. A., & Helwig, A. W. S. (2003).** *Integrated Navigation System Eurofix: Vision, Concept, Design, Implementation & Test*. Joint PhD dissertation, Delft University of Technology, defended 13 October 2003. ISBN 90-901-7418-4. Reelektronika / TU Delft.
    - Architecture and testing of micro-pulse modulation (pulses 3–8 tri-state modulation) broadcasting DGNSS corrections via Loran pulses.
-5. **Helwig, A. W. S. (2001).** *Eurofix: A New Loran-C/GNSS Navigation System*. PhD dissertation, Delft University of Technology.
-   - Detailed analysis of Loran/GNSS integration and data transmission reliability.
-6. **Hargreaves, C. (2010).** *ASF Measurement and Processing Techniques, to allow Harbour Navigation at High Accuracy with eLoran*. MSc dissertation, University of Nottingham.
+5. **Hargreaves, C. (2010).** *ASF Measurement and Processing Techniques, to allow Harbour Navigation at High Accuracy with eLoran*. MSc dissertation, Institute of Engineering Surveying and Space Geodesy (IESSG), University of Nottingham, 2010 (frequently cited as 2014 in later literature bibliographies).
    - Spatial modeling of Additional Secondary Factors along coastal navigation approaches.
+6. **Boyce, C. O. L. Jr. (2007).** *Atmospheric Noise Mitigation for Expansion of Loran to Meet the Requirements of Aviation Non-Precision Approach*. PhD dissertation, Department of Aeronautics and Astronautics, Stanford University.
+   - Characterization and non-linear filtering of non-Gaussian atmospheric impulsive noise.
 
 ---
 
 ## 3. Topical Research & Papers
 
 ### A. ASF Propagation & Mixed Paths
-- **Millington, G. (1949).** "Ground-wave propagation over an inhomogeneous smooth earth." *Proc. IEE*, 96(39), 53–64.
+- **Millington, G. (1949).** "Ground-wave propagation over an inhomogeneous smooth earth." *Proc. IEE*, 96(39), 53–64. DOI: [10.1049/pi-3.1949.0013](https://doi.org/10.1049/pi-3.1949.0013).
 - **Monteath, G. D. (1973).** *Applications of the Electromagnetic Reciprocity Principle*. Pergamon Press.
-- **Williams, P., & Last, D. (2000).** "Mapping the ASFs of the Northwest European Loran-C System." *The Journal of Navigation*, 53(2), 225–235.
-- **Zhou, X., et al. (2013).** "A new method for Loran-C ASF calculation over irregular terrain." *IEEE Transactions on Aerospace and Electronic Systems*, 49(4), 2662–2673.
+- **Williams, P., & Last, D. (2000).** "Mapping the ASFs of the Northwest European Loran-C System." *The Journal of Navigation*, 53(2), 225–235. DOI: [10.1017/S0373463300008855](https://doi.org/10.1017/S0373463300008855).
+- **Zhou, L., Xi, X., Zhang, J., & Pu, Y. (2013).** "A new method for Loran-C ASF calculation over irregular terrain." *IEEE Transactions on Aerospace and Electronic Systems*, 49(3), 1738–1744. DOI: [10.1109/TAES.2013.6558016](https://doi.org/10.1109/TAES.2013.6558016).
 
 ### B. Receiver DSP, Cycle Selection, & Envelope-to-Cycle Difference (ECD)
-- **Boyce, C. (2006).** "Analysis of Noise and Cycle Selection in a Loran Receiver." *Proc. 35th Annual Convention of the International Loran Association (ILA-35)*, Groton, CT.
+- **Blanch, J., Wang, R., & Walter, T. (2006).** "Analysis of Noise and Cycle Selection in a Loran Receiver." *Proc. 35th Annual Convention of the International Loran Association (ILA-35)*, Groton, CT.
   - Defines wrong-cycle selection criteria ($|\Delta t| > 10\ \mu\text{s}$, corresponding to a $\sim 3\text{ km}$ range step). Analyzes cycle-selection error rates as a function of SNR and pulse averaging.
-- **Lo, S., Peterson, B., & Enge, P. (2005).** "Early Skywave Detection Network: Preliminary Design and Analysis." *Proc. 34th Annual Convention of the International Loran Association (ILA-34)*, Santa Barbara, CA.
+- **Lo, S., Morris, P. B., & Enge, P. (2005).** "Early Skywave Detection Network: Preliminary Design and Analysis." *Proc. 34th Annual Convention of the International Loran Association (ILA-34)*, Santa Barbara, CA.
 
 ### C. Multilateration & Positioning Algorithms
-- **Gao, Y., et al. (2025).** "Research on the Loran-C Pseudorange Positioning Method Based on an Ellipsoidal Geodesic Model and an Improved Newton-Raphson Algorithm." *Sensors*, 25(16), 5110.
-- **Collins, J. (1980).** *Formulas for Positioning at Sea by Circular, Hyperbolic and Astronomic Methods*. NOAA Technical Report NOS 81, National Oceanic and Atmospheric Administration.
-- **Razin, S. (1967).** "Explicit (noniterative) Loran Solution." *NAVIGATION: Journal of The Institute of Navigation*, 14(3), 265–269.
+- **Gao, A., Ji, B., Wu, M., Chang, S., Zheng, G., Yu, D., & Li, W. (2025).** "Research on the Loran-C Pseudorange Positioning Method Based on an Ellipsoidal Geodesic Model and Its Application in Inland Areas." *Sensors*, 25(16), 5110. DOI: [10.3390/s25165110](https://doi.org/10.3390/s25165110).
+- **Collins, J. (1980).** *Formulas for Positioning at Sea by Circular, Hyperbolic, and Astronomic Methods*. NOAA Technical Report NOS 81, National Oceanic and Atmospheric Administration, National Ocean Survey, Rockville, MD.
+- **Razin, S. (1967).** "Explicit (noniterative) Loran Solution." *NAVIGATION: Journal of The Institute of Navigation*, 14(3), 265–269. DOI: [10.1002/j.2161-4296.1967.tb02305.x](https://doi.org/10.1002/j.2161-4296.1967.tb02305.x).
 
 ---
 

@@ -313,7 +313,7 @@ describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () =
     expect(solution.gdop).toBeGreaterThan(0);
   });
 
-  it('tests continuity of the SF polynomial at the 100 statute mile boundary', () => {
+  it.fails('expects physical continuity of the Secondary Factor (SF) polynomial across the 100 statute mile boundary (expected failure until continuous coefficients are implemented)', () => {
     const sm100Meters = 100 * 1609.344;
     // Evaluate just below 100 statute miles (short-range branch)
     const sfBelow = computeSecondaryFactorSec(sm100Meters - 1);
@@ -324,15 +324,10 @@ describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () =
     const sfAboveUs = sfAbove * 1e6;
     const jumpUs = Math.abs(sfBelowUs - sfAboveUs);
 
-    // Short-range branch at 100 sm: (-0.4076/100) + 0.08182 + (0.003914*100) = ~0.469 µs
-    expect(sfBelowUs).toBeCloseTo(0.469, 2);
-    // Long-range branch at 100 sm: (-107.8/100) + 1.297 + (0.000139*100) = ~0.233 µs
-    expect(sfAboveUs).toBeCloseTo(0.233, 2);
-
-    // Proves the unphysical ~0.236 µs (~71 m) discontinuity between branches
-    // This empirically proves why these coefficients cannot be shipped as verified/continuous
-    expect(jumpUs).toBeGreaterThan(0.2);
-    expect(jumpUs).toBeCloseTo(0.236, 2);
+    // A physically continuous model must have jump < 0.001 µs (< 0.3 m) across the 100 sm threshold.
+    // In the historical polynomial, this jump is ~0.236 µs (~71 m), which fails this assertion.
+    // Marked as it.fails: when continuous Brunavs coefficients are implemented, this will turn green.
+    expect(jumpUs).toBeLessThan(0.001);
   });
 });
 

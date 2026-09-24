@@ -21,7 +21,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ## 2. Documentation & Research Standards
 
-- [**REFERENCES.md**](docs/REFERENCES.md) — Sourced compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans 2000), and physics formulas.
+- [**REFERENCES.md**](docs/REFERENCES.md) — Sourced literature compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans & Helwig 2003, Hargreaves 2010), and physics formulas.
 - [**PROVENANCE.md**](docs/PROVENANCE.md) — Provenance tracking, retrievable URLs/DOIs for all literature, and register of items marked UNVERIFIED.
 - [**DATA_NOTES.md**](docs/DATA_NOTES.md) — Global transmitter status (US/Canada 2010 shutdown, European 2015 decommissioning, Anthorn UK timing role, active China and Russia chains).
 - [**TILES.md**](docs/TILES.md) — Centralized map tile configuration, offline radar canvas fallback, and self-hosted tile instructions.
@@ -81,7 +81,7 @@ eloran/
   - RTCM MPS: $\eta = 1.000338$ ($c = 299,792,458\text{ m/s}$)
   - USCG Loran-C User Handbook: $\eta = 1.000284$
   - China National Standard: $\eta = 1.000315$
-- **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known 100 statute mile boundary discontinuity; disabled by default).
+- **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known ~0.236 µs / ~71 m step discontinuity at 100 statute miles; disabled by default with a visible UI indicator `Secondary Factor: off (UNVERIFIED model)` wherever results depend on PF+SF+ASF).
 - **Additional Secondary Factor (ASF)**: Real-time spatial polynomial and raster evaluation of overland phase delays.
 
 ### 3. Cycle Slip Modeling (Boyce 2006)

@@ -4,40 +4,42 @@ This document provides context on the operational status, history, and geographi
 
 ---
 
-## 1. Global Operational Status Overview (2026)
+## 1. Global Operational Status Overview
 
-| Region / Country | Network Type | Current Operational Status | Key Transmitters & Notes |
+| Region / Country | Network Type | Operational Status | Key Transmitters & Notes |
 |---|---|---|---|
-| **United States & Canada** | Loran-C | **Decommissioned (2010)** | Terminated by US Coast Guard and Canadian Coast Guard on February 8, 2010. Infrastructure dismantled; occasional R&D testing conducted under DARPA/DHS backup PNT initiatives. |
-| **Northwest Europe** | Loran-C / eLoran | **Decommissioned (Dec 31, 2015)** | The European chain (Sylt, Lessay, Værlandet, Bø, Ejde) ceased transmissions at 23:59 UTC on December 31, 2015. France, Germany, and Norway terminated funding. |
-| **United Kingdom** | eLoran (Timing) | **Active (Timing Sovereign)** | The **Anthorn** transmitter (Cumbria, UK; 100 kW) was preserved after the 2015 closure to broadcast sovereign national time (UTC(NPL)) as an uninterruptible timing reference. Single-station reception provides sub-microsecond time synchronization, but cannot compute a 2D position fix. The UK Government has initiated renewed eLoran resilience studies. |
-| **China** | eLoran (National) | **Active & Expanding** | Operates three high-power regional chains (Northern, Eastern, Southern) coordinated by the National Time Service Center (NTSC) and BACC. Fully modernized solid-state transmitters with LDC (Loran Data Channel) differential corrections. |
-| **Russian Federation** | Chayka | **Active** | Operates modern pulse chains (compatible with standard Loran receivers) covering the Baltic, Northern Sea Route, and Far East under the RSDN-20 / Chayka program. |
-| **South Korea** | eLoran | **Active & Upgrading** | Upgraded from Loran-C to high-precision eLoran with differential reference stations and HEA harbor approach testbeds in Incheon and Pohang to counter regional GPS jamming. |
-| **Saudi Arabia** | Loran-C | **Active** | Operates dual internal chains across the Red Sea and Arabian Gulf. |
+| **United States & Canada** | Loran-C | **Decommissioned (2010)** | Terminated by US Coast Guard and Canadian Coast Guard on February 8, 2010. Infrastructure decommissioned; subsequent R&D testing intermittently explored under government backup PNT initiatives. |
+| **Northwest Europe** | Loran-C / eLoran | **Decommissioned (Dec 31, 2015)** | The Northwest European chain (Sylt, Lessay, Værlandet, Bø) ceased transmissions at 23:59 UTC on December 31, 2015 when France, Germany, and Norway terminated funding. (Note: The Ejde station in the Faroe Islands ceased Loran-C transmissions earlier, at the end of 1995). |
+| **United Kingdom** | eLoran (Timing) | **Timing broadcast preserved post-2015** | Following the Northwest European chain shutdown on December 31, 2015, the **Anthorn** transmitter (Cumbria, UK) was retained to broadcast sovereign national time (UTC(NPL)) as an independent timing reference. Single-station reception provides time synchronization but cannot compute a 2D hyperbolic position fix. (Status beyond 2015 based on UK General Lighthouse Authorities reports; ongoing commercial operation unverified). |
+| **China** | eLoran | **Reported active (unverified real-time status)** | Operates regional chains (including North China Sea chain GRI 7430, South China Sea chain GRI 6780) managed under national navigation authorities. Solid-state transmitters with 9th-pulse Loran Data Channel (LDC) differential corrections. |
+| **Russian Federation** | Chayka (RSDN) | **Reported active (unverified real-time status)** | Operates pulse chains (Chayka systems, compatible in principle with standard Loran pulse timing) covering the Baltic, Northern Sea Route, and Far East. |
+| **South Korea** | eLoran | **Active development & upgrade** | Modernization initiatives from Loran-C to eLoran with differential reference stations and testbeds (Incheon, Pohang) reported to counter GNSS vulnerability. |
+| **Saudi Arabia** | Loran-C | **Operational status not independently verified** | Historically operated internal chains across the Red Sea and Arabian Gulf. |
 
 ---
 
 ## 2. Presets in LORAN LAB
 
-### 1. `north_sea_historical` (Historical - Dec 2015)
-- **Status**: Historical Simulation.
+### 1. `north_sea_historical` (Historical — Decommissioned Dec 31, 2015)
+- **Status**: Historical simulation based on published chain records.
+- **Chain**: Northwest European Chain (GRI 6731).
 - **Transmitters**:
-  - **Sylt (Master)**: Lat `54.960278° N`, Lng `8.293611° E` (Germany, 98.3 kW) - *Shut down 2015*
-  - **Lessay (Secondary)**: Lat `49.150000° N`, Lng `-1.503333° E` (France, 250 kW) - *Shut down 2015*
-  - **Anthorn (Secondary)**: Lat `54.911389° N`, Lng `-3.278333° E` (UK, 100 kW) - *Retained for UTC timing*
-- **Significance**: Demonstrates why a multi-nation hyperbolic chain requires $\ge 3$ active stations for trilateration. Following the shutdown of Sylt and Lessay, Anthorn can provide UTC timing but not horizontal vessel position.
+  - **Sylt (Master)**: Lat `54.9603° N`, Lng `8.2936° E` (Germany) — *Ceased transmissions Dec 31, 2015*
+  - **Lessay (Secondary)**: Lat `49.1500° N`, Lng `-1.5033° E` (France) — *Ceased transmissions Dec 31, 2015*
+  - **Anthorn (Secondary)**: Lat `54.9114° N`, Lng `-3.2783° E` (United Kingdom) — *Retained post-2015 for UTC timing broadcast*
+- **Significance**: Demonstrates why a hyperbolic chain requires $\ge 3$ active stations with appropriate geometry for horizontal positioning. Following the shutdown of Sylt and Lessay, Anthorn alone provides time synchronization but cannot resolve a 2D position fix.
 
-### 2. `bohai_sea_active` (Active Operational - GRI 6780)
-- **Status**: Active Real-World System.
-- **Transmitters**:
-  - **Rongcheng (Master)**: Lat `37.1500° N`, Lng `122.2333° E` (Shandong, 2 MW ERP)
-  - **Xuancheng (Secondary)**: Lat `30.8833° N`, Lng `118.8500° E` (Anhui)
-  - **Helong (Secondary)**: Lat `42.7167° N`, Lng `128.9167° E` (Jilin)
-- **Significance**: Demonstrates active high-power eLoran PNT operating alongside satellite GNSS with 9th-pulse LDC differential broadcast.
+### 2. `bohai_yellow_sea_active` / North China Sea Chain (GRI 7430)
+- **Status**: Active operational chain model.
+- **Chain**: North China Sea Chain (GRI 7430). (Note: GRI 6780 is the distinct South China Sea chain with Hexian master).
+- **Transmitters** (Coordinates from NGA Publication 117, Chapter 6):
+  - **Rongcheng (Master)**: `37°04' N`, `122°19' E` $\rightarrow$ Lat `37.0667° N`, Lng `122.3167° E`
+  - **Xuancheng (Secondary X)**: `31°04' N`, `118°53' E` $\rightarrow$ Lat `31.0667° N`, Lng `118.8833° E`
+  - **Helong (Secondary Y)**: `42°43' N`, `129°06' E` $\rightarrow$ Lat `42.7167° N`, Lng `129.1000° E`
+- **Significance**: Demonstrates eLoran multi-station positioning with differential corrections.
 
 ### 3. `jakarta_baseline` (Synthetic Maritime Testbed)
-- **Status**: Synthetic Simulation Scenario.
+- **Status**: Synthetic illustrative scenario.
 - **Transmitters**: Tanjung Priok, Tangerang, Bekasi.
 - **Significance**: Illustrates harbor entrance and approach (HEA) geometry and mixed-path land/sea conductivity transitions around the Java Sea and Sunda Strait.
 
@@ -45,6 +47,6 @@ This document provides context on the operational status, history, and geographi
 
 ## 3. Coordinate Systems & Geodetic Standards
 
-- All geographic calculations assume the **WGS 84** reference ellipsoid (semi-major axis $a = 6,378,137\text{ m}$, flattening $f = 1 / 298.257223563$).
-- Baseline ranges are computed using spherical great-circle / Vincenty approximations with mean Earth radius $R = 6,371,000\text{ m}$.
-- Planar map projections utilize Spherical Mercator **EPSG:3857** for seamless integration with MapLibre tile raster pyramids.
+- All geographic positions reference the **WGS 84** ellipsoid (semi-major axis $a = 6,378,137\text{ m}$, flattening $f = 1 / 298.257223563$).
+- Great-circle transmitter-receiver ranges are computed in LORAN LAB using the spherical Haversine formula with mean Earth radius $R = 6,371,000\text{ m}$. Rigorous ellipsoidal geodesic distances (such as Vincenty 1975 or Karney 2013) can be evaluated where millimeter-level geodesic fidelity is needed.
+- Planar map projections utilize Web Mercator (**EPSG:3857**) for raster basemap display.

@@ -53,26 +53,30 @@ export function computePrimaryFactorSec(distanceMeters, eta = DEFAULT_REFRACTIVE
 }
 
 /**
+ * UNVERIFIED / DISCONTINUOUS EMPIRICAL APPROXIMATION:
  * Calculates the Secondary Factor (SF) delay in seconds over an assumed all-seawater path.
- * SF is defined relative to seawater conductivity σ = 5 S/m, relative permittivity ε_r ≈ 80
- * at the Loran-C 100 kHz carrier.
  *
- * Polynomial coefficients from: Brunavs, P. (1977). "Loran-C Time Transfer Stability."
- * Journal of Navigation (as reproduced in USCG Loran-C User Handbook M16562.4A, Table 3-1).
- * Cross-checked against Forssell, B. (1991). "Radionavigation Systems."
+ * CAUTION: The piecewise polynomial coefficients below (historically attributed to Harris / USCG tables)
+ * exhibit a known ~0.236 µs (~71 meter) step discontinuity at the 100 statute mile boundary:
+ *   - At 100 sm (short-range branch): SF ≈ 0.469 µs
+ *   - At 100 sm (long-range branch):  SF ≈ 0.233 µs
+ *
+ * Per project provenance audit rules, these coefficients are marked UNVERIFIED and DISABLED
+ * BY DEFAULT in the simulation store. Continuous models (such as Brunavs 1977 Canadian Hydrographic
+ * Service formulation in meters) or zero-delay defaults should be used for verified positioning.
  *
  * @param {number} distanceMeters - Geodesic distance in meters
- * @returns {number} SF delay in seconds (over all-seawater path; add ASF for land portions)
+ * @returns {number} SF delay in seconds
  */
 export function computeSecondaryFactorSec(distanceMeters) {
   if (distanceMeters <= 0) return 0;
-  const sm = distanceMeters / 1609.344; // Convert meters to statute miles (Brunavs table uses statute miles)
+  const sm = distanceMeters / 1609.344; // Convert meters to statute miles
   let sfMicroseconds = 0;
   if (sm < 100) {
-    // Short-range polynomial (0–100 statute miles): Brunavs (1977) Table 3-1, Row 1
+    // Short-range branch (0–100 statute miles) [UNVERIFIED]
     sfMicroseconds = (-0.4076 / Math.max(0.1, sm)) + 0.08182 + (0.003914 * sm);
   } else {
-    // Long-range polynomial (≥100 statute miles): Brunavs (1977) Table 3-1, Row 2
+    // Long-range branch (≥100 statute miles) [UNVERIFIED]
     sfMicroseconds = (-107.8 / sm) + 1.297 + (0.000139 * sm);
   }
   return Math.max(0, sfMicroseconds * 1e-6);

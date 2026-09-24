@@ -34,21 +34,23 @@ export function simulateGnssFix(truePos, stdDevMeters = 8, rng = Math.random) {
 }
 
 /**
- * Fuses eLoran navigation solution with GNSS fix using weighted covariance combination.
+ * Fuses eLoran navigation solution with GNSS fix using inverse-covariance weighting
+ * (Best Linear Unbiased Estimator / BLUE). If fixed weights are explicitly passed,
+ * they are treated as an educational demo mode.
  *
  * @param {object} eloranFix - {lat, lng, covariance, hplMeters}
  * @param {object} gnssFix - {lat, lng, covariance}
  * @param {'fusion'|'eLoran'|'GNSS'} mode - Selected positioning mode
  * @param {{lat: number, lng: number}} [truePos] - True ground coordinate for error metric
- * @param {{eloran: number, gnss: number}} [weights={eloran: 0.6, gnss: 0.4}] - Sensor weights
- * @returns {object} Fused fix object with {lat, lng, errorMeters, covariance, hplMeters, mode}
+ * @param {{eloran: number, gnss: number}|null} [weights=null] - Optional manual weights (demo mode)
+ * @returns {object} Fused fix object with {lat, lng, errorMeters, covariance, hplMeters, mode, weightingMethod, weights}
  */
 export function fusePositions(
   eloranFix,
   gnssFix,
   mode = 'fusion',
   truePos = null,
-  weights = { eloran: 0.6, gnss: 0.4 }
+  weights = null
 ) {
   if (mode === 'eLoran' || !gnssFix) {
     const err = truePos ? haversineDistance(truePos, eloranFix) : 0;
@@ -59,6 +61,7 @@ export function fusePositions(
       hplMeters: eloranFix.hplMeters || 0,
       errorMeters: err,
       mode: 'eLoran',
+      weightingMethod: 'single-source',
     };
   }
 
@@ -73,29 +76,45 @@ export function fusePositions(
       hplMeters: gnssHpl,
       errorMeters: err,
       mode: 'GNSS',
+      weightingMethod: 'single-source',
     };
   }
 
-  // Fusion mode: Weighted combination
-  const wE = weights.eloran;
-  const wG = weights.gnss;
-  const norm = wE + wG > 0 ? wE + wG : 1;
-  const nE = wE / norm;
-  const nG = wG / norm;
+  // Covariances
+  const covE = eloranFix.covariance || [[64, 0], [0, 64]];
+  const covG = gnssFix.covariance || [[64, 0], [0, 64]];
+
+  let nE, nG;
+  let weightingMethod = 'inverse-covariance';
+
+  if (weights && typeof weights.eloran === 'number' && typeof weights.gnss === 'number') {
+    // Explicit fixed weights mode (educational demo)
+    weightingMethod = 'fixed-weights-demo';
+    const norm = weights.eloran + weights.gnss > 0 ? weights.eloran + weights.gnss : 1;
+    nE = weights.eloran / norm;
+    nG = weights.gnss / norm;
+  } else {
+    // Optimal inverse-variance / inverse-covariance weighting (BLUE)
+    // Variance proxy from trace of horizontal covariance:
+    const traceE = Math.max(1e-4, (covE[0][0] || 0) + (covE[1][1] || 0));
+    const traceG = Math.max(1e-4, (covG[0][0] || 0) + (covG[1][1] || 0));
+    const invVarE = 1 / traceE;
+    const invVarG = 1 / traceG;
+    const sumInv = invVarE + invVarG;
+    nE = invVarE / sumInv;
+    nG = invVarG / sumInv;
+  }
 
   const fusedLat = eloranFix.lat * nE + gnssFix.lat * nG;
   const fusedLng = eloranFix.lng * nE + gnssFix.lng * nG;
 
   // Covariance combination: Cov_fused = nE^2 * Cov_E + nG^2 * Cov_G
-  const covE = eloranFix.covariance || [[0, 0], [0, 0]];
-  const covG = gnssFix.covariance || [[64, 0], [0, 64]];
-
   const fusedCov = [
     [nE * nE * covE[0][0] + nG * nG * covG[0][0], nE * nE * covE[0][1] + nG * nG * covG[0][1]],
     [nE * nE * covE[1][0] + nG * nG * covG[1][0], nE * nE * covE[1][1] + nG * nG * covG[1][1]],
   ];
 
-  // HPL from fused covariance maximum eigenvalue
+  // HPL from fused covariance maximum eigenvalue (simplified 3-sigma bound)
   const trace = fusedCov[0][0] + fusedCov[1][1];
   const det = fusedCov[0][0] * fusedCov[1][1] - fusedCov[0][1] * fusedCov[1][0];
   const disc = Math.sqrt(Math.max(0, (trace * trace) / 4 - det));
@@ -111,5 +130,7 @@ export function fusePositions(
     hplMeters: fusedHpl,
     errorMeters,
     mode: 'fusion',
+    weightingMethod,
+    weights: { eloran: nE, gnss: nG },
   };
 }

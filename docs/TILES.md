@@ -10,7 +10,7 @@ All map tile providers and styles are configured in [`src/lib/tiles.js`](../src/
 
 | Provider | Type | URL Template | Default Attribution | Usage / Limits |
 |---|---|---|---|---|
-| **Carto Dark** *(Default)* | Raster (PNG) | `https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png` | © OpenStreetMap contributors © CARTO | Non-commercial educational use; dark palette optimized for radar displays |
+| **Carto Dark** *(Default)* | Raster (PNG) | `https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png` | © OpenStreetMap contributors © CARTO | Non-commercial educational use; dark palette optimized for radar displays |
 | **OpenStreetMap Standard** | Raster (PNG) | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | © OpenStreetMap contributors | Standard community fallback basemap; subject to OSM Tile Usage Policy |
 | **Offline Radar Canvas** | Vector/Synthetic | `null` (Local client canvas) | LORAN LAB Synthetic Grid | Zero-network fallback; renders pure dark radar canvas with high-contrast station markers and hyperbolic LOPs |
 
@@ -27,7 +27,7 @@ LORAN LAB is designed to function reliably in environments with strict network b
 
 ## 3. Configuring Custom or Self-Hosted Tile Servers
 
-To configure a private tile server or enterprise tile provider (e.g., self-hosted OpenMapTiles, Proj4 raster caches, MapTiler, or Stadia Maps), modify or extend `TILE_PROVIDERS` in [`src/lib/tiles.js`](../src/lib/tiles.js):
+To configure a private tile server or enterprise tile provider (e.g., self-hosted OpenMapTiles, MapTiler, or Stadia Maps), modify or extend `TILE_PROVIDERS` in [`src/lib/tiles.js`](../src/lib/tiles.js):
 
 ```javascript
 export const TILE_PROVIDERS = {
@@ -47,5 +47,5 @@ export const TILE_PROVIDERS = {
 
 ## 4. Tile Usage Policies & Attribution Notice
 
-- **CARTO**: Basemaps are provided courtesy of CARTO. Free tiers are suitable for academic, open-source, and evaluation purposes. Commercial deployments require a CARTO license key.
-- **OpenStreetMap**: Map data is copyrighted by OpenStreetMap contributors under the Open Database License (ODbL). Any redistribution or screenshots of maps must retain the appropriate attribution string.
+- **CARTO**: Basemaps are provided courtesy of CARTO. Refer directly to the official [CARTO Free Basemap Tiles Terms](https://carto.com/help/working-with-data/carto-free-basemap-tiles/) and [CARTO Legal Terms](https://carto.com/legal/). Commercial or high-volume usage requires a commercial CARTO account.
+- **OpenStreetMap**: Map data is copyrighted by OpenStreetMap contributors under the Open Database License (ODbL). All access must comply strictly with the [OpenStreetMap Foundation Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) and attribution rules defined at [OpenStreetMap Copyright & License](https://www.openstreetmap.org/copyright).

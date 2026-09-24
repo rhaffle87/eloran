@@ -49,18 +49,58 @@ export const IONOSPHERE_HEIGHTS = {
 };
 
 /**
- * Computes single-pulse amplitude at time t (relative to pulse start).
+ * Evaluates standard Loran-C instantaneous pulse waveform.
+ * Formulated with time t in microseconds (µs) from pulse onset:
+ *   i(t) = A * (t / 65)² * exp(-2 * (t - 65) / 65) * sin(2π * 0.1 * t + PC)
+ *
+ * Carrier frequency: 100 kHz = 0.1 cycles/µs (carrier period Tc = 10 µs).
+ * Standard Zero Crossing (SZC): 3rd positive-going zero crossing occurs at t = 30 µs.
+ * Peak envelope occurs at t = 65 µs.
+ *
+ * Note on units:
+ *   - With t in microseconds (µs), carrier argument is 2π * 0.1 * t (or 0.2π * t).
+ *   - With t in seconds (s), carrier argument is 2π * 100,000 * t (or 2π * 10⁵ * t).
+ *
+ * @param {number} tMicroseconds - Time in microseconds from pulse start (t >= 0)
+ * @param {number} [amplitude=1.0] - Normalized peak amplitude
+ * @param {number} [phaseCode=0] - Phase code in radians (0 or Math.PI)
+ * @returns {number} Instantaneous current/amplitude
+ */
+export function evaluateStandardLoranPulseMicroseconds(tMicroseconds, amplitude = 1.0, phaseCode = 0) {
+  if (tMicroseconds < 0) return 0;
+  // Carrier term with t in microseconds: 2 * pi * 0.1 * t = 0.2 * pi * t
+  const carrier = Math.sin(2 * Math.PI * 0.1 * tMicroseconds + phaseCode);
+  // Normalized envelope with peak at t = 65 µs: e(65) = 1.0
+  const normFactor = Math.E ** 2 / (65 ** 2);
+  const envelope = normFactor * (tMicroseconds ** 2) * Math.exp((-2 * tMicroseconds) / 65);
+  return amplitude * envelope * carrier;
+}
+
+/**
+ * Returns carrier value at time t in microseconds.
+ * @param {number} tMicroseconds - Time in microseconds
+ * @param {number} [phaseCode=0] - Phase code in radians
+ * @returns {number}
+ */
+export function evaluateCarrierMicroseconds(tMicroseconds, phaseCode = 0) {
+  return Math.sin(2 * Math.PI * 0.1 * tMicroseconds + phaseCode);
+}
+
+/**
+ * Computes single-pulse amplitude at time t in seconds (relative to pulse start).
  * @param {number} t - Time in seconds from pulse start (0 <= t <= pulseDuration)
  * @param {number} [pulseDuration=NOMINAL_PULSE_DURATION] - Pulse width in seconds
  * @param {boolean} [includeCarrier=false] - If true, modulates by 100 kHz carrier
+ * @param {number} [phaseCode=0] - Phase code in radians (0 or Math.PI)
  * @returns {number} Instantaneous amplitude in [-1, 1]
  */
-export function evaluatePulse(t, pulseDuration = NOMINAL_PULSE_DURATION, includeCarrier = false) {
+export function evaluatePulse(t, pulseDuration = NOMINAL_PULSE_DURATION, includeCarrier = false, phaseCode = 0) {
   if (t < 0 || t > pulseDuration) return 0;
   // Standard Loran-C raised-cosine envelope (USCG M16562.4A, Eq. 4-1)
   const envelope = 0.5 * (1 + Math.cos((Math.PI * t) / pulseDuration));
   if (!includeCarrier) return envelope;
-  const carrier = Math.sin(2 * Math.PI * LORAN_CARRIER_FREQ * t);
+  // t is in seconds here, so f = 100,000 Hz:
+  const carrier = Math.sin(2 * Math.PI * LORAN_CARRIER_FREQ * t + phaseCode);
   return envelope * carrier;
 }
 

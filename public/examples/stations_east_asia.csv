@@ -1,0 +1,6 @@
+role,lat,lng,label,clock_bias,clock_drift,diffCorrAvg,ddsEnabled,griMs,phaseSec
+master,36.016667,129.350000,Pohang-M,0,0,3.1,true,9930,0
+slave,37.916667,139.050000,Niigata-W,0,0,0,true,9930,0.012
+slave,26.600000,128.150000,Gesashi-X,0,0,0,true,9930,0.027
+slave,33.250000,126.266667,Jeju-Y,0,0,0,true,9930,0.038
+receiver,34.500000,131.000000,KoreaStrait-Rx,0,0,0,false,9930,0

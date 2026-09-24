@@ -1,0 +1,5 @@
+role,lat,lng,label,clock_bias,clock_drift,diffCorrAvg,ddsEnabled,griMs,phaseSec
+master,-6.200000,106.816666,M1,0,0,5,true,1000,0
+slave,-6.300000,106.900000,S1,0,0,0,false,1000,0
+slave,-6.100000,106.700000,S2,0,0,0,false,1000,0
+receiver,-6.250000,106.820000,R1,0,0,0,false,1000,0

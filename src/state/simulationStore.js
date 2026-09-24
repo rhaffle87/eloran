@@ -5,7 +5,18 @@
 
 import { create } from 'zustand';
 import { PRESET_SCENARIOS } from './presets.js';
-import { computeTDOAPair, solvePositionFromTDOA } from '../lib/tdoa.js';
+import {
+  computeTDOAPair,
+  solvePositionFromTDOA,
+  solvePositionPseudorange,
+  computeArrivalSec,
+  simulateCycleSlip,
+} from '../lib/tdoa.js';
+import {
+  SPEED_OF_LIGHT,
+  DEFAULT_REFRACTIVE_INDEX,
+  haversineDistance,
+} from '../lib/geodesy.js';
 import { fusePositions, simulateGnssFix } from '../lib/fusion.js';
 import { broadcastDdsEvents } from '../lib/dds.js';
 
@@ -37,8 +48,14 @@ export const useSimulationStore = create((set, get) => ({
   baselinesVisible: true,
   lopsVisible: true,
 
-  // Configuration Settings
+  // Configuration Settings & Physics Parameters
   settings: {
+    solverMode: 'pseudorange', // 'pseudorange' (with b_rx clock bias) | 'tdoa' (hyperbolic)
+    refractiveIndex: DEFAULT_REFRACTIVE_INDEX, // RTCM MPS: 1.000338, Handbook: 1.000284, China: 1.000315
+    enableSecondaryFactor: true, // Seawater 5 S/m Brunavs delay
+    enableCycleSlips: false, // Boyce 2006 wrong-cycle selection (±10 µs / ~3 km error)
+    snrDb: 18,
+    pulsesAveraged: 10,
     enableDDS: true,
     enableIntegrity: true,
     integrityThresholdMeters: 50,
@@ -74,8 +91,10 @@ export const useSimulationStore = create((set, get) => ({
   toggleBaselines: () => set((state) => ({ baselinesVisible: !state.baselinesVisible })),
   toggleLops: () => set((state) => ({ lopsVisible: !state.lopsVisible })),
 
-  updateSettings: (newSettings) =>
-    set((state) => ({ settings: { ...state.settings, ...newSettings } })),
+  updateSettings: (newSettings) => {
+    set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+    setTimeout(() => get().evaluateReceivers(), 20);
+  },
 
   loadPreset: (presetId) => {
     const preset = PRESET_SCENARIOS[presetId];
@@ -92,9 +111,10 @@ export const useSimulationStore = create((set, get) => ({
       gridStatus: { status: 'idle', computedAt: null, message: null },
       selectedReceiver: preset.receivers[0]?.label || '',
     });
+    setTimeout(() => get().evaluateReceivers(), 50);
   },
 
-  setStations: (masters, slaves, receivers) =>
+  setStations: (masters, slaves, receivers) => {
     set({
       masters,
       slaves,
@@ -102,7 +122,9 @@ export const useSimulationStore = create((set, get) => ({
       contours: [],
       receiverFixes: {},
       selectedReceiver: receivers[0]?.label || '',
-    }),
+    });
+    setTimeout(() => get().evaluateReceivers(), 50);
+  },
 
   addStation: (station) => {
     const { role } = station;
@@ -140,23 +162,76 @@ export const useSimulationStore = create((set, get) => ({
 
   // Calculates estimated position and integrity metrics for all receivers
   evaluateReceivers: () => {
-    const { masters, slaves, receivers, simTimeSec } = get();
-    if (!masters.length || !slaves.length || !receivers.length) return;
+    const { masters, slaves, receivers, simTimeSec, settings } = get();
+    if (!masters.length || !receivers.length) return;
 
     const refMaster = masters[0];
     const fixes = {};
 
     receivers.forEach((rx) => {
-      // Build TDOA observation pairs
-      const pairs = slaves.map((s) => ({
-        master: refMaster,
-        slave: s,
-        tdoaSec: computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec),
-      }));
+      let eloranSol;
+      let rawTdoaPairs = [];
 
-      // Solve position
-      const initialGuess = { lat: rx.lat, lng: rx.lng };
-      const eloranSol = solvePositionFromTDOA(pairs, initialGuess);
+      if (settings.solverMode === 'pseudorange' && (masters.length + slaves.length >= 3)) {
+        // Modern 3D Pseudorange solver with Receiver Clock Bias (b_rx)
+        const allTransmitters = [...masters, ...slaves];
+        const observations = allTransmitters.map((st) => {
+          let arrivalSec = computeArrivalSec(
+            st,
+            rx.lat,
+            rx.lng,
+            simTimeSec,
+            settings.refractiveIndex,
+            settings.enableSecondaryFactor
+          );
+
+          let slipped = false;
+          if (settings.enableCycleSlips) {
+            const slipRes = simulateCycleSlip(
+              arrivalSec,
+              settings.snrDb || 18,
+              settings.pulsesAveraged || 10
+            );
+            arrivalSec = slipRes.arrivalSec;
+            slipped = slipRes.slipped;
+          }
+
+          return {
+            station: st,
+            pseudorangeMeters: arrivalSec * SPEED_OF_LIGHT,
+            slipped,
+          };
+        });
+
+        eloranSol = solvePositionPseudorange(observations, { lat: rx.lat, lng: rx.lng }, {
+          eta: settings.refractiveIndex,
+          includeSF: settings.enableSecondaryFactor,
+        });
+
+        // Also build TDOA pairs for display in LOP telemetry
+        rawTdoaPairs = slaves.map((s) => ({
+          master: refMaster,
+          slave: s,
+          tdoaSec: computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex),
+        }));
+      } else {
+        // Classical Hyperbolic TDOA Gauss-Newton solver
+        rawTdoaPairs = slaves.map((s) => {
+          let tdoa = computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex);
+          if (settings.enableCycleSlips) {
+            tdoa = simulateCycleSlip(tdoa, settings.snrDb || 18, settings.pulsesAveraged || 10).arrivalSec;
+          }
+          return {
+            master: refMaster,
+            slave: s,
+            tdoaSec: tdoa,
+          };
+        });
+
+        eloranSol = solvePositionFromTDOA(rawTdoaPairs, { lat: rx.lat, lng: rx.lng }, {
+          eta: settings.refractiveIndex,
+        });
+      }
 
       // Simulate GNSS fix
       const gnssFix = simulateGnssFix(rx, 8);
@@ -164,10 +239,22 @@ export const useSimulationStore = create((set, get) => ({
       // Multi-sensor fusion
       const fused = fusePositions(eloranSol, gnssFix, rx.fuseMode || 'fusion', rx);
 
+      // Error distance in meters from true position
+      const errorMeters = (eloranSol.lat !== undefined && eloranSol.lng !== undefined)
+        ? haversineDistance(rx, { lat: eloranSol.lat, lng: eloranSol.lng })
+        : 0;
+
       fixes[rx.label] = {
         ...fused,
+        eloranSol,
+        clockBiasSec: eloranSol.clockBiasSec || 0,
+        clockBiasNs: (eloranSol.clockBiasSec || 0) * 1e9,
+        hdop: eloranSol.hdop || 1.0,
+        tdop: eloranSol.tdop || 1.0,
+        errorMeters,
         computedAt: Date.now(),
-        rawTdoaPairs: pairs,
+        rawTdoaPairs,
+        solverMode: settings.solverMode,
       };
     });
 

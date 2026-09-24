@@ -8,10 +8,13 @@ import {
   latLngToLocalXY,
   localXYToLatLng,
   SPEED_OF_LIGHT,
+  computeSecondaryFactorSec,
 } from '../geodesy.js';
 import {
   computeTDOAPair,
   solvePositionFromTDOA,
+  solvePositionPseudorange,
+  simulateCycleSlip,
 } from '../tdoa.js';
 import { computeGDOPAtPoint } from '../gdop.js';
 import { simplifyRDP } from '../contours.js';
@@ -226,3 +229,83 @@ describe('RF Pulse Synthesis & Clocks', () => {
     expect(rng1()).toBe(rng2());
   });
 });
+
+describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () => {
+  it('computes Primary Factor (PF) variation across refractive index standards', () => {
+    const d = 1000000; // 1,000 km
+    // Vacuum: eta = 1.0 -> d / c
+    const pfVac = (1.0 * d) / SPEED_OF_LIGHT;
+    // RTCM: eta = 1.000338
+    const pfRtcm = (1.000338 * d) / SPEED_OF_LIGHT;
+    // User Handbook: eta = 1.000284
+    const pfHandbook = (1.000284 * d) / SPEED_OF_LIGHT;
+
+    expect(pfRtcm).toBeGreaterThan(pfVac);
+    expect(pfRtcm).toBeGreaterThan(pfHandbook);
+    // Over 1000 km, RTCM vs Handbook difference is ~0.18 microseconds (~54 meters)
+    const diffSec = pfRtcm - pfHandbook;
+    expect(diffSec * 1e6).toBeCloseTo(0.18, 1);
+  });
+
+  it('computes Seawater Secondary Factor (SF) delay according to Brunavs / USCG empirical model', () => {
+    // 50 statute miles (~80.4 km)
+    const d50sm = 50 * 1609.344;
+    const sf50 = computeSecondaryFactorSec(d50sm);
+    expect(sf50).toBeGreaterThan(0);
+    // Typical SF at 50 statute miles is ~0.27 microseconds
+    expect(sf50 * 1e6).toBeCloseTo(0.27, 1);
+
+    // 200 statute miles (~321.8 km)
+    const d200sm = 200 * 1609.344;
+    const sf200 = computeSecondaryFactorSec(d200sm);
+    expect(sf200).toBeGreaterThan(sf50);
+  });
+
+  it('detects cycle slip and applies ±10 µs carrier period offset (~3 km)', () => {
+    const arrival = 0.005; // 5 ms
+    // Mock deterministic RNG that forces slip
+    const slipResult = simulateCycleSlip(arrival, -5, 1, () => 0.01);
+    expect(slipResult.slipped).toBe(true);
+    expect(Math.abs(slipResult.cycleOffset)).toBe(1);
+    // Time shifted by exactly ±10 µs
+    expect(Math.abs(slipResult.arrivalSec - arrival)).toBeCloseTo(10e-6, 10);
+
+    // High SNR with high pulse count should never slip
+    const highSnrResult = simulateCycleSlip(arrival, 30, 20, () => 0.5);
+    expect(highSnrResult.slipped).toBe(false);
+    expect(highSnrResult.arrivalSec).toBe(arrival);
+  });
+
+  it('Pseudorange solver accurately estimates 2D position and receiver clock bias (b_rx)', () => {
+    const s1 = { lat: 0, lng: 0, label: 'Tx1' };
+    const s2 = { lat: 0, lng: 1, label: 'Tx2' };
+    const s3 = { lat: 1, lng: 0, label: 'Tx3' };
+
+    const trueRx = { lat: 0.3, lng: 0.4 };
+    const trueClockBiasSec = 15e-6; // 15 microseconds receiver clock bias
+    const cbrxMeters = trueClockBiasSec * SPEED_OF_LIGHT;
+
+    const d1 = haversineDistance(s1, trueRx);
+    const d2 = haversineDistance(s2, trueRx);
+    const d3 = haversineDistance(s3, trueRx);
+
+    // Modeled pseudoranges = geometric distance + c * b_rx
+    const observations = [
+      { station: s1, pseudorangeMeters: d1 + cbrxMeters },
+      { station: s2, pseudorangeMeters: d2 + cbrxMeters },
+      { station: s3, pseudorangeMeters: d3 + cbrxMeters },
+    ];
+
+    const initialGuess = { lat: 0.1, lng: 0.1 };
+    const solution = solvePositionPseudorange(observations, initialGuess);
+
+    expect(solution.converged).toBe(true);
+    expect(solution.lat).toBeCloseTo(trueRx.lat, 4);
+    expect(solution.lng).toBeCloseTo(trueRx.lng, 4);
+    expect(solution.clockBiasSec).toBeCloseTo(trueClockBiasSec, 8);
+    expect(solution.hdop).toBeGreaterThan(0);
+    expect(solution.tdop).toBeGreaterThan(0);
+    expect(solution.gdop).toBeGreaterThan(0);
+  });
+});
+

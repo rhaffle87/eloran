@@ -39,6 +39,12 @@ export default function StationEditor({ isELoran = false }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 1024 * 1024) {
+      alert('Security Notice: Station CSV exceeds 1 MB maximum file size limit.');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result;

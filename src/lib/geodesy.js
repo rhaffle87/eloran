@@ -1,10 +1,91 @@
 /**
  * Geodesy and Coordinate Transformations Library for LORAN LAB
  * All calculations use standard physical constants and WGS84 ellipsoid / sphere approximations.
+ * Includes Primary Factor (PF), Secondary Factor (SF), and refractive index variations.
  */
 
-export const SPEED_OF_LIGHT = 299792458; // m/s
+export const SPEED_OF_LIGHT = 299792458; // m/s (vacuum)
 export const EARTH_RADIUS = 6371000;    // meters
+
+/**
+ * Standard atmospheric refractive index presets (Primary Factor: PF = (eta * d) / c)
+ * Sourced from RTCM 10410.1, USCG Loran-C User Handbook, and BACC standards.
+ */
+export const REFRACTIVE_INDEX_PRESETS = {
+  rtcm: {
+    id: 'rtcm',
+    name: 'RTCM MPS (Standard)',
+    value: 1.000338,
+    description: 'RTCM 10410.1 Minimum Performance Standards (c = 299,792,458 m/s, n = 1.000338)',
+  },
+  handbook: {
+    id: 'handbook',
+    name: 'USCG Loran-C User Handbook',
+    value: 1.000284,
+    description: 'USCG Loran-C User Handbook (P16562.5) standard atmosphere reference',
+  },
+  china: {
+    id: 'china',
+    name: 'China National eLoran Standard',
+    value: 1.000315,
+    description: 'Chinese Academy of Sciences / BACC national timing & navigation standard',
+  },
+  vacuum: {
+    id: 'vacuum',
+    name: 'Theoretical Free Space (n = 1.0)',
+    value: 1.000000,
+    description: 'Unattenuated vacuum speed of light for theoretical baseline tests',
+  },
+};
+
+export const DEFAULT_REFRACTIVE_INDEX = REFRACTIVE_INDEX_PRESETS.rtcm.value;
+
+/**
+ * Calculates Primary Factor (PF) propagation delay in seconds.
+ * PF = (eta * distance) / c
+ * @param {number} distanceMeters - Geodesic path distance in meters
+ * @param {number} [eta=1.000338] - Atmospheric refractive index
+ * @returns {number} PF delay in seconds
+ */
+export function computePrimaryFactorSec(distanceMeters, eta = DEFAULT_REFRACTIVE_INDEX) {
+  if (distanceMeters <= 0) return 0;
+  return (eta * distanceMeters) / SPEED_OF_LIGHT;
+}
+
+/**
+ * Calculates the Secondary Factor (SF) delay in seconds over an all-seawater path
+ * (conductivity sigma = 5 S/m, relative permittivity eps_r = 80 at 100 kHz).
+ * Uses the classical USCG / Brunavs (1977) empirical seawater polynomial.
+ * 
+ * @param {number} distanceMeters - Geodesic distance in meters
+ * @returns {number} SF delay in seconds
+ */
+export function computeSecondaryFactorSec(distanceMeters) {
+  if (distanceMeters <= 0) return 0;
+  const sm = distanceMeters / 1609.344; // Statute miles
+  let sfMicroseconds = 0;
+  if (sm < 100) {
+    sfMicroseconds = (-0.4076 / Math.max(0.1, sm)) + 0.08182 + (0.003914 * sm);
+  } else {
+    sfMicroseconds = (-107.8 / sm) + 1.297 + (0.000139 * sm);
+  }
+  return Math.max(0, sfMicroseconds * 1e-6);
+}
+
+/**
+ * Calculates total Loran groundwave propagation time:
+ * t = PF + SF + ASF
+ * 
+ * @param {number} distanceMeters - Geodesic distance in meters
+ * @param {number} [eta=1.000338] - Primary factor refractive index
+ * @param {number} [asfSec=0] - Additional Secondary Factor (overland excess delay) in seconds
+ * @returns {number} Total propagation time in seconds
+ */
+export function computeTotalPropagationTimeSec(distanceMeters, eta = DEFAULT_REFRACTIVE_INDEX, asfSec = 0) {
+  const pf = computePrimaryFactorSec(distanceMeters, eta);
+  const sf = computeSecondaryFactorSec(distanceMeters);
+  return pf + sf + asfSec;
+}
 
 /**
  * Calculates great-circle distance between two geographic coordinates using the Haversine formula.
@@ -105,7 +186,6 @@ export function mercatorToWgs84([x, y]) {
 
 /**
  * Transforms latitude and longitude to local Cartesian coordinates (meters).
- * Matches original ACTIFE solver implementation.
  * @param {number} lat - Latitude in degrees
  * @param {number} lng - Longitude in degrees
  * @param {number} refLat - Reference latitude in degrees

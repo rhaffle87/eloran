@@ -31,7 +31,9 @@ export function validateStation(row, index = 0) {
     return { valid: false, error: `Row ${index + 1}: Invalid longitude '${row.lng}' (must be between -180 and 180)` };
   }
 
-  const label = String(row.label || `${role[0].toUpperCase()}${index + 1}`).trim();
+  // Sanitize label to prevent injection and constrain length
+  const rawLabel = String(row.label || `${role[0].toUpperCase()}${index + 1}`).trim();
+  const label = rawLabel.replace(/[<>"'&/\\]/g, '').slice(0, 32) || `ST${index + 1}`;
   const txDbm = Number.isFinite(parseFloat(row.txDbm)) ? parseFloat(row.txDbm) : (role === 'master' ? 20 : 18);
   const offsetSec = Number.isFinite(parseFloat(row.offsetSec)) ? parseFloat(row.offsetSec) : 0;
   const griMs = Number.isFinite(parseFloat(row.griMs)) ? parseFloat(row.griMs) : (role === 'master' ? 1000 : 1000);
@@ -43,7 +45,7 @@ export function validateStation(row, index = 0) {
   const clockDrift = Number.isFinite(parseFloat(row.clock_drift || row.clockDrift))
     ? parseFloat(row.clock_drift || row.clockDrift)
     : 0;
-  const clockType = String(row.clockType || 'gps-disciplined');
+  const clockType = String(row.clockType || 'gps-disciplined').replace(/[<>"'&]/g, '').slice(0, 32);
 
   const diffCorrAvg = Number.isFinite(parseFloat(row.diffCorrAvg)) ? parseFloat(row.diffCorrAvg) : 0;
   const ddsEnabled = row.ddsEnabled === false || row.ddsEnabled === 'false' ? false : true;
@@ -67,7 +69,7 @@ export function validateStation(row, index = 0) {
       enabled: diffCorrAvg !== 0 || row.diffCorrEnabled === 'true',
       avgMeters: diffCorrAvg,
     },
-    asfFormula: typeof row.asfFormula === 'string' ? row.asfFormula : '0',
+    asfFormula: typeof row.asfFormula === 'string' ? row.asfFormula.slice(0, 200) : '0',
     asfMeters: Number.isFinite(parseFloat(row.asfMeters)) ? parseFloat(row.asfMeters) : 0,
     fuseMode: role === 'receiver' ? (row.fuseMode || 'fusion') : undefined,
   };
@@ -75,13 +77,20 @@ export function validateStation(row, index = 0) {
   return { valid: true, station };
 }
 
+export const MAX_CSV_SIZE_BYTES = 1024 * 1024; // 1 MB
+export const MAX_STATION_ROWS = 100;
+
 /**
- * Parses CSV text into verified lists of masters, slaves, and receivers.
+ * Parses CSV text into verified lists of masters, slaves, and receivers with strict boundary guards.
  *
  * @param {string} csvText - Raw CSV file string
  * @returns {{masters: object[], slaves: object[], receivers: object[], errors: string[]}}
  */
 export function parseStationsCsv(csvText) {
+  if (typeof csvText !== 'string' || csvText.length > MAX_CSV_SIZE_BYTES) {
+    return { masters: [], slaves: [], receivers: [], errors: ['File exceeds maximum allowed size (1 MB).'] };
+  }
+
   const result = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -92,7 +101,12 @@ export function parseStationsCsv(csvText) {
   const receivers = [];
   const errors = [];
 
-  result.data.forEach((row, i) => {
+  const rows = result.data.slice(0, MAX_STATION_ROWS);
+  if (result.data.length > MAX_STATION_ROWS) {
+    errors.push(`Input exceeds maximum station limit (${MAX_STATION_ROWS}). Truncated to first 100 rows.`);
+  }
+
+  rows.forEach((row, i) => {
     const { valid, station, error } = validateStation(row, i);
     if (!valid) {
       errors.push(error);

@@ -85,6 +85,53 @@ export default function About() {
         </div>
       </div>
 
+      {/* Primary Standards & Compendiums */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+        <h2 className="text-base font-bold text-zinc-100 font-mono flex items-center gap-2">
+          <BookOpen size={16} className="text-cyan-400" /> Literature, Standards & Documentation
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <a
+            href="https://github.com/rhaffle87/eloran/blob/main/docs/REFERENCES.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-cyan-500/40 transition group flex flex-col justify-between"
+          >
+            <div>
+              <div className="text-cyan-300 font-bold group-hover:text-cyan-200">REFERENCES.md</div>
+              <div className="text-[11px] text-zinc-400 mt-1">Full survey of primary specs, books, theses & formula sheet.</div>
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-2 flex items-center gap-1">View on GitHub <ExternalLink size={10} /></div>
+          </a>
+
+          <a
+            href="https://github.com/rhaffle87/eloran/blob/main/docs/DATA_NOTES.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-cyan-500/40 transition group flex flex-col justify-between"
+          >
+            <div>
+              <div className="text-cyan-300 font-bold group-hover:text-cyan-200">DATA_NOTES.md</div>
+              <div className="text-[11px] text-zinc-400 mt-1">Global transmitter operational history (US, Europe, China).</div>
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-2 flex items-center gap-1">View on GitHub <ExternalLink size={10} /></div>
+          </a>
+
+          <a
+            href="https://github.com/rhaffle87/eloran/blob/main/docs/TILES.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-cyan-500/40 transition group flex flex-col justify-between"
+          >
+            <div>
+              <div className="text-cyan-300 font-bold group-hover:text-cyan-200">TILES.md</div>
+              <div className="text-[11px] text-zinc-400 mt-1">Centralized basemap setup, offline canvas & terms of use.</div>
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-2 flex items-center gap-1">View on GitHub <ExternalLink size={10} /></div>
+          </a>
+        </div>
+      </div>
+
       {/* Tech Stack Summary */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-3 font-mono text-xs">
         <h2 className="text-base font-bold text-zinc-100 font-mono">Technology Stack (Free & Open Source Only)</h2>

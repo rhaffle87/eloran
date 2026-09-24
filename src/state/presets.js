@@ -1,12 +1,19 @@
 /**
  * Predefined Scenarios and Station Presets for LORAN LAB
+ * 
+ * Accurately reflects operational status as of 2026:
+ * - US & Canada chains terminated in 2010.
+ * - Northwest European chain decommissioned December 31, 2015 (Sylt, Lessay closed; Anthorn retained for timing).
+ * - China, Russia (Chayka), and Saudi Arabia operate active modernized eLoran chains.
+ * - South Korea is actively upgrading its eLoran infrastructure.
  */
 
 export const PRESET_SCENARIOS = {
   jakarta_baseline: {
     id: 'jakarta_baseline',
-    name: 'Jakarta Baseline Chain',
-    description: 'Reference 3-station chain around Jakarta Bay. Ideal for initial TDOA geometry and baseline extension tests.',
+    name: 'Jakarta Maritime Testbed (Synthetic / Illustrative)',
+    status: 'synthetic',
+    description: 'Reference 3-station chain around Jakarta Bay. Ideal for initial TDOA geometry, harbor entrance and approach (HEA) studies, and baseline extension tests.',
     center: [106.816666, -6.200000],
     zoom: 9,
     masters: [
@@ -67,18 +74,19 @@ export const PRESET_SCENARIOS = {
     ],
   },
 
-  north_sea: {
-    id: 'north_sea',
-    name: 'North Sea European eLoran Chain',
-    description: 'Realistic multi-nation European eLoran network (Anthorn UK, Sylt Germany, Lessay France). High maritime coverage.',
+  north_sea_historical: {
+    id: 'north_sea_historical',
+    name: 'North Sea Chain (Historical - Decommissioned Dec 2015)',
+    status: 'historical',
+    description: 'Historical Northwest European Loran-C/eLoran chain (GRI 6731). Decommissioned on December 31, 2015. Sylt (Germany) and Lessay (France) were permanently shut down. Anthorn (UK) transmitter was retained solely for timing broadcast (UTC transfer). Demonstrates that a single transmitter provides time synchronization but cannot solve for a 2D position fix.',
     center: [3.5, 53.5],
     zoom: 5.5,
     masters: [
       {
         role: 'master',
-        label: 'Anthorn-M',
-        lat: 54.911389,
-        lng: -3.278333,
+        label: 'Sylt-Master (Decomm 2015)',
+        lat: 54.960278,
+        lng: 8.293611,
         txDbm: 24,
         griMs: 6731,
         offsetSec: 0,
@@ -93,23 +101,23 @@ export const PRESET_SCENARIOS = {
     slaves: [
       {
         role: 'slave',
-        label: 'Sylt-W',
-        lat: 54.960278,
-        lng: 8.293611,
-        txDbm: 22,
+        label: 'Lessay-Slave (Decomm 2015)',
+        lat: 49.150000,
+        lng: -1.503333,
+        txDbm: 24,
         griMs: 6731,
-        offsetSec: 0.012,
+        offsetSec: 0.013,
         phaseSec: 0,
         ddsEnabled: true,
         clock: { type: 'cesium', biasSec: 0, driftPerSec: 1e-13 },
         diffCorrections: { enabled: false, avgMeters: 0 },
-        asfMeters: 15,
+        asfMeters: 18,
       },
       {
         role: 'slave',
-        label: 'Lessay-X',
-        lat: 49.150000,
-        lng: -1.503333,
+        label: 'Anthorn-Slave (UK Timing Only)',
+        lat: 54.911389,
+        lng: -3.278333,
         txDbm: 22,
         griMs: 6731,
         offsetSec: 0.027,
@@ -117,13 +125,13 @@ export const PRESET_SCENARIOS = {
         ddsEnabled: true,
         clock: { type: 'cesium', biasSec: 0, driftPerSec: 1e-13 },
         diffCorrections: { enabled: false, avgMeters: 0 },
-        asfMeters: 18,
+        asfMeters: 12,
       },
     ],
     receivers: [
       {
         role: 'receiver',
-        label: 'Tanker-Alpha',
+        label: 'NorthSea-Vessel',
         lat: 53.800000,
         lng: 3.200000,
         fuseMode: 'fusion',
@@ -131,10 +139,75 @@ export const PRESET_SCENARIOS = {
     ],
   },
 
+  bohai_sea_active: {
+    id: 'bohai_sea_active',
+    name: 'Bohai & Yellow Sea Chain (Active Operational - GRI 6780)',
+    status: 'active',
+    description: 'Active modern high-power Chinese eLoran chain operating in the Bohai and Yellow Seas. Transmits pulse group navigation alongside Loran Data Channel (LDC) 9th-pulse differential corrections and timing.',
+    center: [121.5, 36.5],
+    zoom: 6,
+    masters: [
+      {
+        role: 'master',
+        label: 'Rongcheng-M (Active)',
+        lat: 37.150000,
+        lng: 122.233333,
+        txDbm: 26,
+        griMs: 6780,
+        offsetSec: 0,
+        phaseSec: 0,
+        ddsEnabled: true,
+        clock: { type: 'cesium', biasSec: 0, driftPerSec: 1e-14 },
+        diffCorrections: { enabled: true, avgMeters: 1.8 },
+        asfMeters: 8,
+      },
+    ],
+    slaves: [
+      {
+        role: 'slave',
+        label: 'Xuancheng-S1 (Active)',
+        lat: 30.883333,
+        lng: 118.850000,
+        txDbm: 26,
+        griMs: 6780,
+        offsetSec: 0.012,
+        phaseSec: 0,
+        ddsEnabled: true,
+        clock: { type: 'cesium', biasSec: 0, driftPerSec: 1e-14 },
+        diffCorrections: { enabled: false, avgMeters: 0 },
+        asfMeters: 15,
+      },
+      {
+        role: 'slave',
+        label: 'Helong-S2 (Active)',
+        lat: 42.716667,
+        lng: 128.916667,
+        txDbm: 26,
+        griMs: 6780,
+        offsetSec: 0.028,
+        phaseSec: 0,
+        ddsEnabled: true,
+        clock: { type: 'cesium', biasSec: 0, driftPerSec: 1e-14 },
+        diffCorrections: { enabled: false, avgMeters: 0 },
+        asfMeters: 22,
+      },
+    ],
+    receivers: [
+      {
+        role: 'receiver',
+        label: 'Cargo-Vessel-Bohai',
+        lat: 38.200000,
+        lng: 121.000000,
+        fuseMode: 'fusion',
+      },
+    ],
+  },
+
   high_gdop: {
     id: 'high_gdop',
-    name: 'Poor Geometry (High GDOP Scenario)',
-    description: 'Almost collinear stations causing extreme geometric dilution of precision and elongated error ellipses.',
+    name: 'Poor Geometry (High GDOP Collinear Scenario)',
+    status: 'synthetic',
+    description: 'Collinear transmitter layout causing high Geometric Dilution of Precision (GDOP) and severely elongated error ellipses along the baseline axis.',
     center: [107.0, -6.2],
     zoom: 8,
     masters: [
@@ -185,8 +258,9 @@ export const PRESET_SCENARIOS = {
 
   gnss_denied: {
     id: 'gnss_denied',
-    name: 'GNSS-Denied Maritime Resilience',
-    description: 'Demonstrates eLoran autonomous backup when GPS is spoofed or jammed. Compares eLoran vs GNSS error.',
+    name: 'GNSS-Denied Maritime Resilience (Synthetic Testbed)',
+    status: 'synthetic',
+    description: 'Demonstrates eLoran autonomous resilient PNT when satellite GNSS signals are degraded, jammed, or spoofed.',
     center: [106.8, -6.15],
     zoom: 9,
     masters: [

@@ -1,7 +1,10 @@
 /**
  * Time Difference of Arrival (TDOA) and Pseudorange Multilateration Library
  * Implements propagation delay modeling, atmospheric refraction, seawater secondary factor (SF),
- * cycle slip error detection, and both classical hyperbolic TDOA and modern 3D pseudorange solvers.
+ * cycle slip error detection, classical hyperbolic TDOA, and pseudorange solvers estimating
+ * 2D position (x, y) plus receiver clock bias b_rx.
+ *
+ * HPL values produced here are simplified k×σ estimates, NOT formal RTCM MPS integrity bounds.
  */
 
 import {

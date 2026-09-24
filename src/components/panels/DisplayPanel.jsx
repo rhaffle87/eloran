@@ -212,7 +212,7 @@ export default function DisplayPanel({ isELoran = false }) {
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]">HPL (99.7% 3σ)</span>
+              <span className="text-zinc-500 block text-[10px]" title="Simplified k×σ estimate — NOT a formal integrity bound per RTCM MPS">HPL (simplified 3σ) ⓘ</span>
               <span className="text-zinc-300">
                 {activeFix.hplMeters?.toFixed(1) || '0.0'} m
               </span>
@@ -247,9 +247,9 @@ export default function DisplayPanel({ isELoran = false }) {
                 : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
             }`}
           >
-            <span className="font-bold">Pseudorange (3D)</span>
+            <span className="font-bold">Pseudorange (2D + Clock Bias)</span>
             <span className="text-[10px] text-zinc-500 leading-tight">
-              Estimates (x, y) & receiver clock bias b_rx. Supports multi-chain.
+              Estimates 2D position (x, y) and receiver clock bias b_rx. Supports multi-chain.
             </span>
           </button>
 

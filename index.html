@@ -2,10 +2,56 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LORAN LAB | Precision Radio Navigation Simulator</title>
-    <meta name="description" content="Interactive Loran-C and eLoran hyperbolic radio navigation engineering simulator. Real-time TDOA hyperbolic LOP calculation, live GDOP analysis, differential corrections, and RF waveform synthesis." />
+
+    <!-- Primary SEO -->
+    <title>LORAN LAB — Loran-C & eLoran Hyperbolic Navigation Simulator</title>
+    <meta name="description" content="Interactive Loran-C and eLoran radio navigation engineering simulator. Real-time TDOA hyperbolic LOP calculation, live GDOP analysis, pseudorange solver with clock bias, differential corrections (ASF), Eurofix 9th-pulse data channel, and 100 kHz RF waveform synthesis. Educational use only." />
+    <meta name="keywords" content="Loran-C, eLoran, hyperbolic navigation, TDOA, LOP, GDOP, ASF, Eurofix, PNT, radio navigation, assured PNT, backup GNSS, navigation simulator" />
+    <meta name="author" content="LORAN LAB Contributors" />
+    <link rel="canonical" href="https://eloran.vercel.app/" />
+
+    <!-- Open Graph (Facebook / LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://eloran.vercel.app/" />
+    <meta property="og:title" content="LORAN LAB — Loran-C & eLoran Hyperbolic Navigation Simulator" />
+    <meta property="og:description" content="High-fidelity simulation of 100 kHz Loran-C and eLoran radio navigation. Explore TDOA geometry, GDOP heatmaps, cycle slips, differential corrections, and Eurofix data channels in your browser." />
+    <meta property="og:image" content="https://eloran.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="LORAN LAB" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://eloran.vercel.app/" />
+    <meta name="twitter:title" content="LORAN LAB — Loran-C & eLoran Navigation Simulator" />
+    <meta name="twitter:description" content="Simulate 100 kHz Loran-C and eLoran radio navigation in the browser. TDOA, GDOP, ASF, Eurofix, and RF waveforms." />
+    <meta name="twitter:image" content="https://eloran.vercel.app/og-image.png" />
+
+    <!-- Robots -->
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#09090b" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "LORAN LAB",
+      "url": "https://eloran.vercel.app/",
+      "description": "Interactive Loran-C and eLoran hyperbolic radio navigation engineering simulator for educational use.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "creator": { "@type": "Organization", "name": "LORAN LAB Contributors" }
+    }
+    </script>
+
+    <!-- Fonts: Space Grotesk (display/UI) + JetBrains Mono (data/code) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">

@@ -1,15 +1,54 @@
 @import "tailwindcss";
 
+/* =====================================================
+   LORAN LAB — Design System Tokens
+   Aesthetic: "Industrial Signal" (precision-instrument dark)
+   - Base: near-black ink, not plain zinc
+   - eLoran accent: cyan-500 (#06b6d4)
+   - Loran-C accent: amber-400 (#f59e0b)
+   - Data/telemetry surfaces: zinc-900 with hairline borders
+   - Typography: Space Grotesk (UI) + JetBrains Mono (data)
+   ===================================================== */
+
 @layer base {
   :root {
-    --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+
+    /* Brand colors */
+    --color-eloran: #06b6d4;     /* cyan-500 — eLoran / modern */
+    --color-loran-c: #f59e0b;    /* amber-400 — Loran-C legacy */
+    --color-ok: #34d399;         /* emerald-400 */
+    --color-warn: #fbbf24;       /* amber-400 */
+    --color-danger: #f87171;     /* red-400 */
+
+    /* Surface scale */
+    --surface-base:    #080b0e;  /* near-black with a blue undertone */
+    --surface-layer:   #0e1318;
+    --surface-card:    #141b22;
+    --surface-border:  #1e2a33;
+    --surface-muted:   #243040;
+
+    /* Text scale */
+    --text-primary:   #e8eef4;
+    --text-secondary: #8fa0b0;
+    --text-dim:       #4a6070;
+
+    /* Glow / shadow */
+    --glow-eloran:  rgba(6, 182, 212, 0.15);
+    --glow-loran-c: rgba(245, 158, 11, 0.15);
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
-    font-family: var(--font-sans);
-    background-color: #09090b;
-    color: #f4f4f5;
+    font-family: var(--font-display);
+    background-color: var(--surface-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   code, pre, .font-mono {
@@ -17,66 +56,141 @@
   }
 }
 
-/* Custom scrollbars for technical console appearance */
+/* ─── Custom Scrollbars ─────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: var(--surface-layer);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: var(--surface-muted);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #71717a;
+  background: #3a5060;
 }
 
-/* MapLibre popup and marker styling overrides */
+/* ─── MapLibre Popup Overrides ───────────────────────── */
 .maplibregl-popup-content {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border: 1px solid #27272a !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--surface-border) !important;
   border-radius: 8px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.6) !important;
   padding: 12px !important;
   font-family: var(--font-mono) !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip    { border-bottom-color: var(--surface-card) !important; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface-card) !important; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip   { border-right-color: var(--surface-card) !important; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip  { border-left-color: var(--surface-card) !important; }
 
-.maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: #18181b !important;
-}
-.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: #18181b !important;
-}
-.maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: #18181b !important;
-}
-.maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: #18181b !important;
-}
+/* ─── Animations ────────────────────────────────────── */
 
-/* Radar ping animation */
+/* Radar ping on transmitter markers */
 @keyframes radar-pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 12px rgba(6, 182, 212, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
-  }
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 14px rgba(6, 182, 212, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+}
+.radar-ping {
+  animation: radar-pulse 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
-.radar-ping {
-  animation: radar-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+/* Scanline texture overlay for hero sections */
+@keyframes scanline-drift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 6px; }
 }
+.scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 3px
+  );
+  animation: scanline-drift 0.12s linear infinite;
+  pointer-events: none;
+}
+
+/* Signal sweep animation (for active sim badge) */
+@keyframes signal-sweep {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.signal-blink {
+  animation: signal-sweep 1.8s ease-in-out infinite;
+}
+
+/* Entrance: fade + slide up */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+.animate-fade-up-delay-1 { animation: fade-up 0.5s 0.1s ease-out both; }
+.animate-fade-up-delay-2 { animation: fade-up 0.5s 0.2s ease-out both; }
+.animate-fade-up-delay-3 { animation: fade-up 0.5s 0.35s ease-out both; }
+
+/* Telemetry number counter flash */
+@keyframes data-flash {
+  0%   { color: var(--color-eloran); }
+  100% { color: inherit; }
+}
+.data-update {
+  animation: data-flash 0.4s ease-out;
+}
+
+/* ─── Component Utilities ───────────────────────────── */
+
+/* Surface card with hairline border */
+.panel-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+}
+.panel-card:hover {
+  border-color: var(--surface-muted);
+}
+
+/* Telemetry label / value pairs */
+.tele-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.tele-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Status pill variants */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid transparent;
+}
+.pill-ok      { background: rgba(52,211,153,0.1); color: var(--color-ok);     border-color: rgba(52,211,153,0.25); }
+.pill-warn    { background: rgba(251,191,36,0.1);  color: var(--color-warn);   border-color: rgba(251,191,36,0.25); }
+.pill-danger  { background: rgba(248,113,113,0.1); color: var(--color-danger); border-color: rgba(248,113,113,0.25); }
+.pill-eloran  { background: rgba(6,182,212,0.08);  color: var(--color-eloran); border-color: rgba(6,182,212,0.25); }
+.pill-loran-c { background: rgba(245,158,11,0.08); color: var(--color-loran-c);border-color: rgba(245,158,11,0.25); }
+.pill-ghost   { background: transparent; color: var(--text-dim); border-color: var(--surface-border); }

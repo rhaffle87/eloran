@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, ShieldCheck, Github, Code, Heart, Radio, ExternalLink } from 'lucide-react';
+import { Cpu, ShieldCheck, Github, Code, Heart, Radio, ExternalLink, BookOpen } from 'lucide-react';
 
 export default function About() {
   return (

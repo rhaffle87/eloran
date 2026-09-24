@@ -78,7 +78,7 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-0.5 font-mono text-xs">
-            {navLinks.map(({ to, label, icon: NavIcon, accent }) => ( // eslint-disable-line no-unused-vars
+            {navLinks.map(({ to, label, icon: NavIcon, accent }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -125,7 +125,7 @@ export default function Navbar() {
           id="mobile-menu"
           className="md:hidden border-t border-[var(--surface-border)] bg-[var(--surface-layer)] px-4 py-3 space-y-1"
         >
-          {navLinks.map(({ to, label, icon: MobileIcon }) => ( // eslint-disable-line no-unused-vars
+          {navLinks.map(({ to, label, icon: MobileIcon }) => (
             <NavLink
               key={to}
               to={to}

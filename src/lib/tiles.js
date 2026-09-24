@@ -11,7 +11,7 @@ export const TILE_PROVIDERS = {
   'carto-dark': {
     id: 'carto-dark',
     name: 'Carto Dark (Default)',
-    url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     maxZoom: 19,
     tileSize: 256,

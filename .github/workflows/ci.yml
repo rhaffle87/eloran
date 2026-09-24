@@ -1,8 +1,8 @@
-name: CI — Lint, Test & Build
+name: CI — Lint, Test, E2E & Build
 
 on:
   push:
-    branches: [main, "chore/**", "feat/**", "fix/**"]
+    branches: [main, "chore/**", "feat/**", "fix/**", "hotfix/**"]
   pull_request:
     branches: [main]
 
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint · Test · Build
+    name: Lint · Test · E2E · Build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,12 @@ jobs:
 
       - name: Vitest unit tests
         run: npm run test -- --run --reporter=verbose
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright E2E tests
+        run: npm run test:e2e
 
       - name: Production build
         run: npm run build

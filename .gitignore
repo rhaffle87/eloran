@@ -31,3 +31,8 @@ dist-ssr
 
 # Sources Material
 sources/
+
+# Testing
+test-results/
+playwright-report/
+blob-report/

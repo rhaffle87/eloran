@@ -139,7 +139,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       const handleTileLoaded = (e) => {
-        if ((e.sourceId === 'basemap-tiles' || e.dataType === 'source') && (e.tile?.state === 'loaded' || e.isSourceLoaded)) {
+        if (e.sourceId === 'basemap-tiles' && (e.tile?.state === 'loaded' || e.isSourceLoaded)) {
           hasTileLoadedRef.current = true;
         }
       };
@@ -479,9 +479,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       return () => {
         try {
-          if (isMapStyleReady(map)) {
-            map.off('click', layerId, clickHandler);
-          }
+          map.off('click', layerId, clickHandler);
         } catch {
           // ignore
         }

@@ -22,7 +22,7 @@ test.describe('LORAN LAB E2E Suite', () => {
 
       page.on('console', (msg) => {
         const text = msg.text();
-        if (/violates the following Content Security Policy|Content-Security-Policy|blocked by CSP/i.test(text)) {
+        if (/Content Security Policy|Content-Security-Policy/i.test(text)) {
           cspViolations.push(text);
         }
       });
@@ -36,7 +36,7 @@ test.describe('LORAN LAB E2E Suite', () => {
       // Verify no runtime crashes
       expect(pageErrors, `Page errors on ${route.path}: ${pageErrors.join(' | ')}`).toHaveLength(0);
 
-      // Verify no CSP violations triggered
+      // Verify zero console messages containing "Content Security Policy"
       expect(cspViolations, `CSP violations on ${route.path}: ${cspViolations.join(' | ')}`).toHaveLength(0);
 
       // Verify ErrorBoundary did not catch any error
@@ -57,40 +57,88 @@ test.describe('LORAN LAB E2E Suite', () => {
     });
   }
 
-  test('map renders basemap tile or activates radar fallback on /eloran', async ({ page }) => {
-    let tileResponseStatus = null;
-    let tileUrl = null;
+  for (const mapPath of ['/eloran', '/loran-c']) {
+    test(`${mapPath} receives HTTP 200 from real basemap tile host within 10s`, async ({ page }) => {
+      let tile200Count = 0;
+      let networkOffline = false;
+      const cspViolations = [];
 
-    page.on('response', (res) => {
-      const url = res.url();
-      if (url.includes('basemaps.cartocdn.com') || url.includes('tile.openstreetmap.org')) {
-        tileUrl = url;
-        tileResponseStatus = res.status();
+      page.on('console', (msg) => {
+        const text = msg.text();
+        if (/Content Security Policy|Content-Security-Policy/i.test(text)) {
+          cspViolations.push(text);
+        }
+      });
+
+      page.on('response', (res) => {
+        const url = res.url();
+        if (url.includes('basemaps.cartocdn.com') || url.includes('tile.openstreetmap.org')) {
+          if (res.status() === 200) {
+            tile200Count++;
+          }
+        }
+      });
+
+      page.on('requestfailed', (req) => {
+        const url = req.url();
+        if (url.includes('basemaps.cartocdn.com') || url.includes('tile.openstreetmap.org')) {
+          const failure = req.failure();
+          if (failure && /ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED/i.test(failure.errorText)) {
+            networkOffline = true;
+          }
+        }
+      });
+
+      await page.goto(mapPath, { waitUntil: 'domcontentloaded' });
+      const canvas = page.locator('canvas.maplibregl-canvas');
+      await expect(canvas).toBeVisible({ timeout: 10000 });
+
+      const startTime = Date.now();
+      while (tile200Count === 0 && Date.now() - startTime < 10000) {
+        if (networkOffline) break;
+        await page.waitForTimeout(250);
+      }
+
+      if (tile200Count === 0 && networkOffline) {
+        test.skip(true, 'skipped: offline');
+      }
+
+      expect(cspViolations, `CSP violations detected on ${mapPath}: ${cspViolations.join(' | ')}`).toHaveLength(0);
+      expect(tile200Count, `Expected at least one HTTP 200 tile response on ${mapPath} within 10s`).toBeGreaterThan(0);
+    });
+  }
+
+  test('offline fallback: activates Radar Canvas and shows dismissible notice when tile hosts fail', async ({ page }) => {
+    const cspViolations = [];
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (/Content Security Policy|Content-Security-Policy/i.test(text)) {
+        cspViolations.push(text);
       }
     });
 
-    await page.goto('/eloran', { waitUntil: 'networkidle' });
+    // Abort all external tile requests to simulate 100% network failure
+    await page.route('**/*cartocdn.com/**', (route) => route.abort('failed'));
+    await page.route('**/*openstreetmap.org/**', (route) => route.abort('failed'));
 
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
     const canvas = page.locator('canvas.maplibregl-canvas');
     await expect(canvas).toBeVisible({ timeout: 10000 });
 
-    // Assert that either:
-    // 1. A real tile was fetched and returned HTTP 200
-    // 2. OR the Radar Canvas fallback was activated
-    const isRadarActive = await page.evaluate(() => {
-      const activeBtn = Array.from(document.querySelectorAll('button')).find((b) =>
-        b.textContent.includes('Radar Canvas')
-      );
-      const notice = document.querySelector('[data-testid="radar-fallback-notice"]');
-      const isRadarProvider = activeBtn && activeBtn.className.includes('bg-cyan-500/20');
-      return Boolean(isRadarProvider || notice);
-    });
+    // Radar Canvas notice should become visible after >= 8 tile errors occur
+    const notice = page.locator('[data-testid="radar-fallback-notice"]');
+    await expect(notice).toBeVisible({ timeout: 10000 });
+    await expect(notice).toContainText('Switched to offline Radar Canvas');
 
-    const isTileOk = tileResponseStatus === 200;
+    // Dismiss notice
+    const dismissBtn = notice.locator('button[aria-label="Dismiss notice"]');
+    await dismissBtn.click();
+    await expect(notice).not.toBeVisible();
 
-    expect(
-      isTileOk || isRadarActive,
-      `Expected either HTTP 200 tile (got status: ${tileResponseStatus}, url: ${tileUrl}) or radar fallback active (got: ${isRadarActive})`
-    ).toBe(true);
+    // Verify session storage remembered the offline preference
+    const remembered = await page.evaluate(() => sessionStorage.getItem('loran_offline_radar'));
+    expect(remembered).toBe('true');
+
+    expect(cspViolations).toHaveLength(0);
   });
 });

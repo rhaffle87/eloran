@@ -1,16 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.BASE_URL || 'http://localhost:4173';
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 30000,
   expect: {
-    timeout: 5000,
+    timeout: 8000,
   },
   fullyParallel: false,
   retries: 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -19,10 +21,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run build && vite preview --port 4173',
-    port: 4173,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60000,
-  },
+  webServer: process.env.BASE_URL
+    ? undefined
+    : {
+        command: 'npm run build && vite preview --port 4173',
+        port: 4173,
+        reuseExistingServer: !process.env.CI,
+        timeout: 60000,
+      },
 });

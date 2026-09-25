@@ -101,6 +101,9 @@ npm test
 # Run ESLint validation
 npm run lint
 
+# Run citation & provenance verification (local audit)
+npm run check:provenance
+
 # Start Vite development server
 npm run dev
 

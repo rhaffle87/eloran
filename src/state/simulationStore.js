@@ -240,12 +240,21 @@ export const useSimulationStore = create((set, get) => ({
       const fused = fusePositions(eloranSol, gnssFix, rx.fuseMode || 'fusion', rx);
 
       // Error distance in meters from true position
-      const errorMeters = (eloranSol.lat !== undefined && eloranSol.lng !== undefined)
-        ? haversineDistance(rx, { lat: eloranSol.lat, lng: eloranSol.lng })
-        : 0;
+      const safeSol = {
+        lat: Number.isFinite(eloranSol.lat) ? Math.max(-90, Math.min(90, eloranSol.lat)) : rx.lat,
+        lng: Number.isFinite(eloranSol.lng) ? eloranSol.lng : rx.lng,
+      };
+      const errorMeters = (eloranSol.lat !== undefined && eloranSol.lng !== undefined && eloranSol.converged)
+        ? haversineDistance(rx, safeSol)
+        : (fused.errorMeters || 0);
+
+      const fixLat = Number.isFinite(fused.lat) ? Math.max(-90, Math.min(90, fused.lat)) : rx.lat;
+      const fixLng = Number.isFinite(fused.lng) ? ((((fused.lng + 180) % 360) + 360) % 360) - 180 : rx.lng;
 
       fixes[rx.label] = {
         ...fused,
+        lat: fixLat,
+        lng: fixLng,
         eloranSol,
         clockBiasSec: eloranSol.clockBiasSec || 0,
         clockBiasNs: (eloranSol.clockBiasSec || 0) * 1e9,
@@ -255,6 +264,8 @@ export const useSimulationStore = create((set, get) => ({
         computedAt: Date.now(),
         rawTdoaPairs,
         solverMode: settings.solverMode,
+        converged: fused.converged ?? eloranSol.converged ?? true,
+        noSolution: fused.noSolution ?? eloranSol.noSolution ?? false,
       };
     });
 

@@ -207,4 +207,67 @@ test.describe('LORAN LAB E2E Suite', () => {
 
     expect(cspViolations).toHaveLength(0);
   });
+
+  test('/loran-c handles near-degenerate / collinear geometry without triggering ErrorBoundary and silences missing sprite warnings', async ({ page }) => {
+    const pageErrors = [];
+    const missingImageWarnings = [];
+
+    page.on('pageerror', (err) => {
+      pageErrors.push(err.message || String(err));
+    });
+
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (/wood-pattern|circle-11/i.test(text) && /could not be loaded/i.test(text)) {
+        missingImageWarnings.push(text);
+      }
+    });
+
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const canvas = page.locator('canvas.maplibregl-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    // Ensure initial load does not trigger ErrorBoundary
+    const errorBoundaryNotice = page.locator('text=Simulator Error Encountered');
+    await expect(errorBoundaryNotice).toHaveCount(0);
+
+    // Switch to collinear / high GDOP scenario
+    const presetSelect = page.locator('select').first();
+    await expect(presetSelect).toBeVisible();
+    await presetSelect.selectOption('high_gdop');
+
+    // Wait for simulation to evaluate with the collinear geometry
+    await page.waitForTimeout(1000);
+    await expect(errorBoundaryNotice).toHaveCount(0);
+
+    // Add a near-coincident secondary station to push geometry into near-singular state
+    const addStationBtn = page.locator('button:has-text("Add Station")');
+    if (await addStationBtn.isVisible()) {
+      await addStationBtn.click();
+      const latInput = page.locator('input[placeholder="Latitude"], input[type="number"]').first();
+      if (await latInput.isVisible()) {
+        // Place very close to collinear master at -6.200000, 106.500000
+        await latInput.fill('-6.200001');
+        const lngInput = page.locator('input[placeholder="Longitude"], input[type="number"]').nth(1);
+        if (await lngInput.isVisible()) {
+          await lngInput.fill('106.500001');
+        }
+        const createBtn = page.locator('button:has-text("Create Station"), button:has-text("Add")').last();
+        if (await createBtn.isVisible()) {
+          await createBtn.click();
+        }
+      }
+    }
+
+    // Wait for receiver evaluation under near-singular conditions
+    await page.waitForTimeout(1000);
+
+    // Verify still zero ErrorBoundary and zero page errors
+    await expect(errorBoundaryNotice).toHaveCount(0);
+    expect(pageErrors, `Page errors under degenerate geometry: ${pageErrors.join(' | ')}`).toHaveLength(0);
+
+    // Verify missing sprite image warnings were prevented by styleimagemissing handler
+    expect(missingImageWarnings, `Missing image warnings: ${missingImageWarnings.join(' | ')}`).toHaveLength(0);
+  });
 });
+

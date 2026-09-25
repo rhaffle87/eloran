@@ -7,6 +7,7 @@ import {
   mercatorToWgs84,
   latLngToLocalXY,
   localXYToLatLng,
+  isValidLngLat,
   SPEED_OF_LIGHT,
   computeSecondaryFactorSec,
 } from '../geodesy.js';
@@ -28,6 +29,7 @@ import {
 } from '../pulse.js';
 import { fusePositions } from '../fusion.js';
 import { TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, FALLBACK_CHAIN, getNextFallbackProvider } from '../tiles.js';
+
 
 describe('Geodesy and Coordinate Transformations', () => {
   it('computes geodesic distance vs known values (London to Paris ~343 km)', () => {
@@ -71,7 +73,41 @@ describe('Geodesy and Coordinate Transformations', () => {
     expect(back.lat).toBeCloseTo(pt.lat, 6);
     expect(back.lng).toBeCloseTo(pt.lng, 6);
   });
+
+  it('strictly bounds localXYToLatLng output to [-90, 90] latitude and [-180, 180] longitude even under extreme or divergent inputs', () => {
+    // Extreme positive Y (e.g. 100 million meters)
+    const northExtreme = localXYToLatLng(0, 1e8, 0);
+    expect(northExtreme.lat).toBe(90);
+    expect(northExtreme.lng).toBe(0);
+
+    // Extreme negative Y
+    const southExtreme = localXYToLatLng(0, -1e8, 0);
+    expect(southExtreme.lat).toBe(-90);
+    expect(southExtreme.lng).toBe(0);
+
+    // Non-finite values
+    const nanCase = localXYToLatLng(NaN, Infinity, 0);
+    expect(nanCase.lat).toBe(0);
+    expect(nanCase.lng).toBe(0);
+  });
+
+  it('validates coordinates accurately via isValidLngLat helper', () => {
+    expect(isValidLngLat(106.8, -6.2)).toBe(true);
+    expect(isValidLngLat(0, 90)).toBe(true);
+    expect(isValidLngLat(0, -90)).toBe(true);
+    expect(isValidLngLat(180, 0)).toBe(true);
+    expect(isValidLngLat(-180, 0)).toBe(true);
+
+    // Out of bounds or non-finite
+    expect(isValidLngLat(106.8, 90.1)).toBe(false);
+    expect(isValidLngLat(106.8, -90.1)).toBe(false);
+    expect(isValidLngLat(181, 0)).toBe(false);
+    expect(isValidLngLat(NaN, 0)).toBe(false);
+    expect(isValidLngLat(0, Infinity)).toBe(false);
+    expect(isValidLngLat(undefined, null)).toBe(false);
+  });
 });
+
 
 describe('TDOA and Multilateration Math', () => {
   const master = { lat: 0, lng: 0, offsetSec: 0, label: 'M' };
@@ -103,7 +139,52 @@ describe('TDOA and Multilateration Math', () => {
     expect(solution.lng).toBeCloseTo(truePos.lng, 4);
     expect(solution.hplMeters).toBeGreaterThan(0);
   });
+
+  it('handles degenerate/collinear geometry safely without returning unbounded coordinates or out-of-range latitude', () => {
+    // Collinear transmitters along the equator (causes Gauss-Newton solver divergence if unguarded)
+    const m = { lat: 0, lng: 0 };
+    const s1 = { lat: 0, lng: 1 };
+    const s2 = { lat: 0, lng: 2 };
+    const pairs = [
+      { master: m, slave: s1, tdoaSec: 0.00333564 },
+      { master: m, slave: s2, tdoaSec: 0.00667128 },
+    ];
+    const initialGuess = { lat: 0.0001, lng: 0.5 };
+    const solution = solvePositionFromTDOA(pairs, initialGuess);
+
+    // Assert that the solution is strictly finite, within valid WGS84 range, and flagged noSolution
+    expect(Number.isFinite(solution.lat)).toBe(true);
+    expect(Number.isFinite(solution.lng)).toBe(true);
+    expect(solution.lat).toBeGreaterThanOrEqual(-90);
+    expect(solution.lat).toBeLessThanOrEqual(90);
+    expect(solution.lng).toBeGreaterThanOrEqual(-180);
+    expect(solution.lng).toBeLessThanOrEqual(180);
+    expect(solution.converged).toBe(false);
+    expect(solution.noSolution).toBe(true);
+  });
+
+  it('handles degenerate/collinear pseudorange observations safely with bounded coordinates and noSolution flag', () => {
+    const m = { lat: 0, lng: 0 };
+    const s1 = { lat: 0, lng: 1 };
+    const s2 = { lat: 0, lng: 2 };
+    const obs = [
+      { station: m, pseudorangeMeters: 1000 },
+      { station: s1, pseudorangeMeters: 2000 },
+      { station: s2, pseudorangeMeters: 3000 },
+    ];
+    const solution = solvePositionPseudorange(obs, { lat: 0.0001, lng: 0.5 });
+
+    expect(Number.isFinite(solution.lat)).toBe(true);
+    expect(Number.isFinite(solution.lng)).toBe(true);
+    expect(solution.lat).toBeGreaterThanOrEqual(-90);
+    expect(solution.lat).toBeLessThanOrEqual(90);
+    expect(solution.lng).toBeGreaterThanOrEqual(-180);
+    expect(solution.lng).toBeLessThanOrEqual(180);
+    expect(solution.converged).toBe(false);
+    expect(solution.noSolution).toBe(true);
+  });
 });
+
 
 describe('GDOP on Known Geometry', () => {
   it('computes low GDOP for symmetric orthogonal layout and high GDOP for ill-conditioned layout', () => {

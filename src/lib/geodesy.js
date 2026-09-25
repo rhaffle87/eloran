@@ -202,22 +202,63 @@ export function mercatorToWgs84([x, y]) {
  * @returns {{x: number, y: number}} Local Cartesian coordinates in meters
  */
 export function latLngToLocalXY(lat, lng, refLat) {
+  const safeLat = Number.isFinite(lat) ? Math.max(-90, Math.min(90, lat)) : 0;
+  const safeLng = Number.isFinite(lng) ? lng : 0;
+  const safeRef = Number.isFinite(refLat) ? Math.max(-90, Math.min(90, refLat)) : 0;
   const toRad = Math.PI / 180;
-  const x = (lng * toRad) * EARTH_RADIUS * Math.cos(refLat * toRad);
-  const y = (lat * toRad) * EARTH_RADIUS;
+  const x = (safeLng * toRad) * EARTH_RADIUS * Math.cos(safeRef * toRad);
+  const y = (safeLat * toRad) * EARTH_RADIUS;
   return { x, y };
 }
 
 /**
  * Inverts local Cartesian coordinates back to geographic latitude and longitude.
+ * Strictly guarantees that returned latitude is a finite value within [-90, 90]
+ * and longitude is within [-180, 180].
  * @param {number} x - Local Cartesian X in meters
  * @param {number} y - Local Cartesian Y in meters
  * @param {number} refLat - Reference latitude in degrees
  * @returns {{lat: number, lng: number}} Geographic coordinate in degrees
  */
 export function localXYToLatLng(x, y, refLat) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return { lat: 0, lng: 0 };
+  }
   const toDeg = 180 / Math.PI;
-  const lat = (y / EARTH_RADIUS) * toDeg;
-  const lng = (x / (EARTH_RADIUS * Math.cos((refLat * Math.PI) / 180))) * toDeg;
+  let lat = (y / EARTH_RADIUS) * toDeg;
+  // Strictly enforce valid geographic limits [-90, 90]
+  lat = Math.max(-90, Math.min(90, lat));
+
+  const cosLat = Math.cos(((Number.isFinite(refLat) ? refLat : 0) * Math.PI) / 180);
+  const safeCos = Math.abs(cosLat) < 1e-6 ? 1e-6 : cosLat;
+  let lng = (x / (EARTH_RADIUS * safeCos)) * toDeg;
+
+  if (Number.isFinite(lng)) {
+    lng = ((((lng + 180) % 360) + 360) % 360) - 180;
+  } else {
+    lng = 0;
+  }
   return { lat, lng };
 }
+
+/**
+ * Validates that latitude is within [-90, 90] and longitude is finite within [-180, 180].
+ * Prevents MapLibre Marker and Popup crash: "Invalid LngLat latitude value: must be between -90 and 90".
+ * @param {number} lng - Longitude in degrees
+ * @param {number} lat - Latitude in degrees
+ * @returns {boolean} True if coordinates are valid finite numbers in bounds
+ */
+export function isValidLngLat(lng, lat) {
+  return (
+    typeof lng === 'number' &&
+    typeof lat === 'number' &&
+    Number.isFinite(lng) &&
+    Number.isFinite(lat) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+

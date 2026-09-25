@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock } from 'lucide-react';
+import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
 import { wgs84ToMercator, mercatorToWgs84, REFRACTIVE_INDEX_PRESETS } from '../../lib/geodesy.js';
 import { simplifyRDP } from '../../lib/contours.js';
+import { computeToaNoiseStdDevMeters, DEFAULT_TOA_NOISE_PARAMS } from '../../lib/tdoa.js';
+import {
+  computeAustronWrongCycleProbability,
+  computeTheoreticalRiceWrongCycleProbability,
+} from '../../lib/pulse.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
 
@@ -313,50 +318,138 @@ export default function DisplayPanel({ isELoran = false }) {
         </div>
       </div>
 
-      {/* Cycle Slip / Wrong-Cycle Selection Simulation (Boyce 2006) */}
-      <div className="space-y-2 pt-2 border-t border-zinc-800/80">
+      {/* Cycle Slip & TOA Noise Model (Boyce 2006 / Rhee 2021) */}
+      <div className="space-y-3 pt-2 border-t border-zinc-800/80 font-mono text-xs">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
-            Cycle Slip & Noise Model
+          <label className="font-semibold text-zinc-400 uppercase tracking-wider block">
+            Cycle Slip & TOA Noise Model
           </label>
           {settings.enableCycleSlips && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 font-mono">
-              <ShieldAlert size={11} /> 10 µs Slip Active
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <ShieldAlert size={11} /> Cycle Slip Active
             </span>
           )}
         </div>
 
+        {/* Status Pills */}
+        <div className="flex flex-wrap gap-2 text-[10px]">
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Model: Boyce ILA 2006 (SOURCED)
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Noise: Rhee et al. 2021 (SOURCED)
+          </span>
+        </div>
+
         <Toggle
           label="Simulate Carrier Cycle Slips"
-          description="Triggers wrong-cycle selection (±10 µs / ~3 km error) when SNR is degraded"
+          description="Triggers wrong-cycle selection (±10 µs / ~3 km error) when SNR degrades"
           checked={settings.enableCycleSlips}
           onChange={(checked) => updateSettings({ enableCycleSlips: checked })}
         />
 
-        {settings.enableCycleSlips && (
-          <div className="space-y-2 pl-2 border-l-2 border-amber-500/40">
-            <Slider
-              label="Receiver RF SNR"
-              value={settings.snrDb || 18}
-              min={-5}
-              max={30}
-              step={1}
-              unit="dB"
-              tooltip="Lower SNR increases wrong-cycle selection probability"
-              onChange={(val) => updateSettings({ snrDb: val })}
-            />
-            <Slider
-              label="Pulse Integration Count"
-              value={settings.pulsesAveraged || 10}
-              min={1}
-              max={50}
-              step={1}
-              unit="pulses"
-              tooltip="Number of pulses averaged per GRI to suppress noise"
-              onChange={(val) => updateSettings({ pulsesAveraged: val })}
-            />
+        <div className="space-y-2.5 bg-zinc-950 p-3 rounded-xl border border-zinc-800/80">
+          <div>
+            <label className="block text-zinc-400 text-[11px] mb-1">
+              Active Cycle Selection Model
+            </label>
+            <select
+              value={settings.cycleSlipModel || 'boyce-ratio'}
+              onChange={(e) => updateSettings({ cycleSlipModel: e.target.value })}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100"
+            >
+              <option value="boyce-ratio">
+                Boyce Theoretical Rician Ratio (SOURCED, ILA 2006)
+              </option>
+              <option value="austron-28">
+                Austron New Empirical (28 µs) (SOURCED, Boyce Eq. 6)
+              </option>
+              <option value="austron-42">
+                Austron Old Empirical (42 µs) (SOURCED, Boyce Eq. 5)
+              </option>
+            </select>
           </div>
-        )}
+
+          <Slider
+            label="Receiver RF SNR"
+            value={settings.snrDb || 18}
+            min={-5}
+            max={30}
+            step={1}
+            unit="dB"
+            tooltip="Lower SNR increases wrong-cycle selection probability"
+            onChange={(val) => updateSettings({ snrDb: val })}
+          />
+
+          <Slider
+            label="Pulse Averaging Integration"
+            value={settings.pulsesAveraged || 10}
+            min={1}
+            max={50}
+            step={1}
+            unit="pulses"
+            tooltip="Number of pulses averaged per GRI to suppress noise"
+            onChange={(val) => updateSettings({ pulsesAveraged: val })}
+          />
+
+          <Slider
+            label="Transmitter Jitter (J_i)"
+            value={settings.jitterMeters ?? DEFAULT_TOA_NOISE_PARAMS.jitterMeters}
+            min={0}
+            max={20}
+            step={0.5}
+            unit="m"
+            tooltip="Nominal transmitter clock jitter (SOURCED: Rhee et al. 2021)"
+            onChange={(val) => updateSettings({ jitterMeters: val })}
+          />
+
+          <Slider
+            label="Receiver Noise Constant (K)"
+            value={settings.kConstantMeters ?? DEFAULT_TOA_NOISE_PARAMS.kConstantMeters}
+            min={100}
+            max={600}
+            step={12.5}
+            unit="m"
+            tooltip="Receiver scaling constant K (SOURCED: Rhee et al. 2021 / Lo 2008)"
+            onChange={(val) => updateSettings({ kConstantMeters: val })}
+          />
+
+          {/* Live Calculated Readout */}
+          <div className="pt-2 border-t border-zinc-800 text-[10px] space-y-1 text-zinc-400">
+            <div className="flex justify-between">
+              <span>Total SNR (N · SNR):</span>
+              <span className="text-zinc-200 font-bold">
+                {((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10))).toFixed(1)} dB
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>TOA Error Std Dev (σ_i):</span>
+              <span className="text-cyan-400 font-bold">
+                {computeToaNoiseStdDevMeters({
+                  snrDb: settings.snrDb || 18,
+                  pulsesAveraged: settings.pulsesAveraged || 10,
+                  jitterMeters: settings.jitterMeters ?? DEFAULT_TOA_NOISE_PARAMS.jitterMeters,
+                  kConstantMeters: settings.kConstantMeters ?? DEFAULT_TOA_NOISE_PARAMS.kConstantMeters,
+                }).toFixed(2)} m ({(computeToaNoiseStdDevMeters({
+                  snrDb: settings.snrDb || 18,
+                  pulsesAveraged: settings.pulsesAveraged || 10,
+                  jitterMeters: settings.jitterMeters ?? DEFAULT_TOA_NOISE_PARAMS.jitterMeters,
+                  kConstantMeters: settings.kConstantMeters ?? DEFAULT_TOA_NOISE_PARAMS.kConstantMeters,
+                }) / 0.299792).toFixed(1)} ns)
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Wrong-Cycle Selection P[E]:</span>
+              <span className="text-amber-400 font-bold">
+                {((settings.cycleSlipModel === 'austron-42'
+                  ? computeAustronWrongCycleProbability((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10)), 'old')
+                  : settings.cycleSlipModel === 'austron-28'
+                  ? computeAustronWrongCycleProbability((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10)), 'new')
+                  : computeTheoreticalRiceWrongCycleProbability((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10)))) * 100).toFixed(4)}%
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Layer Visibility Toggles */}
@@ -438,6 +531,87 @@ export default function DisplayPanel({ isELoran = false }) {
             >
               Seconds (TDOA)
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Model Fidelity & Provenance Registry */}
+      <div className="space-y-3 pt-2 border-t border-zinc-800/80 font-mono text-xs">
+        <div className="flex items-center justify-between">
+          <label className="font-semibold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
+            <CheckCircle2 size={13} className="text-cyan-400" /> Model Fidelity & Provenance
+          </label>
+          <span className="text-[10px] text-zinc-500">docs/PROVENANCE.md</span>
+        </div>
+
+        <div className="bg-zinc-950 rounded-xl border border-zinc-800 p-3 space-y-2.5 text-[11px]">
+          {/* Primary Factor */}
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+            <div>
+              <div className="font-bold text-zinc-200">Primary Factor (PF)</div>
+              <div className="text-[10px] text-zinc-500">v = c / η (Atmospheric refraction)</div>
+            </div>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+              SOURCED (RTCM / USCG)
+            </span>
+          </div>
+
+          {/* Secondary Factor */}
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+            <div>
+              <div className="font-bold text-zinc-200">Secondary Factor (SF)</div>
+              <div className="text-[10px] text-zinc-500">Brunavs seawater delay (5 S/m)</div>
+            </div>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[10px] border ${
+                settings.enableSecondaryFactor
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'bg-zinc-800/60 text-zinc-400 border-zinc-700'
+              }`}
+            >
+              {settings.enableSecondaryFactor ? 'ON (UNVERIFIED)' : 'OFF (UNVERIFIED)'}
+            </span>
+          </div>
+
+          {/* Mixed-Path ASF */}
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+            <div>
+              <div className="font-bold text-zinc-200">Mixed-Path ASF (Millington)</div>
+              <div className="text-[10px] text-zinc-500">
+                {settings.asfModelMode === 'millington'
+                  ? `Terrain σ = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
+                  : 'Safe AST Formula Override'}
+              </div>
+            </div>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+              SOURCED (ITU-R P.832) / UNVERIFIED (k)
+            </span>
+          </div>
+
+          {/* Cycle Selection */}
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+            <div>
+              <div className="font-bold text-zinc-200">Cycle Selection Ratio Test</div>
+              <div className="text-[10px] text-zinc-500">
+                Envelope ratio excursion [R(25), R(35)] (±5 µs)
+              </div>
+            </div>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+              SOURCED (Boyce ILA 2006)
+            </span>
+          </div>
+
+          {/* TOA Noise Model */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-bold text-zinc-200">TOA Measurement Noise</div>
+              <div className="text-[10px] text-zinc-500">
+                σ_i² = J_i² + K² / (N · SNR_i)
+              </div>
+            </div>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+              SOURCED (Rhee et al. 2021)
+            </span>
           </div>
         </div>
       </div>

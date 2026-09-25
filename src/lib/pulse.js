@@ -270,3 +270,259 @@ export function synthesizeReceiverWaveform({
     simTime,
   };
 }
+
+/**
+ * ============================================================================
+ * BOYCE ET AL. (ILA 2006) CYCLE SELECTION & RATIO-TEST ACCURACY MODELS
+ * Reference: Boyce, Lo, Powell, & Enge, "Analysis of Noise and Cycle Selection
+ * in a Loran Receiver," Proc. 35th Annual Convention of the International
+ * Loran Association (ILA-35), October 2006.
+ * SOURCED: web.stanford.edu/group/scpnt/gpslab/pubs/papers/Boyce_ILA_2006.pdf
+ * ============================================================================
+ */
+
+/**
+ * Evaluates the normalized Loran-C standard pulse envelope amplitude at time t in microseconds.
+ * Peak envelope is normalized to 1.0 at t = 65 µs:
+ *   e(t) = (e² / 65²) * t² * exp(-2 * t / 65)  for t >= 0
+ * Source: USCG Specification of the Transmitted Loran-C Signal (COMDTINST M16562.4A, 1994)
+ *
+ * @param {number} tMicroseconds - Time in µs from pulse start
+ * @returns {number} Normalized amplitude in [0, 1]
+ */
+export function evaluateStandardLoranEnvelopeMicroseconds(tMicroseconds) {
+  if (tMicroseconds <= 0) return 0;
+  const normFactor = Math.E ** 2 / (65 ** 2);
+  return normFactor * (tMicroseconds ** 2) * Math.exp((-2 * tMicroseconds) / 65);
+}
+
+/**
+ * Computes the Loran pulse envelope ratio test at time tau in microseconds.
+ * Sourced from Boyce, Lo, Powell, & Enge, "Analysis of Noise and Cycle Selection in a Loran Receiver,"
+ * Proc. ILA-35 (2006), Section II-A:
+ *   Ratio(tau) = Envelope(tau - 15 µs) / Envelope(tau)
+ *
+ * At the Standard Zero Crossing (SZC, tau = 30 µs):
+ *   Ratio(30) = Envelope(15) / Envelope(30) ≈ 0.3966 (≈ 0.40).
+ *
+ * @param {number} tauMicroseconds - Sampling point in µs (tau >= 15)
+ * @param {number} [delayMicroseconds=15] - Delay between sample points in µs
+ * @returns {number} Envelope ratio
+ */
+export function computeEnvelopeRatio(tauMicroseconds, delayMicroseconds = 15) {
+  if (tauMicroseconds <= 0) return 0;
+  const promptAmp = evaluateStandardLoranEnvelopeMicroseconds(tauMicroseconds);
+  if (promptAmp <= 0) return 0;
+  const delayedAmp = evaluateStandardLoranEnvelopeMicroseconds(tauMicroseconds - delayMicroseconds);
+  return delayedAmp / promptAmp;
+}
+
+/**
+ * Analytic bounds for wrong-cycle selection from Boyce et al. (ILA 2006, Section II-D).
+ * An offset of ±5 µs in the zero-crossing estimate mistakes the signal as belonging
+ * to the previous or next carrier cycle.
+ * Bounds on Ratio(30) are [Ratio(25), Ratio(35)]:
+ *   - Lower bound: Ratio(25) = Envelope(10)/Envelope(25) ≈ 0.2538 (5 µs early)
+ *   - Ideal SZC:   Ratio(30) = Envelope(15)/Envelope(30) ≈ 0.3966 (ideal 30 µs SZC)
+ *   - Upper bound: Ratio(35) = Envelope(20)/Envelope(35) ≈ 0.5180 (5 µs late)
+ */
+export const BOYCE_2006_RATIO_BOUNDS = {
+  lower: computeEnvelopeRatio(25), // ≈ 0.2538
+  szc: computeEnvelopeRatio(30),   // ≈ 0.3966
+  upper: computeEnvelopeRatio(35), // ≈ 0.5180
+};
+
+/**
+ * Checks if a measured envelope ratio at tau=30 µs represents a wrong-cycle selection.
+ * Sourced: Boyce et al. (ILA 2006, Section II-D).
+ *
+ * @param {number} ratioValue - Measured ratio
+ * @param {number} [lowerBound=BOYCE_2006_RATIO_BOUNDS.lower]
+ * @param {number} [upperBound=BOYCE_2006_RATIO_BOUNDS.upper]
+ * @returns {boolean} True if wrong cycle (excursion outside [Ratio(25), Ratio(35)])
+ */
+export function isWrongCycleSelection(
+  ratioValue,
+  lowerBound = BOYCE_2006_RATIO_BOUNDS.lower,
+  upperBound = BOYCE_2006_RATIO_BOUNDS.upper
+) {
+  return ratioValue <= lowerBound || ratioValue >= upperBound;
+}
+
+/**
+ * Complementary error function erfc(x) using high-accuracy rational approximation (Abramowitz & Stegun formula 7.1.26).
+ * Maximum absolute error < 1.5e-7.
+ * @param {number} x
+ * @returns {number} erfc(x)
+ */
+export function erfc(x) {
+  if (x < 0) return 2.0 - erfc(-x);
+  const t = 1.0 / (1.0 + 0.3275911 * x);
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  return poly * Math.exp(-x * x);
+}
+
+/**
+ * Modified Bessel function of the first kind of order 0, I0(x).
+ * Used for Rician probability density evaluations.
+ * @param {number} x
+ * @returns {number}
+ */
+export function besselI0(x) {
+  const ax = Math.abs(x);
+  if (ax < 3.75) {
+    const y = (x / 3.75) ** 2;
+    return 1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492 + y * (0.2659732 + y * (0.0360768 + y * 0.0045813)))));
+  }
+  const y = 3.75 / ax;
+  return (Math.exp(ax) / Math.sqrt(ax)) * (0.39894228 + y * (0.01328592 + y * (0.00225319 + y * (-0.00157565 + y * (0.00916281 + y * (-0.02057706 + y * (0.02635537 + y * (-0.01647633 + y * 0.00392377))))))));
+}
+
+/**
+ * Austron empirical ECD standard deviation in microseconds.
+ * Sourced from Boyce et al. (ILA 2006), Eqs. (5) and (6):
+ *   sigma_ECD_Old = 42 / sqrt(N * SNR) µs  (Austron 5000 historical)
+ *   sigma_ECD_New = 28 / sqrt(N * SNR) µs  (Modern / Peterson estimate)
+ *
+ * @param {number} totalSnrLinear - Total SNR power ratio (N * SNR)
+ * @param {'new' | 'old'} [model='new']
+ * @returns {number} sigma in microseconds
+ */
+export function computeAustronEcdVariance(totalSnrLinear, model = 'new') {
+  const c = model === 'old' ? 42.0 : 28.0;
+  const safeSnr = Math.max(1e-4, totalSnrLinear);
+  return c / Math.sqrt(safeSnr);
+}
+
+/**
+ * Calculates probability of wrong cycle selection using the empirical Austron ECD Gaussian model.
+ * Sourced from Boyce et al. (ILA 2006), Section II-D:
+ * An ECD excursion > 5 µs triggers wrong cycle selection:
+ *   P[Wrong Cycle] = P[|ECD| >= 5 µs] = erfc(5 / (sigma_ECD * sqrt(2)))
+ *
+ * @param {number} totalSnrDb - Total SNR in dB = 10 * log10(N * SNR)
+ * @param {'new' | 'old'} [model='new'] - 'new' (28 µs) or 'old' (42 µs)
+ * @returns {number} Probability in [0, 1]
+ */
+export function computeAustronWrongCycleProbability(totalSnrDb, model = 'new') {
+  const totalSnrLinear = Math.pow(10, totalSnrDb / 10);
+  const sigmaEcdUs = computeAustronEcdVariance(totalSnrLinear, model);
+  return Math.min(1.0, Math.max(0.0, erfc(5.0 / (sigmaEcdUs * Math.SQRT2))));
+}
+
+/**
+ * Evaluates theoretical probability of wrong cycle selection under Gaussian noise
+ * using Boyce et al. (ILA 2006, Section II-D) Rician envelope ratio model.
+ *
+ * @param {number} totalSnrDb - Total SNR in dB
+ * @returns {number} Probability in [0, 1]
+ */
+export function computeTheoreticalRiceWrongCycleProbability(totalSnrDb) {
+  const totalSnrLinear = Math.pow(10, totalSnrDb / 10);
+  const sSsp = evaluateStandardLoranEnvelopeMicroseconds(25);
+  const s1 = evaluateStandardLoranEnvelopeMicroseconds(15);
+  const s2 = evaluateStandardLoranEnvelopeMicroseconds(30);
+  const r25 = BOYCE_2006_RATIO_BOUNDS.lower;
+  const r35 = BOYCE_2006_RATIO_BOUNDS.upper;
+
+  // Noise sigma from definition: SNR_total = s(25)^2 / (2 * sigma_n^2)
+  const sigmaN = sSsp / Math.sqrt(2.0 * Math.max(1e-4, totalSnrLinear));
+
+  // High SNR Gaussian approximation (Section II-D: used for high SNR >= 18 dB)
+  if (totalSnrDb >= 18) {
+    const muQ = s1 / s2;
+    const varQ = (s1 / s2) ** 2 * ((sigmaN ** 2) / (s1 ** 2) + (sigmaN ** 2) / (s2 ** 2));
+    const stdQ = Math.sqrt(varQ);
+    const p1 = 0.5 * erfc((muQ - r25) / (stdQ * Math.SQRT2));
+    const p2 = 0.5 * erfc((r35 - muQ) / (stdQ * Math.SQRT2));
+    return Math.min(1.0, Math.max(0.0, p1 + p2));
+  }
+
+  // Low/Medium SNR numerical integration of joint Rician envelope ratio
+  // P[Q <= r25 or Q >= r35] via Simpson's rule over Z2
+  const zMax = s2 + 5 * sigmaN;
+  const numSteps = 80;
+  const h = zMax / numSteps;
+  let integral = 0;
+
+  for (let i = 0; i <= numSteps; i++) {
+    const z2 = i * h;
+    if (z2 <= 0) continue;
+    const weight = (i === 0 || i === numSteps) ? 1 : (i % 2 === 1 ? 4 : 2);
+
+    const pdfZ2 = (z2 / (sigmaN ** 2)) * Math.exp(-(z2 ** 2 + s2 ** 2) / (2 * sigmaN ** 2)) * besselI0((z2 * s2) / (sigmaN ** 2));
+
+    const q1z2 = r25 * z2;
+    const q2z2 = r35 * z2;
+
+    const u1 = (q1z2 - s1) / sigmaN;
+    const cdf1 = 0.5 * (1 + (u1 >= 0 ? 1 - erfc(u1 * Math.SQRT1_2) : erfc(-u1 * Math.SQRT1_2) - 1));
+    const u2 = (q2z2 - s1) / sigmaN;
+    const cdf2 = 0.5 * (1 + (u2 >= 0 ? 1 - erfc(u2 * Math.SQRT1_2) : erfc(-u2 * Math.SQRT1_2) - 1));
+
+    const probQGivenZ2 = Math.max(0, Math.min(1, cdf1 + (1 - cdf2)));
+    integral += weight * pdfZ2 * probQGivenZ2;
+  }
+
+  const pNumeric = (h / 3) * integral;
+  return Math.min(1.0, Math.max(0.0, pNumeric));
+}
+
+/**
+ * Monte Carlo simulator for Loran cycle selection wrong-cycle probability.
+ * Directly simulates independent Rician I/Q noise on envelope samples at 15 µs and 30 µs,
+ * testing whether Ratio(30) falls outside [Ratio(25), Ratio(35)].
+ * Replicates the simulation curve of Fig. 9 in Boyce et al. (ILA 2006).
+ *
+ * @param {object} params
+ * @param {number[]} [params.snrDbList] - List of total SNR values in dB
+ * @param {number} [params.numTrialsPerPoint=1000] - Trials per SNR point
+ * @param {() => number} [params.rng=Math.random] - PRNG function
+ * @returns {Array<{ snrDb: number, pWrongCycle: number, trials: number, wrongCount: number }>}
+ */
+export function simulateMonteCarloWrongCycleCurve({
+  snrDbList = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24],
+  numTrialsPerPoint = 1000,
+  rng = Math.random,
+}) {
+  const sSsp = evaluateStandardLoranEnvelopeMicroseconds(25);
+  const s1 = evaluateStandardLoranEnvelopeMicroseconds(15);
+  const s2 = evaluateStandardLoranEnvelopeMicroseconds(30);
+  const r25 = BOYCE_2006_RATIO_BOUNDS.lower;
+  const r35 = BOYCE_2006_RATIO_BOUNDS.upper;
+
+  return snrDbList.map((snrDb) => {
+    const snrLinear = Math.pow(10, snrDb / 10);
+    const sigmaN = sSsp / Math.sqrt(2.0 * Math.max(1e-4, snrLinear));
+    let wrongCount = 0;
+
+    for (let t = 0; t < numTrialsPerPoint; t++) {
+      // Box-Muller normal variates
+      const u1 = Math.max(1e-12, rng());
+      const u2 = rng();
+      const u3 = Math.max(1e-12, rng());
+      const u4 = rng();
+
+      const nI1 = sigmaN * Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+      const nQ1 = sigmaN * Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+      const nI2 = sigmaN * Math.sqrt(-2.0 * Math.log(u3)) * Math.cos(2.0 * Math.PI * u4);
+      const nQ2 = sigmaN * Math.sqrt(-2.0 * Math.log(u3)) * Math.sin(2.0 * Math.PI * u4);
+
+      const z1 = Math.hypot(s1 + nI1, nQ1);
+      const z2 = Math.hypot(s2 + nI2, nQ2);
+
+      const q = z2 > 0 ? z1 / z2 : 999.0;
+      if (q <= r25 || q >= r35) {
+        wrongCount++;
+      }
+    }
+
+    return {
+      snrDb,
+      pWrongCycle: wrongCount / numTrialsPerPoint,
+      trials: numTrialsPerPoint,
+      wrongCount,
+    };
+  });
+}
+

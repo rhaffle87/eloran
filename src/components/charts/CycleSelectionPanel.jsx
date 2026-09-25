@@ -84,23 +84,23 @@ export default function CycleSelectionPanel() {
   }, [analyticPoints, mapX, mapY]);
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-6 shadow-2xl">
+    <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-xl p-5 space-y-6 shadow-2xl">
       {/* Header and Provenance Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 font-semibold uppercase tracking-wider">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] flex items-center gap-1 font-semibold uppercase tracking-wider">
               <CheckCircle2 size={11} /> Model: Boyce Ratio & Austron ECD (SOURCED)
             </span>
-            <span className="text-[10px] font-mono text-zinc-500">
+            <span className="text-[10px] font-mono text-[var(--text-muted)]">
               Boyce et al. (ILA 2006, Section II-D, Fig. 9)
             </span>
           </div>
-          <h2 className="text-lg font-bold text-zinc-100 font-mono flex items-center gap-2">
-            <Sparkles size={16} className="text-cyan-400" />
+          <h2 className="text-lg font-bold text-[var(--text-primary)] font-mono flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--accent-eloran)]" />
             Loran Cycle Selection & Monte Carlo Simulator
           </h2>
-          <p className="text-zinc-400 text-xs mt-0.5">
+          <p className="text-[var(--text-dim)] text-xs mt-0.5">
             Analytic comparison of Rician envelope ratio excursion probability against empirical Austron ECD bounds.
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function CycleSelectionPanel() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSimSeed((prev) => prev + 1)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-mono transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent-eloran-subtle)] hover:bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)] rounded-lg text-xs font-mono transition"
             title="Re-seed Monte Carlo Gaussian noise generator"
           >
             <RotateCcw size={13} /> Re-seed Trials
@@ -120,11 +120,11 @@ export default function CycleSelectionPanel() {
       {/* Primary Analytic & Monte Carlo Comparison Chart (Replicating Boyce Fig. 9) */}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-          <span className="text-zinc-300 font-semibold">
-            P[Wrong Cycle] vs Total SNR (N · SNR)
+          <span className="text-[var(--text-secondary)] font-semibold">
+            P[Wrong Cycle] vs Total SNR (N Â· SNR)
           </span>
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <label className="flex items-center gap-1.5 cursor-pointer text-cyan-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-[var(--accent-eloran)]">
               <input
                 type="checkbox"
                 checked={showTheoretical}
@@ -133,23 +133,23 @@ export default function CycleSelectionPanel() {
               />
               <span className="w-3 h-0.5 bg-cyan-400 inline-block"></span> Theoretical Rician Ratio
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer text-emerald-300">
+            <label className="flex items-center gap-1.5 cursor-pointer" style={{ color: 'var(--status-ok)' }}>
               <input
                 type="checkbox"
                 checked={showAustronNew}
                 onChange={(e) => setShowAustronNew(e.target.checked)}
                 className="accent-emerald-400"
               />
-              <span className="w-3 h-0.5 bg-emerald-400 border-b border-dashed inline-block"></span> Austron New (28 µs)
+              <span className="w-3 h-0.5 bg-emerald-400 border-b border-dashed inline-block"></span> Austron New (28 Âµs)
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer text-amber-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-[var(--status-warn)]">
               <input
                 type="checkbox"
                 checked={showAustronOld}
                 onChange={(e) => setShowAustronOld(e.target.checked)}
                 className="accent-amber-400"
               />
-              <span className="w-3 h-0.5 bg-amber-400 border-b border-dotted inline-block"></span> Austron Old (42 µs)
+              <span className="w-3 h-0.5 bg-amber-400 border-b border-dotted inline-block"></span> Austron Old (42 Âµs)
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer text-fuchsia-300">
               <input
@@ -164,7 +164,7 @@ export default function CycleSelectionPanel() {
         </div>
 
         {/* SVG Logarithmic Chart */}
-        <div className="relative bg-zinc-950 rounded-xl border border-zinc-800/90 p-2 overflow-hidden shadow-inner">
+        <div className="relative bg-[var(--bg-canvas)] rounded-xl border border-[var(--border-subtle)]/90 p-2 overflow-hidden shadow-inner">
           <svg viewBox="0 0 800 380" className="w-full h-72">
             {/* Grid background */}
             <rect x="60" y="40" width="700" height="300" fill="#09090b" rx="4" />
@@ -176,7 +176,7 @@ export default function CycleSelectionPanel() {
                 <g key={`ygrid-${exp}`}>
                   <line x1="60" y1={y} x2="760" y2={y} stroke="#27272a" strokeWidth="0.8" strokeDasharray={exp === 0 ? 'none' : '3 3'} />
                   <text x="52" y={y + 3} fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
-                    10{exp === 0 ? '⁰' : exp === -1 ? '⁻¹' : exp === -2 ? '⁻²' : exp === -3 ? '⁻³' : '⁻⁴'}
+                    10{exp === 0 ? 'â°' : exp === -1 ? 'â»Â¹' : exp === -2 ? 'â»Â²' : exp === -3 ? 'â»Â³' : 'â»â´'}
                   </text>
                 </g>
               );
@@ -197,7 +197,7 @@ export default function CycleSelectionPanel() {
 
             {/* Axis labels */}
             <text x="410" y="375" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle">
-              Total SNR [dB] = 10 · log₁₀(N · SNR)
+              Total SNR [dB] = 10 Â· logâ‚â‚€(N Â· SNR)
             </text>
             <text x="18" y="190" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle" transform="rotate(-90 18 190)">
               P[Wrong Cycle Selection]
@@ -255,9 +255,9 @@ export default function CycleSelectionPanel() {
       {/* Controls & Active Inspection Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Left Column: Simulation Tuning */}
-        <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 space-y-4 font-mono text-xs">
-          <div className="font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-            <Sliders size={14} className="text-cyan-400" />
+        <div className="bg-[var(--bg-canvas)] p-4 rounded-xl border border-[var(--border-subtle)] space-y-4 font-mono text-xs">
+          <div className="font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
+            <Sliders size={14} className="text-[var(--accent-eloran)]" />
             Monte Carlo Parameters
           </div>
 
@@ -296,42 +296,42 @@ export default function CycleSelectionPanel() {
         </div>
 
         {/* Right Column: Live Analytic Readout */}
-        <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 space-y-3 font-mono text-xs">
-          <div className="font-bold text-zinc-200 uppercase tracking-wider flex items-center justify-between">
+        <div className="bg-[var(--bg-canvas)] p-4 rounded-xl border border-[var(--border-subtle)] space-y-3 font-mono text-xs">
+          <div className="font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <ShieldAlert size={14} className="text-amber-400" />
+              <ShieldAlert size={14} className="text-[var(--accent-loran-c)]" />
               Live Cycle Slip Prediction
             </span>
-            <span className="text-[11px] text-cyan-400 font-bold">
+            <span className="text-[11px] text-[var(--accent-eloran)] font-bold">
               Total SNR: {totalInspectionSnrDb.toFixed(1)} dB
             </span>
           </div>
 
           <div className="space-y-2 pt-1">
-            <div className="flex justify-between items-center bg-zinc-900/80 p-2 rounded border border-zinc-800 text-[11px]">
-              <span className="text-cyan-300 font-medium">Theoretical Rice (Boyce 2006):</span>
-              <span className="font-bold text-zinc-100">{(inspectRice * 100).toFixed(3)}%</span>
+            <div className="flex justify-between items-center bg-[var(--bg-subtle)]/80 p-2 rounded border border-[var(--border-subtle)] text-[11px]">
+              <span className="text-[var(--accent-eloran)] font-medium">Theoretical Rice (Boyce 2006):</span>
+              <span className="font-bold text-[var(--text-primary)]">{(inspectRice * 100).toFixed(3)}%</span>
             </div>
-            <div className="flex justify-between items-center bg-zinc-900/80 p-2 rounded border border-zinc-800 text-[11px]">
-              <span className="text-emerald-300 font-medium">Austron New (28 µs / modern):</span>
-              <span className="font-bold text-zinc-100">{(inspectAustronNew * 100).toFixed(3)}%</span>
+            <div className="flex justify-between items-center bg-[var(--bg-subtle)]/80 p-2 rounded border border-[var(--border-subtle)] text-[11px]">
+              <span className="font-medium" style={{ color: 'var(--status-ok)' }}>Austron New (28 µs / modern):</span>
+              <span className="font-bold text-[var(--text-primary)]">{(inspectAustronNew * 100).toFixed(3)}%</span>
             </div>
-            <div className="flex justify-between items-center bg-zinc-900/80 p-2 rounded border border-zinc-800 text-[11px]">
-              <span className="text-amber-300 font-medium">Austron Old (42 µs / historical):</span>
-              <span className="font-bold text-zinc-100">{(inspectAustronOld * 100).toFixed(3)}%</span>
+            <div className="flex justify-between items-center bg-[var(--bg-subtle)]/80 p-2 rounded border border-[var(--border-subtle)] text-[11px]">
+              <span className="text-[var(--status-warn)] font-medium">Austron Old (42 Âµs / historical):</span>
+              <span className="font-bold text-[var(--text-primary)]">{(inspectAustronOld * 100).toFixed(3)}%</span>
             </div>
           </div>
 
           {/* Decision Boundary Summary */}
-          <div className="pt-2 border-t border-zinc-800/80 text-[10px] text-zinc-400 space-y-1">
+          <div className="pt-2 border-t border-[var(--border-subtle)] text-[10px] text-[var(--text-dim)] space-y-1">
             <div className="flex justify-between">
               <span>Standard Zero Crossing (SZC):</span>
-              <span className="text-zinc-200 font-bold">τ = 30 µs (Ideal Ratio ≈ {BOYCE_2006_RATIO_BOUNDS.szc.toFixed(4)})</span>
+              <span className="text-[var(--text-primary)] font-bold">Ï„ = 30 Âµs (Ideal Ratio â‰ˆ {BOYCE_2006_RATIO_BOUNDS.szc.toFixed(4)})</span>
             </div>
             <div className="flex justify-between">
               <span>Wrong-Cycle Excursion Window:</span>
-              <span className="text-zinc-200 font-bold">
-                [{BOYCE_2006_RATIO_BOUNDS.lower.toFixed(4)}, {BOYCE_2006_RATIO_BOUNDS.upper.toFixed(4)}] (±5 µs)
+              <span className="text-[var(--text-primary)] font-bold">
+                [{BOYCE_2006_RATIO_BOUNDS.lower.toFixed(4)}, {BOYCE_2006_RATIO_BOUNDS.upper.toFixed(4)}] (Â±5 Âµs)
               </span>
             </div>
           </div>
@@ -339,17 +339,18 @@ export default function CycleSelectionPanel() {
       </div>
 
       {/* Sourced Quoted Passage Callout */}
-      <div className="bg-zinc-950/80 border border-zinc-800 rounded-lg p-3 text-[11px] font-mono text-zinc-400 space-y-1.5">
-        <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
+      <div className="bg-[var(--bg-canvas)]/80 border border-[var(--border-subtle)] rounded-lg p-3 text-[11px] font-mono text-[var(--text-dim)] space-y-1.5">
+        <div className="flex items-center gap-1.5 text-[var(--accent-eloran)] font-bold">
           <Info size={13} /> Sourced Excerpt: Boyce, Lo, Powell, & Enge (ILA 2006, Section II-D)
         </div>
-        <blockquote className="border-l-2 border-cyan-500/50 pl-2.5 italic text-zinc-300">
-          "An offset in the time estimate of 5 µs would result in a wrong cycle selection, therefore, we can set bounds on Ratio(30) to lie between Ratio(25) and Ratio(35) in order to obtain the correct cycle. Therefore, a wrong cycle selection will occur if Ratio(30) ≤ Ratio(25) or Ratio(30) ≥ Ratio(35)."
+        <blockquote className="border-l-2 pl-2.5 italic text-[var(--text-secondary)]" style={{ borderColor: 'var(--accent-eloran-border)' }}>
+          "An offset in the time estimate of 5 Âµs would result in a wrong cycle selection, therefore, we can set bounds on Ratio(30) to lie between Ratio(25) and Ratio(35) in order to obtain the correct cycle. Therefore, a wrong cycle selection will occur if Ratio(30) â‰¤ Ratio(25) or Ratio(30) â‰¥ Ratio(35)."
         </blockquote>
-        <p className="text-[10px] text-zinc-500">
-          Historical Austron ECD variance: σ_ECD_Old = 42 / √(N · SNR) µs (Eq. 5), modern Peterson estimate: σ_ECD_New = 28 / √(N · SNR) µs (Eq. 6).
+        <p className="text-[10px] text-[var(--text-muted)]">
+          Historical Austron ECD variance: Ïƒ_ECD_Old = 42 / âˆš(N Â· SNR) Âµs (Eq. 5), modern Peterson estimate: Ïƒ_ECD_New = 28 / âˆš(N Â· SNR) Âµs (Eq. 6).
         </p>
       </div>
     </div>
   );
 }
+

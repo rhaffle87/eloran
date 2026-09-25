@@ -5,10 +5,8 @@ import { synthesizeReceiverWaveform } from '../../lib/pulse.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
 
-// Resolved at render time from CSS vars for SVG (SVG doesn't support CSS vars in stroke)
-function getCssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
+
+
 
 export default function PulseViewer() {
   const {

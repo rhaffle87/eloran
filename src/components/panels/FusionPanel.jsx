@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ShieldCheck, AlertTriangle, Radio, Navigation, Compass } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import Slider from '../ui/Slider.jsx';
@@ -47,7 +47,7 @@ export default function FusionPanel() {
           >
             {receivers.map((r) => (
               <option key={r.label} value={r.label}>
-                {r.label} ({r.lat.toFixed(4)}°, {r.lng.toFixed(4)}°)
+                {r.label} ({r.lat.toFixed(4)}Â°, {r.lng.toFixed(4)}Â°)
               </option>
             ))}
           </select>
@@ -115,17 +115,17 @@ export default function FusionPanel() {
         {fix?.lat !== undefined && (
           <div className="text-[11px] space-y-0.5 pt-1" style={{ color: 'var(--text-muted)' }}>
             <div>
-              Estimated Coords: <span style={{ color: 'var(--text-primary)' }}>{fix.lat.toFixed(5)}°, {fix.lng.toFixed(5)}°</span>
+              Estimated Coords: <span style={{ color: 'var(--text-primary)' }}>{fix.lat.toFixed(5)}Â°, {fix.lng.toFixed(5)}Â°</span>
             </div>
             {rx && (
               <div>
-                Ground Truth: <span style={{ color: 'var(--text-secondary)' }}>{rx.lat.toFixed(5)}°, {rx.lng.toFixed(5)}°</span>
+                Ground Truth: <span style={{ color: 'var(--text-secondary)' }}>{rx.lat.toFixed(5)}Â°, {rx.lng.toFixed(5)}Â°</span>
               </div>
             )}
             {fix.toaNoiseStdDevMeters !== undefined && (
               <div className="flex justify-between items-center pt-1 text-[10px]">
-                <span className="text-zinc-500">TOA Measurement Noise σ_i:</span>
-                <span className="text-cyan-300 font-bold">
+                <span className="text-[var(--text-muted)]">TOA Measurement Noise Ïƒ_i:</span>
+                <span className="text-[var(--accent-eloran)] font-bold">
                   {fix.toaNoiseStdDevMeters.toFixed(2)} m ({(fix.toaNoiseStdDevMeters / 0.299792).toFixed(1)} ns)
                 </span>
               </div>
@@ -134,29 +134,29 @@ export default function FusionPanel() {
         )}
 
         {/* Active Models Provenance Indicators */}
-        <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap gap-1.5 text-[9px]">
-          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="pt-2 border-t border-[var(--border-subtle)] flex flex-wrap gap-1.5 text-[9px]">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
             Model: PF Refraction (SOURCED)
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
             Model: TOA Noise (SOURCED)
           </span>
           {settings.asfModelMode === 'millington' ? (
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
               Model: Millington ASF (SOURCED/UNVERIFIED)
             </span>
           ) : (
-            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-amber-500/20">
               Model: AST ASF (UNVERIFIED)
             </span>
           )}
           {settings.enableSecondaryFactor && (
-            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-amber-500/20">
               Model: SF Seawater (UNVERIFIED)
             </span>
           )}
           {settings.enableCycleSlips && (
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
               Model: Boyce Cycle Slip (SOURCED)
             </span>
           )}
@@ -208,3 +208,4 @@ export default function FusionPanel() {
     </div>
   );
 }
+

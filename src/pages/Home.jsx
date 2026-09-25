@@ -145,9 +145,9 @@ export default function Home() {
 
         {/* Grid overlay */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-30"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'linear-gradient(to right, #1e2a33 1px, transparent 1px), linear-gradient(to bottom, #1e2a33 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px)',
             backgroundSize: '3rem 3rem',
             maskImage: 'radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)',
           }}
@@ -179,7 +179,7 @@ export default function Home() {
             <Link
               to="/eloran"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-mono font-bold text-sm transition-all shadow-[0_0_24px_var(--glow-eloran)] hover:shadow-[0_0_36px_var(--glow-eloran)]"
-              style={{ background: 'var(--color-eloran)', color: '#080b0e' }}
+              style={{ background: 'var(--color-eloran)', color: 'var(--btn-eloran-text)' }}
             >
               <Compass size={17} aria-hidden="true" /> eLoran Simulator <ArrowRight size={15} aria-hidden="true" />
             </Link>

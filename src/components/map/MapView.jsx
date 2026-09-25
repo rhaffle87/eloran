@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSimulationStore } from '../../state/simulationStore.js';
+import { useThemeStore } from '../../state/themeStore.js';
 import { haversineDistance, destinationPoint, initialBearing, isValidLngLat } from '../../lib/geodesy.js';
 import { computeGDOPAtPoint } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
@@ -16,8 +17,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const mapRef = useRef(null);
   const markersRef = useRef({});
   const estMarkerRef = useRef({});
+  const radarCanvasRef = useRef(null);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
+
+  const effectiveTheme = useThemeStore((s) => s.effectiveTheme);
 
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
   const [activeTileProvider, setActiveTileProvider] = useState(() => {
@@ -119,7 +123,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     try {
       mapInstance = new maplibregl.Map({
         container: mapContainer.current,
-        style: getMapLibreStyle(activeTileProvider),
+        style: getMapLibreStyle(activeTileProvider, effectiveTheme),
         center: initialCenterRef.current || [106.816666, -6.200000],
         zoom: initialZoomRef.current || 8,
         attributionControl: false,
@@ -217,12 +221,26 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       mapRef.current = mapInstance;
+      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
+        window.__maplibreInstance = mapInstance;
+      }
     } catch (err) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
     return () => {
       setIsStyleLoaded(false);
+      if (typeof window !== 'undefined') {
+        delete window.__maplibreInstance;
+      }
+      Object.values(markersRef.current).forEach((m) => {
+        try { m.remove(); } catch { /* ignore */ }
+      });
+      markersRef.current = {};
+      Object.values(estMarkerRef.current).forEach((m) => {
+        try { m.remove(); } catch { /* ignore */ }
+      });
+      estMarkerRef.current = {};
       if (mapRef.current) {
         try {
           mapRef.current.remove();
@@ -234,6 +252,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Dynamic theme switching for OpenFreeMap and Offline Radar basemaps
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (activeTileProvider === 'openfreemap-dark' || activeTileProvider === 'openfreemap' || activeTileProvider === 'offline-radar') {
+      setIsStyleLoaded(false);
+      try {
+        map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme));
+      } catch (err) {
+        console.warn('Error updating basemap style for theme change:', err);
+      }
+    }
+  }, [effectiveTheme, activeTileProvider]);
 
   // Update map view when preset changes
   useEffect(() => {
@@ -271,17 +303,27 @@ export default function MapView({ onMapClick, isELoran = false }) {
         return;
       }
 
-      if (!markersRef.current[station.label]) {
+      if (!markersRef.current[station.label] || markersRef.current[station.label]._map !== map) {
+        if (markersRef.current[station.label]) {
+          try { markersRef.current[station.label].remove(); } catch { /* ignore */ }
+        }
+        const size = station.type === 'master' ? 22 : 18;
         const el = document.createElement('div');
         el.className = `station-marker marker-${station.type}`;
-        el.style.display = 'flex';
-        el.style.flexDirection = 'column';
-        el.style.alignItems = 'center';
+        el.dataset.label = station.label;
+        el.dataset.lng = String(station.lng);
+        el.dataset.lat = String(station.lat);
+        el.dataset.type = station.type;
+        el.style.position = 'absolute';
+        el.style.top = '0';
+        el.style.left = '0';
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
         el.style.cursor = 'grab';
 
         const dot = document.createElement('div');
-        dot.style.width = station.type === 'master' ? '22px' : '18px';
-        dot.style.height = station.type === 'master' ? '22px' : '18px';
+        dot.style.width = `${size}px`;
+        dot.style.height = `${size}px`;
         dot.style.borderRadius = '50%';
         dot.style.border = '2px solid rgba(255,255,255,0.9)';
         dot.style.boxShadow = '0 0 12px rgba(0,0,0,0.8)';
@@ -298,21 +340,26 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
         const tag = document.createElement('div');
         tag.innerText = station.label;
+        tag.style.position = 'absolute';
+        tag.style.top = '100%';
+        tag.style.left = '50%';
+        tag.style.transform = 'translateX(-50%)';
+        tag.style.marginTop = '4px';
         tag.style.fontSize = '10px';
         tag.style.fontWeight = '700';
         tag.style.color = '#f4f4f5';
         tag.style.background = 'rgba(24, 24, 27, 0.85)';
         tag.style.padding = '1px 5px';
         tag.style.borderRadius = '4px';
-        tag.style.marginTop = '3px';
         tag.style.whiteSpace = 'nowrap';
         tag.style.border = '1px solid rgba(63, 63, 70, 0.6)';
         tag.style.fontFamily = 'monospace';
+        tag.style.pointerEvents = 'none';
 
         el.appendChild(dot);
         el.appendChild(tag);
 
-        const marker = new maplibregl.Marker({ element: el, draggable: true })
+        const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'center' })
           .setLngLat([station.lng, station.lat])
           .addTo(map);
 
@@ -327,11 +374,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
           if (mapMode === 'pan' && isValidLngLat(station.lng, station.lat)) {
             const popupContent = `
               <div class="space-y-1">
-                <div class="font-bold text-cyan-400 text-xs">${station.label} (${station.type.toUpperCase()})</div>
-                <div class="text-[11px] text-zinc-300">Lat: ${station.lat.toFixed(5)}°</div>
-                <div class="text-[11px] text-zinc-300">Lng: ${station.lng.toFixed(5)}°</div>
-                ${station.txDbm ? `<div class="text-[11px] text-zinc-400">Power: ${station.txDbm} dBm</div>` : ''}
-                ${station.clock?.type ? `<div class="text-[11px] text-zinc-400">Clock: ${station.clock.type}</div>` : ''}
+                <div style="font-family:monospace;font-weight:700;font-size:12px;color:var(--accent-eloran)">${station.label} (${station.type.toUpperCase()})</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lat: ${station.lat.toFixed(5)}°</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lng: ${station.lng.toFixed(5)}°</div>
+                ${station.txDbm ? `<div style="font-size:11px;color:var(--text-muted)">Power: ${station.txDbm} dBm</div>` : ''}
+                ${station.clock?.type ? `<div style="font-size:11px;color:var(--text-muted)">Clock: ${station.clock.type}</div>` : ''}
               </div>
             `;
             new maplibregl.Popup({ offset: 15 }).setLngLat([station.lng, station.lat]).setHTML(popupContent).addTo(map);
@@ -341,6 +388,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
         markersRef.current[station.label] = marker;
       } else {
         markersRef.current[station.label].setLngLat([station.lng, station.lat]);
+        const existingEl = markersRef.current[station.label].getElement();
+        if (existingEl) {
+          existingEl.dataset.lng = String(station.lng);
+          existingEl.dataset.lat = String(station.lat);
+        }
       }
     });
 
@@ -351,7 +403,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         delete markersRef.current[label];
       }
     });
-  }, [masters, slaves, receivers, mapMode, updateStation, evaluateReceivers]);
+  }, [masters, slaves, receivers, mapMode, isStyleLoaded, updateStation, evaluateReceivers]);
 
   // Synchronize Estimated Position Fix Markers
   useEffect(() => {
@@ -363,7 +415,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
       const hasValidFix = fix && isValidLngLat(fix.lng, fix.lat) && fix.converged !== false && !fix.noSolution;
 
       if (hasValidFix) {
-        if (!estMarkerRef.current[rx.label]) {
+        if (!estMarkerRef.current[rx.label] || estMarkerRef.current[rx.label]._map !== map) {
+          if (estMarkerRef.current[rx.label]) {
+            try { estMarkerRef.current[rx.label].remove(); } catch { /* ignore */ }
+          }
           const el = document.createElement('div');
           el.className = 'estimated-fix-marker';
           el.style.width = '14px';
@@ -392,7 +447,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         }
       }
     });
-  }, [receivers, receiverFixes]);
+  }, [receivers, receiverFixes, isStyleLoaded]);
 
 
   // Safe removal helper for MapLibre layers and sources
@@ -451,6 +506,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       const geojson = { type: 'FeatureCollection', features };
+      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
+        window.__baselineGeoJson = geojson;
+      }
 
       safeRemoveLayerAndSource(map, layerId, sourceId);
 
@@ -460,10 +518,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
         type: 'line',
         source: sourceId,
         paint: {
-          'line-color': '#71717a',
-          'line-width': 1.5,
-          'line-opacity': 0.65,
-          'line-dasharray': [3, 2],
+          'line-color': '#06b6d4',
+          'line-width': 1.8,
+          'line-opacity': 0.85,
+          'line-dasharray': [4, 3],
         },
       });
     } catch (err) {
@@ -471,6 +529,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
 
     return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__baselineGeoJson;
+      }
       safeRemoveLayerAndSource(map, layerId, sourceId);
     };
   }, [masters, slaves, baselinesVisible, isStyleLoaded, safeRemoveLayerAndSource]);
@@ -554,15 +615,210 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
   }, [contours, lopsVisible, isELoran, isStyleLoaded, safeRemoveLayerAndSource]);
 
+  // High-performance radar canvas fallback drawing
+  const drawRadar = useCallback(() => {
+    const canvas = radarCanvasRef.current;
+    const map = mapRef.current;
+    const container = mapContainer.current;
+    if (!canvas || !map || !container || activeTileProvider !== 'offline-radar') return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = container.clientWidth || Math.round(canvas.getBoundingClientRect().width);
+    const h = container.clientHeight || Math.round(canvas.getBoundingClientRect().height);
+    if (w <= 0 || h <= 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const isDark = effectiveTheme === 'dark';
+    const bgColor = isDark ? '#09090b' : '#f8fafc';
+    const ringColor = isDark ? 'rgba(6, 182, 212, 0.32)' : 'rgba(14, 116, 144, 0.30)';
+    const ringMajorColor = isDark ? 'rgba(6, 182, 212, 0.70)' : 'rgba(14, 116, 144, 0.65)';
+    const radialColor = isDark ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 118, 110, 0.25)';
+    const textColor = isDark ? '#38bdf8' : '#0369a1';
+    const textMuted = isDark ? '#71717a' : '#64748b';
+    const graticuleColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+
+    // Fill background
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, w, h);
+
+    const centerLngLat = map.getCenter();
+    const centerScreen = map.project(centerLngLat);
+    const cx = centerScreen.x;
+    const cy = centerScreen.y;
+
+    // 1. Geographic graticule (lat/lng coordinates)
+    const bounds = map.getBounds();
+    const west = bounds.getWest();
+    const east = bounds.getEast();
+    const north = bounds.getNorth();
+    const south = bounds.getSouth();
+
+    const zoom = map.getZoom();
+    let step = 1.0;
+    if (zoom >= 11) step = 0.05;
+    else if (zoom >= 9) step = 0.1;
+    else if (zoom >= 7) step = 0.25;
+    else if (zoom >= 5) step = 0.5;
+    else if (zoom >= 3) step = 1.0;
+    else step = 2.0;
+
+    ctx.strokeStyle = graticuleColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+
+    const startLng = Math.floor(west / step) * step;
+    for (let lng = startLng; lng <= east; lng += step) {
+      const p1 = map.project([lng, north]);
+      const p2 = map.project([lng, south]);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+
+      ctx.fillStyle = textMuted;
+      ctx.font = '9px monospace';
+      ctx.fillText(`${lng.toFixed(2)}°`, p1.x + 4, 14);
+    }
+
+    const startLat = Math.floor(south / step) * step;
+    for (let lat = startLat; lat <= north; lat += step) {
+      const p1 = map.project([west, lat]);
+      const p2 = map.project([east, lat]);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+
+      ctx.fillStyle = textMuted;
+      ctx.font = '9px monospace';
+      ctx.fillText(`${lat.toFixed(2)}°`, 6, p1.y - 4);
+    }
+
+    ctx.setLineDash([]);
+
+    // 2. Concentric Range Rings centered on screen/map center
+    const rangeNM = [2, 5, 10, 20, 40, 80, 160, 320, 640];
+    const maxRadius = Math.hypot(w, h);
+
+    for (let i = 0; i < rangeNM.length; i++) {
+      const nm = rangeNM[i];
+      const km = nm * 1.852;
+      const eastPoint = destinationPoint(centerLngLat, km * 1000, 90);
+      const eastScreen = map.project([eastPoint.lng, eastPoint.lat]);
+      const radiusPx = Math.abs(eastScreen.x - cx);
+
+      if (radiusPx < 25 || radiusPx > maxRadius) continue;
+
+      const isMajor = (i % 2 === 0);
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusPx, 0, Math.PI * 2);
+      ctx.strokeStyle = isMajor ? ringMajorColor : ringColor;
+      ctx.lineWidth = isMajor ? 1.5 : 1;
+      ctx.stroke();
+
+      ctx.fillStyle = textColor;
+      ctx.font = '10px monospace';
+      ctx.fillText(`${nm} NM (${km.toFixed(0)} km)`, cx + radiusPx + 4, cy - 3);
+    }
+
+    // 3. Radial Bearing Lines (every 30 degrees)
+    const bearings = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+    const bearingLabels = {
+      0: '000° N', 30: '030°', 60: '060°', 90: '090° E',
+      120: '120°', 150: '150°', 180: '180° S', 210: '210°',
+      240: '240°', 270: '270° W', 300: '300°', 330: '330°',
+    };
+
+    const lineLen = Math.max(w, h);
+    for (const b of bearings) {
+      const rad = ((b - 90) * Math.PI) / 180;
+      const x2 = cx + lineLen * Math.cos(rad);
+      const y2 = cy + lineLen * Math.sin(rad);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = (b % 90 === 0) ? ringMajorColor : radialColor;
+      ctx.lineWidth = (b % 90 === 0) ? 1.2 : 0.8;
+      ctx.stroke();
+
+      const labelRadius = Math.min(w, h) * 0.42;
+      if (labelRadius > 50) {
+        const lx = cx + labelRadius * Math.cos(rad);
+        const ly = cy + labelRadius * Math.sin(rad);
+        ctx.fillStyle = (b % 90 === 0) ? textColor : textMuted;
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(bearingLabels[b], lx, ly);
+      }
+    }
+
+    // 4. Center Reticle Crosshairs
+    ctx.strokeStyle = isDark ? '#22d3ee' : '#0284c7';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 16, cy);
+    ctx.lineTo(cx + 16, cy);
+    ctx.moveTo(cx, cy - 16);
+    ctx.lineTo(cx, cy + 16);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 5. Offline Radar Status Watermark
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillStyle = isDark ? 'rgba(34, 211, 238, 0.7)' : 'rgba(2, 132, 199, 0.8)';
+    ctx.fillText('RADAR 2D VECTOR BACKDROP · OFFLINE STANDBY', 14, h - 14);
+
+    ctx.restore();
+  }, [activeTileProvider, effectiveTheme]);
+
+  // Redraw radar canvas on map events and provider switch
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || activeTileProvider !== 'offline-radar') return;
+
+    drawRadar();
+    map.on('move', drawRadar);
+    map.on('resize', drawRadar);
+
+    return () => {
+      try {
+        map.off('move', drawRadar);
+        map.off('resize', drawRadar);
+      } catch {
+        // ignore
+      }
+    };
+  }, [activeTileProvider, drawRadar]);
+
   // Switch basemap provider safely
   const handleSwitchProvider = (providerKey) => {
-    const map = mapRef.current;
-    if (!map) return;
     if (providerKey === 'carto-dark' && !CARTO_API_KEY) {
-      setFallbackMessage('CARTO Dark requires VITE_CARTO_API_KEY in environment variables.');
+      setFallbackMessage('CARTO is an optional commercial basemap requiring a VITE_CARTO_API_KEY environment variable. OpenFreeMap and OpenStreetMap are currently active and operational.');
       setShowFallbackNotice(true);
       return;
     }
+    const map = mapRef.current;
+    if (!map) return;
     setActiveTileProvider(providerKey);
     activeTileProviderRef.current = providerKey;
     setIsStyleLoaded(false);
@@ -579,26 +835,42 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
     setShowFallbackNotice(false);
     try {
-      map.setStyle(getMapLibreStyle(providerKey));
+      map.setStyle(getMapLibreStyle(providerKey, effectiveTheme));
     } catch (err) {
       console.warn('Error setting map style:', err);
     }
   };
 
   return (
-    <div className="relative w-full h-full min-h-[500px] bg-zinc-950 overflow-hidden select-none">
+    <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
       <div ref={mapContainer} className="w-full h-full" />
+      <canvas
+        ref={radarCanvasRef}
+        className="absolute inset-0 pointer-events-none w-full h-full"
+        style={{
+          zIndex: 1,
+          display: activeTileProvider === 'offline-radar' ? 'block' : 'none',
+        }}
+      />
 
       {/* Dismissible Fallback Notice */}
       {showFallbackNotice && (
         <div
           data-testid="radar-fallback-notice"
-          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/50 text-amber-300 text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--accent-eloran-border)',
+            color: 'var(--text-primary)',
+            boxShadow: 'var(--shadow-card)',
+          }}
         >
-          <span>{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
+          <div className="w-2 h-2 rounded-full shrink-0 animate-ping" style={{ background: 'var(--accent-eloran)' }} />
+          <span className="leading-snug max-w-md">{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
           <button
             onClick={() => setShowFallbackNotice(false)}
-            className="text-zinc-400 hover:text-zinc-100 font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition leading-none cursor-pointer"
+            className="p-1 rounded-md transition text-xs font-bold shrink-0 cursor-pointer hover:bg-[var(--bg-subtle)]"
+            style={{ color: 'var(--text-muted)' }}
             aria-label="Dismiss notice"
           >
             ✕
@@ -608,22 +880,30 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       {/* Real-time telemetry HUD overlay */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-2 sm:gap-4">
+        <div
+          className="backdrop-blur-md rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-2 sm:gap-4"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
+        >
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400'}`}></span>
-            <span className="text-zinc-400 uppercase tracking-wider text-[10px]">MODE:</span>
-            <span className="font-bold text-cyan-300 uppercase">{mapMode}</span>
+            <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'animate-pulse' : ''}`}
+              style={{ background: isStyleLoaded ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
+            />
+            <span className="uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-dim)' }}>MODE:</span>
+            <span className="font-bold uppercase" style={{ color: 'var(--accent-eloran)' }}>{mapMode}</span>
           </div>
           {cursorPos && (
-            <div className="hidden sm:inline text-zinc-300 text-[11px]">
-              <span className="text-zinc-500 mr-1">POS:</span>
+            <div className="hidden sm:inline text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+              <span className="mr-1" style={{ color: 'var(--text-dim)' }}>POS:</span>
               {cursorPos.lat.toFixed(4)}°, {cursorPos.lng.toFixed(4)}°
             </div>
           )}
           {cursorGdop !== null && (
-            <div className="text-zinc-300 text-[11px]">
-              <span className="text-zinc-500 mr-1">GDOP:</span>
-              <span className={`font-bold ${cursorGdop < 3 ? 'text-emerald-400' : cursorGdop < 8 ? 'text-amber-400' : 'text-red-400'}`}>
+            <div className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+              <span className="mr-1" style={{ color: 'var(--text-dim)' }}>GDOP:</span>
+              <span
+                className="font-bold"
+                style={{ color: cursorGdop < 3 ? 'var(--status-ok)' : cursorGdop < 8 ? 'var(--status-warn)' : 'var(--status-danger)' }}
+              >
                 {cursorGdop}
               </span>
             </div>
@@ -632,62 +912,80 @@ export default function MapView({ onMapClick, isELoran = false }) {
       </div>
 
       {/* Map Tile Switcher & Fallback selector */}
-      <div className="absolute top-16 sm:top-14 left-4 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg">
-        {Object.values(TILE_PROVIDERS).map((p) => (
-          <button
-            key={p.id}
-            onClick={() => handleSwitchProvider(p.id)}
-            className={`px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] ${
-              activeTileProvider === p.id
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            {p.id === 'openfreemap-dark'
-              ? 'OpenFreeMap'
-              : p.id === 'osm-standard'
-              ? 'OSM'
-              : p.id === 'carto-dark'
-              ? (CARTO_API_KEY ? 'CARTO' : 'CARTO*')
-              : 'Radar'}
-          </button>
-        ))}
+      <div
+        className="absolute top-16 sm:top-14 left-4 z-10 backdrop-blur-md rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.92 }}
+      >
+        {Object.values(TILE_PROVIDERS).map((p) => {
+          const isCartoUnset = p.id === 'carto-dark' && !CARTO_API_KEY;
+          return (
+            <button
+              key={p.id}
+              onClick={() => handleSwitchProvider(p.id)}
+              title={
+                isCartoUnset
+                  ? 'CARTO Dark requires VITE_CARTO_API_KEY (optional commercial basemap). Click for setup details.'
+                  : undefined
+              }
+              className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1"
+              style={activeTileProvider === p.id
+                ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+                : isCartoUnset
+                ? { color: 'var(--text-dim)', border: '1px dashed var(--border-subtle)', opacity: 0.75 }
+                : { color: 'var(--text-muted)', border: '1px solid transparent' }
+              }
+            >
+              {p.id === 'openfreemap-dark'
+                ? 'OpenFreeMap'
+                : p.id === 'osm-standard'
+                ? 'OSM'
+                : p.id === 'carto-dark'
+                ? (CARTO_API_KEY ? 'CARTO' : 'CARTO 🔒')
+                : 'Radar'}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Collapsible / Position-safe Station Symbols Legend */}
-      <div className="absolute bottom-8 sm:bottom-10 left-4 z-10 font-mono text-xs">
+      {/* Collapsible Station Symbols Legend */}
+      <div className="absolute bottom-12 sm:bottom-8 left-4 z-10 font-mono text-xs">
         {showLegend ? (
-          <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in">
-            <div className="flex items-center justify-between gap-3 text-[10px] text-zinc-400 uppercase font-bold tracking-wider mb-1">
+          <div
+            className="backdrop-blur-md rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between gap-3 text-[10px] uppercase font-bold tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>
               <span>Station Symbols</span>
               <button
                 onClick={() => setShowLegend(false)}
-                className="text-zinc-500 hover:text-zinc-300 font-bold px-1 rounded cursor-pointer leading-none"
+                className="font-bold px-1 rounded cursor-pointer leading-none"
+                style={{ color: 'var(--text-dim)' }}
                 aria-label="Hide symbols legend"
               >
                 ✕
               </button>
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white shrink-0"></span> Master (M)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--accent-eloran)' }} /> Master (M)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border border-white shrink-0"></span> Secondary (S)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--accent-loran-c)' }} /> Secondary (S)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white shrink-0"></span> True Receiver (R)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--status-ok)' }} /> True Receiver (R)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full border-2 border-red-500 shrink-0"></span> Estimated PNT Fix
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: 'var(--status-danger)' }} /> Estimated PNT Fix
             </div>
           </div>
         ) : (
           <button
             onClick={() => setShowLegend(true)}
-            className="bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md"
+            className="backdrop-blur-md rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
             aria-label="Show symbols legend"
           >
-            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-eloran)' }} />
             <span>Symbols</span>
           </button>
         )}

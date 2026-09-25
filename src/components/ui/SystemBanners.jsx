@@ -2,26 +2,54 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 
 export function EducationalDisclaimerBanner() {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem('loran_edu_notice_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('loran_edu_notice_dismissed', 'true');
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   if (dismissed) return null;
 
   return (
-    <div className="bg-amber-500/10 border-b border-amber-500/30 text-amber-200 px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30 select-none">
+    <div
+      role="region"
+      aria-label="Educational Disclaimer"
+      className="border-b px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30 select-none"
+      style={{
+        background: 'var(--banner-edu-bg)',
+        borderColor: 'var(--banner-edu-border)',
+        color: 'var(--banner-edu-text)',
+      }}
+    >
       <div className="flex items-center gap-2 max-w-7xl mx-auto flex-1">
-        <ShieldAlert size={14} className="text-amber-400 shrink-0" />
-        <span className="font-semibold text-amber-300">EDUCATIONAL NOTICE:</span>
-        <span className="text-[11px] text-amber-200/90 hidden sm:inline">
+        <ShieldAlert size={14} className="shrink-0" style={{ color: 'var(--banner-edu-title)' }} />
+        <span className="font-semibold" style={{ color: 'var(--banner-edu-title)' }}>EDUCATIONAL NOTICE:</span>
+        <span className="text-[11px] hidden sm:inline" style={{ opacity: 0.9 }}>
           LORAN LAB is a scientific research and educational simulator. Not certified for real maritime navigation or safety-critical PNT operations.
         </span>
-        <span className="text-[11px] text-amber-200/90 sm:hidden">
+        <span className="text-[11px] sm:hidden" style={{ opacity: 0.9 }}>
           Educational simulator. Not for real navigation.
         </span>
       </div>
       <button
-        onClick={() => setDismissed(true)}
-        className="text-amber-400/70 hover:text-amber-200 p-0.5 rounded transition"
+        onClick={handleDismiss}
+        className="p-0.5 rounded transition opacity-80 hover:opacity-100 cursor-pointer"
+        style={{ color: 'var(--banner-edu-title)' }}
         title="Dismiss notice"
+        aria-label="Dismiss educational notice"
       >
         <X size={13} />
       </button>
@@ -74,6 +102,7 @@ export function SystemCapabilityBanner() {
         onClick={() => setDismissed(true)}
         className="text-red-400 hover:text-red-200 p-1 rounded"
         title="Dismiss warning"
+        aria-label="Dismiss warning"
       >
         <X size={14} />
       </button>

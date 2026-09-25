@@ -66,6 +66,9 @@
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
 
+  /* Tactical Grid Lines */
+  --grid-line: rgba(17, 24, 39, 0.05);
+
   /* Legacy variable aliases for zero-break compatibility */
   --surface-base: var(--bg-canvas);
   --surface-layer: var(--bg-subtle);
@@ -133,6 +136,9 @@
   /* Shadows */
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+  /* Tactical Grid Lines */
+  --grid-line: rgba(255, 255, 255, 0.05);
 
   /* Legacy variable aliases */
   --surface-base: var(--bg-canvas);

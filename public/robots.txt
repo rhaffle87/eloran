@@ -1,0 +1,4 @@
+# LORAN LAB robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://eloran.vercel.app/sitemap.xml

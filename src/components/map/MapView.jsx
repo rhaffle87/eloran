@@ -217,12 +217,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       mapRef.current = mapInstance;
+      if (typeof window !== 'undefined') {
+        window.__maplibreInstance = mapInstance;
+      }
     } catch (err) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
     return () => {
       setIsStyleLoaded(false);
+      if (typeof window !== 'undefined') {
+        delete window.__maplibreInstance;
+      }
       if (mapRef.current) {
         try {
           mapRef.current.remove();
@@ -272,16 +278,17 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
 
       if (!markersRef.current[station.label]) {
+        const size = station.type === 'master' ? 22 : 18;
         const el = document.createElement('div');
         el.className = `station-marker marker-${station.type}`;
-        el.style.display = 'flex';
-        el.style.flexDirection = 'column';
-        el.style.alignItems = 'center';
+        el.style.position = 'relative';
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
         el.style.cursor = 'grab';
 
         const dot = document.createElement('div');
-        dot.style.width = station.type === 'master' ? '22px' : '18px';
-        dot.style.height = station.type === 'master' ? '22px' : '18px';
+        dot.style.width = `${size}px`;
+        dot.style.height = `${size}px`;
         dot.style.borderRadius = '50%';
         dot.style.border = '2px solid rgba(255,255,255,0.9)';
         dot.style.boxShadow = '0 0 12px rgba(0,0,0,0.8)';
@@ -298,21 +305,26 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
         const tag = document.createElement('div');
         tag.innerText = station.label;
+        tag.style.position = 'absolute';
+        tag.style.top = '100%';
+        tag.style.left = '50%';
+        tag.style.transform = 'translateX(-50%)';
+        tag.style.marginTop = '4px';
         tag.style.fontSize = '10px';
         tag.style.fontWeight = '700';
         tag.style.color = '#f4f4f5';
         tag.style.background = 'rgba(24, 24, 27, 0.85)';
         tag.style.padding = '1px 5px';
         tag.style.borderRadius = '4px';
-        tag.style.marginTop = '3px';
         tag.style.whiteSpace = 'nowrap';
         tag.style.border = '1px solid rgba(63, 63, 70, 0.6)';
         tag.style.fontFamily = 'monospace';
+        tag.style.pointerEvents = 'none';
 
         el.appendChild(dot);
         el.appendChild(tag);
 
-        const marker = new maplibregl.Marker({ element: el, draggable: true })
+        const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'center' })
           .setLngLat([station.lng, station.lat])
           .addTo(map);
 
@@ -460,10 +472,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
         type: 'line',
         source: sourceId,
         paint: {
-          'line-color': '#71717a',
-          'line-width': 1.5,
-          'line-opacity': 0.65,
-          'line-dasharray': [3, 2],
+          'line-color': '#06b6d4',
+          'line-width': 1.8,
+          'line-opacity': 0.85,
+          'line-dasharray': [4, 3],
         },
       });
     } catch (err) {
@@ -668,7 +680,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       </div>
 
       {/* Collapsible Station Symbols Legend */}
-      <div className="absolute bottom-8 sm:bottom-10 left-4 z-10 font-mono text-xs">
+      <div className="absolute bottom-12 sm:bottom-8 left-4 z-10 font-mono text-xs">
         {showLegend ? (
           <div
             className="backdrop-blur-md rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in"

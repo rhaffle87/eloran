@@ -106,10 +106,8 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
     await expect(cartoBtn).toBeVisible();
     await cartoBtn.click();
 
-    const isCartoKeyConfigured = await page.evaluate(async () => {
-      const m = await import('/src/lib/tiles.js');
-      return Boolean(m.CARTO_API_KEY);
-    });
+    const btnText = (await cartoBtn.textContent()) || '';
+    const isCartoKeyConfigured = !btnText.includes('🔒');
 
     if (!isCartoKeyConfigured) {
       // Unconfigured API key: verify non-blocking guidance banner appears and is dismissible

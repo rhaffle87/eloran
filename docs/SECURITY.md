@@ -5,7 +5,7 @@
 The deployment serves a strict HTTP Content Security Policy configured in `vercel.json` and mirrored in the Vite preview server:
 
 ```http
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://tiles.openfreemap.org https://*.openfreemap.org; img-src 'self' data: blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; connect-src 'self' blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'none'; form-action 'none'; base-uri 'self';
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://tiles.openfreemap.org https://*.openfreemap.org; img-src 'self' data: blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; connect-src 'self' blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'none'; form-action 'none'; base-uri 'self';
 ```
 
 ### Documented Policy Directives & Tradeoffs
@@ -14,7 +14,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 |---|---|---|
 | `script-src 'self'` | Strict | All dynamic evaluation (`eval()`, `Function()`, WASM dynamic compilation) is strictly forbidden. MapLibre GL JS functions with pure JavaScript rendering. |
 | `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` | Pinned + Relaxed | `'unsafe-inline'` is required for MapLibre GL dynamic canvas/DOM styling (markers, popups, scalebars) and React dynamic inline style attributes. Pinned to Google Fonts for external font stylesheets. |
-| `font-src 'self' https://fonts.gstatic.com https://tiles.openfreemap.org https://*.openfreemap.org` | Pinned | Pinned specifically to Google Fonts CDN (`fonts.gstatic.com`) for Space Grotesk/JetBrains Mono fonts, and OpenFreeMap for PBF vector map glyphs/fonts. |
+| `font-src 'self' data: https://fonts.gstatic.com https://tiles.openfreemap.org https://*.openfreemap.org` | Pinned | Pinned to Google Fonts CDN (`fonts.gstatic.com`) for Space Grotesk/JetBrains Mono fonts, OpenFreeMap for PBF vector glyphs, and `data:` for KaTeX mathematical font subsets. |
 | `connect-src` / `img-src` | Pinned | Pinned to OpenFreeMap (`tiles.openfreemap.org`, `*.openfreemap.org`), OpenStreetMap (`tile.openstreetmap.org`, `*.tile.openstreetmap.org`), and Carto (`basemaps.cartocdn.com`, `*.basemaps.cartocdn.com`). Wildcards are scoped to subdomain prefixes only. `api.mapbox.com` is omitted. |
 | `worker-src` / `child-src` | `'self' blob:` | Required for MapLibre background workers (`blob:`) and off-thread Vite Web Workers (`'self' blob:`) computing 2D hyperbolic LOP grids and spatial ASF simulations. |
 | `frame-ancestors 'none'` | Strict | Prevents clickjacking by forbidding embedding in foreign iframes. |

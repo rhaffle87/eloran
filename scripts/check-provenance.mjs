@@ -43,9 +43,12 @@ async function fetchWithRetry(urlStr, redirectCount = 0) {
     const client = parsedUrl.protocol === 'https:' ? https : http;
     const agent = parsedUrl.protocol === 'https:' ? httpsAgent : httpAgent;
 
+    const isCitationApi = parsedUrl.hostname.includes('doi.org') || parsedUrl.hostname.includes('crossref.org');
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) LORAN-LAB-Verifier/1.0',
-      'Accept': 'application/vnd.citationstyles.csl+json, text/html;q=0.8, application/xhtml+xml;q=0.8, application/pdf;q=0.5, */*;q=0.1',
+      'Accept': isCitationApi
+        ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
+        : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
       'Accept-Language': 'en-US,en;q=0.9',
     };
 

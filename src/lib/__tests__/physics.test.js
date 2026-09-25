@@ -27,6 +27,7 @@ import {
   evaluateCarrierMicroseconds,
 } from '../pulse.js';
 import { fusePositions } from '../fusion.js';
+import { TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, FALLBACK_CHAIN, getNextFallbackProvider } from '../tiles.js';
 
 describe('Geodesy and Coordinate Transformations', () => {
   it('computes geodesic distance vs known values (London to Paris ~343 km)', () => {
@@ -419,6 +420,33 @@ describe('Multi-Sensor PNT Fusion (Inverse-Covariance BLUE)', () => {
     expect(demoFused.weightingMethod).toBe('fixed-weights-demo');
     expect(demoFused.weights.eloran).toBeCloseTo(0.6, 2);
     expect(demoFused.weights.gnss).toBeCloseTo(0.4, 2);
+  });
+});
+
+describe('Tile Provider Configuration & Security Checks', () => {
+  it('asserts no provider URL points at basemaps.cartocdn.com without an api_key parameter', () => {
+    expect(Object.keys(TILE_PROVIDERS).length).toBeGreaterThan(0);
+    Object.values(TILE_PROVIDERS).forEach((provider) => {
+      const url = provider.url || provider.styleUrl || '';
+      if (typeof url === 'string' && url.includes('basemaps.cartocdn.com')) {
+        expect(url).toMatch(/[?&]api_key=/);
+      }
+    });
+  });
+
+  it('defaults to a keyless provider without watermark (openfreemap-dark)', () => {
+    expect(DEFAULT_TILE_PROVIDER).toBe('openfreemap-dark');
+    const defaultProvider = TILE_PROVIDERS[DEFAULT_TILE_PROVIDER];
+    expect(defaultProvider).toBeDefined();
+    expect(defaultProvider.type).toBe('vector');
+    expect(defaultProvider.styleUrl).toContain('openfreemap.org');
+  });
+
+  it('enforces progressive fallback chain order and transitions', () => {
+    expect(FALLBACK_CHAIN).toEqual(['openfreemap-dark', 'osm-standard', 'offline-radar']);
+    expect(getNextFallbackProvider('openfreemap-dark')).toBe('osm-standard');
+    expect(getNextFallbackProvider('osm-standard')).toBe('offline-radar');
+    expect(getNextFallbackProvider('offline-radar')).toBe('offline-radar');
   });
 });
 

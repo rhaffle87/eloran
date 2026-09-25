@@ -113,5 +113,6 @@ LORAN LAB incorporates open-source libraries, geospatial projection engines, dev
 - **USCG Loran Signal Specifications**: Transmitted RF pulse envelope parameters are derived from public domain United States Coast Guard specification COMDTINST M16562.4A.
 - **USCG Loran-C User Handbook**: Station coordinates and chain baseline definitions are derived from public domain USCG Loran-C User Handbook (COMDTINST P16562.5, Table B-1).
 - **NGA Publication 117**: Modern North China Sea chain station coordinates are derived from National Geospatial-Intelligence Agency public domain Publication 117 (Radio Navigational Aids, Chapter 6).
-- **OpenStreetMap**: Map data is © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, licensed under the Open Database License (ODbL).
-- **CARTO**: Basemap styling and raster tiles are © [CARTO](https://carto.com/attributions).
+- **OpenFreeMap**: Vector basemap tiles and styles provided by OpenFreeMap (Hyperknot Software Kft.), licensed under open-source terms. Website: [https://openfreemap.org/](https://openfreemap.org/). Free for commercial and non-commercial use with no API keys, no tracking, and no rate limits.
+- **OpenStreetMap**: Map data is © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under the Open Database License (ODbL).
+- **CARTO**: Basemap raster tiles are © [CARTO](https://carto.com/attributions), governed by the [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/). Non-commercial free tier up to 5M requests/month with API key.

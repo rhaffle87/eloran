@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { haversineDistance, destinationPoint, initialBearing } from '../../lib/geodesy.js';
 import { computeGDOPAtPoint } from '../../lib/gdop.js';
-import { getMapLibreStyle, TILE_PROVIDERS } from '../../lib/tiles.js';
+import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 
 function isMapStyleReady(map) {
   return Boolean(map && map.style && typeof map.isStyleLoaded === 'function' && map.isStyleLoaded());
@@ -27,34 +27,61 @@ export default function MapView({ onMapClick, isELoran = false }) {
     } catch {
       // ignore
     }
-    return 'carto-dark';
+    return DEFAULT_TILE_PROVIDER;
   });
   const [showFallbackNotice, setShowFallbackNotice] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState('');
+  const [showLegend, setShowLegend] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
 
   const tileErrorsRef = useRef([]);
   const hasTileLoadedRef = useRef(false);
   const activeTileProviderRef = useRef(activeTileProvider);
   activeTileProviderRef.current = activeTileProvider;
 
-  const triggerRadarFallback = useCallback(() => {
-    if (activeTileProviderRef.current === 'offline-radar') return;
-    console.warn('LORAN LAB: Basemap tiles failed to load (>= 8 errors in 5s). Auto-switched to offline Radar Canvas fallback.');
-    try {
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        sessionStorage.setItem('loran_offline_radar', 'true');
+  const triggerNextFallback = useCallback(() => {
+    const current = activeTileProviderRef.current;
+    if (current === 'offline-radar') return;
+
+    if (current === 'openfreemap-dark') {
+      console.warn('LORAN LAB: OpenFreeMap vector service unreachable. Auto-switched to OpenStreetMap raster fallback.');
+      setActiveTileProvider('osm-standard');
+      activeTileProviderRef.current = 'osm-standard';
+      hasTileLoadedRef.current = false;
+      tileErrorsRef.current = [];
+      setFallbackMessage('OpenFreeMap unavailable. Switched to OpenStreetMap fallback.');
+      setShowFallbackNotice(true);
+      const map = mapRef.current;
+      if (map) {
+        setIsStyleLoaded(false);
+        try {
+          map.setStyle(getMapLibreStyle('osm-standard'));
+        } catch (err) {
+          console.warn('Error applying OSM fallback style:', err);
+        }
       }
-    } catch {
-      // ignore
-    }
-    setActiveTileProvider('offline-radar');
-    setShowFallbackNotice(true);
-    const map = mapRef.current;
-    if (map) {
-      setIsStyleLoaded(false);
+    } else {
+      console.warn('LORAN LAB: Basemap network unreachable. Auto-switched to offline Radar Canvas fallback.');
       try {
-        map.setStyle(getMapLibreStyle('offline-radar'));
-      } catch (err) {
-        console.warn('Error applying offline radar style:', err);
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          sessionStorage.setItem('loran_offline_radar', 'true');
+        }
+      } catch {
+        // ignore
+      }
+      setActiveTileProvider('offline-radar');
+      activeTileProviderRef.current = 'offline-radar';
+      hasTileLoadedRef.current = false;
+      tileErrorsRef.current = [];
+      setFallbackMessage('Basemap tiles unavailable. Switched to offline Radar Canvas.');
+      setShowFallbackNotice(true);
+      const map = mapRef.current;
+      if (map) {
+        setIsStyleLoaded(false);
+        try {
+          map.setStyle(getMapLibreStyle('offline-radar'));
+        } catch (err) {
+          console.warn('Error applying offline radar style:', err);
+        }
       }
     }
   }, []);
@@ -94,10 +121,12 @@ export default function MapView({ onMapClick, isELoran = false }) {
         style: getMapLibreStyle(activeTileProvider),
         center: initialCenterRef.current || [106.816666, -6.200000],
         zoom: initialZoomRef.current || 8,
+        attributionControl: false,
       });
 
-      mapInstance.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
+      mapInstance.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
       mapInstance.addControl(new maplibregl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-left');
+      mapInstance.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
       const handleStyleReady = () => {
         if (isMapStyleReady(mapInstance)) {
@@ -116,9 +145,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
       mapInstance.on('error', (e) => {
         const isTileError = Boolean(
           e && (
-            (e.error && (e.error.status || (e.error.message && /tile|fetch|failed|blocked|csp/i.test(e.error.message)))) ||
+            (e.error && (e.error.status || (e.error.message && /tile|fetch|failed|blocked|csp|network/i.test(e.error.message)))) ||
             e.tile ||
-            e.sourceId === 'basemap-tiles'
+            e.sourceId === 'basemap-tiles' ||
+            e.sourceId === 'openmaptiles' ||
+            e.sourceId === 'ne2_shaded'
           )
         );
 
@@ -132,14 +163,21 @@ export default function MapView({ onMapClick, isELoran = false }) {
             console.warn('LORAN LAB: Basemap tile loading issues detected. Monitoring for offline fallback.');
           }
 
-          if (tileErrorsRef.current.length >= 8 && !hasTileLoadedRef.current) {
-            triggerRadarFallback();
+          const isFatalStyleFailure = Boolean(
+            e?.error && /failed|abort|fetch|network|404|500/i.test(e.error.message || '')
+          );
+
+          if ((tileErrorsRef.current.length >= 3 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
+            triggerNextFallback();
           }
         }
       });
 
       const handleTileLoaded = (e) => {
-        if (e.sourceId === 'basemap-tiles' && (e.tile?.state === 'loaded' || e.isSourceLoaded)) {
+        if (
+          (e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) ||
+          (e.isSourceLoaded && e.sourceId && !e.sourceId.startsWith('loran-'))
+        ) {
           hasTileLoadedRef.current = true;
         }
       };
@@ -494,7 +532,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const handleSwitchProvider = (providerKey) => {
     const map = mapRef.current;
     if (!map) return;
+    if (providerKey === 'carto-dark' && !CARTO_API_KEY) {
+      setFallbackMessage('CARTO Dark requires VITE_CARTO_API_KEY in environment variables.');
+      setShowFallbackNotice(true);
+      return;
+    }
     setActiveTileProvider(providerKey);
+    activeTileProviderRef.current = providerKey;
     setIsStyleLoaded(false);
     if (providerKey !== 'offline-radar') {
       try {
@@ -519,13 +563,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
     <div className="relative w-full h-full min-h-[500px] bg-zinc-950 overflow-hidden select-none">
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* Dismissible Offline Radar Fallback Notice */}
+      {/* Dismissible Fallback Notice */}
       {showFallbackNotice && (
         <div
           data-testid="radar-fallback-notice"
           className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/50 text-amber-300 text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
         >
-          <span>Basemap tiles unavailable. Switched to offline Radar Canvas.</span>
+          <span>{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
           <button
             onClick={() => setShowFallbackNotice(false)}
             className="text-zinc-400 hover:text-zinc-100 font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition leading-none cursor-pointer"
@@ -538,21 +582,21 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       {/* Real-time telemetry HUD overlay */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg px-3 py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400'}`}></span>
             <span className="text-zinc-400 uppercase tracking-wider text-[10px]">MODE:</span>
             <span className="font-bold text-cyan-300 uppercase">{mapMode}</span>
           </div>
           {cursorPos && (
-            <div className="text-zinc-300">
+            <div className="hidden sm:inline text-zinc-300 text-[11px]">
               <span className="text-zinc-500 mr-1">POS:</span>
               {cursorPos.lat.toFixed(4)}°, {cursorPos.lng.toFixed(4)}°
             </div>
           )}
           {cursorGdop !== null && (
-            <div className="text-zinc-300">
-              <span className="text-zinc-500 mr-1">LIVE GDOP:</span>
+            <div className="text-zinc-300 text-[11px]">
+              <span className="text-zinc-500 mr-1">GDOP:</span>
               <span className={`font-bold ${cursorGdop < 3 ? 'text-emerald-400' : cursorGdop < 8 ? 'text-amber-400' : 'text-red-400'}`}>
                 {cursorGdop}
               </span>
@@ -562,37 +606,65 @@ export default function MapView({ onMapClick, isELoran = false }) {
       </div>
 
       {/* Map Tile Switcher & Fallback selector */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-zinc-900/80 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg">
+      <div className="absolute top-16 sm:top-14 left-4 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg">
         {Object.values(TILE_PROVIDERS).map((p) => (
           <button
             key={p.id}
             onClick={() => handleSwitchProvider(p.id)}
-            className={`px-2.5 py-0.5 rounded-full transition-colors ${
+            className={`px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] ${
               activeTileProvider === p.id
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            {p.id === 'carto-dark' ? 'Carto Dark' : p.id === 'osm-standard' ? 'OSM' : 'Radar Canvas'}
+            {p.id === 'openfreemap-dark'
+              ? 'OpenFreeMap'
+              : p.id === 'osm-standard'
+              ? 'OSM'
+              : p.id === 'carto-dark'
+              ? (CARTO_API_KEY ? 'CARTO' : 'CARTO*')
+              : 'Radar'}
           </button>
         ))}
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-6 right-4 z-10 bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg p-3 text-xs font-mono shadow-xl space-y-1.5">
-        <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider mb-1">Station Symbols</div>
-        <div className="flex items-center gap-2 text-zinc-300">
-          <span className="w-3 h-3 rounded-full bg-cyan-400 border border-white shrink-0"></span> Master (M)
-        </div>
-        <div className="flex items-center gap-2 text-zinc-300">
-          <span className="w-3 h-3 rounded-full bg-amber-500 border border-white shrink-0"></span> Secondary (S)
-        </div>
-        <div className="flex items-center gap-2 text-zinc-300">
-          <span className="w-3 h-3 rounded-full bg-emerald-500 border border-white shrink-0"></span> True Receiver (R)
-        </div>
-        <div className="flex items-center gap-2 text-zinc-300">
-          <span className="w-3 h-3 rounded-full border-2 border-red-500 shrink-0"></span> Estimated PNT Fix
-        </div>
+      {/* Collapsible / Position-safe Station Symbols Legend */}
+      <div className="absolute bottom-8 sm:bottom-10 left-4 z-10 font-mono text-xs">
+        {showLegend ? (
+          <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in">
+            <div className="flex items-center justify-between gap-3 text-[10px] text-zinc-400 uppercase font-bold tracking-wider mb-1">
+              <span>Station Symbols</span>
+              <button
+                onClick={() => setShowLegend(false)}
+                className="text-zinc-500 hover:text-zinc-300 font-bold px-1 rounded cursor-pointer leading-none"
+                aria-label="Hide symbols legend"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white shrink-0"></span> Master (M)
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border border-white shrink-0"></span> Secondary (S)
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white shrink-0"></span> True Receiver (R)
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <span className="w-2.5 h-2.5 rounded-full border-2 border-red-500 shrink-0"></span> Estimated PNT Fix
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowLegend(true)}
+            className="bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md"
+            aria-label="Show symbols legend"
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>Symbols</span>
+          </button>
+        )}
       </div>
     </div>
   );

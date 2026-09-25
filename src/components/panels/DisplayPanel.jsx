@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
@@ -178,7 +178,7 @@ export default function DisplayPanel({ isELoran = false }) {
       <button
         onClick={handleComputeContours}
         disabled={isComputing}
-        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 text-black font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition"
+        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-black font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg  transition"
       >
         <Activity size={15} className={isComputing ? 'animate-spin' : ''} />
         {isComputing ? 'Computing Grid Off-Thread...' : 'Generate LOP Contours'}
@@ -186,57 +186,57 @@ export default function DisplayPanel({ isELoran = false }) {
 
       {/* Real-Time Positioning Fix Telemetry Card */}
       {activeFix && (
-        <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg p-3 text-xs font-mono space-y-2">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
-            <span className="text-zinc-400 font-bold uppercase text-[11px] flex items-center gap-1.5">
-              <Cpu size={13} className="text-cyan-400" />
+        <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-lg p-3 text-xs font-mono space-y-2">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-1.5">
+            <span className="text-[var(--text-dim)] font-bold uppercase text-[11px] flex items-center gap-1.5">
+              <Cpu size={13} className="text-[var(--accent-eloran)]" />
               PNT Solution ({activeFix.solverMode?.toUpperCase() || 'PNT'})
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
               {activeFix.converged ? 'CONVERGED' : 'ITERATING'}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div>
-              <span className="text-zinc-500 block text-[10px]">FIX POSITION</span>
-              <span className="text-zinc-200">
-                {activeFix.lat?.toFixed(5)}°, {activeFix.lng?.toFixed(5)}°
+              <span className="text-[var(--text-muted)] block text-[10px]">FIX POSITION</span>
+              <span className="text-[var(--text-primary)]">
+                {activeFix.lat?.toFixed(5)}┬░, {activeFix.lng?.toFixed(5)}┬░
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]">RADIAL ERROR</span>
-              <span className={`font-bold ${activeFix.errorMeters < 20 ? 'text-emerald-400' : activeFix.errorMeters < 100 ? 'text-amber-400' : 'text-red-400'}`}>
+              <span className="text-[var(--text-muted)] block text-[10px]">RADIAL ERROR</span>
+              <span className={`font-bold ${activeFix.errorMeters < 20 ? 'text-[var(--status-ok)]' : activeFix.errorMeters < 100 ? 'text-[var(--accent-loran-c)]' : 'text-[var(--status-danger)]'}`}>
                 {activeFix.errorMeters ? `${activeFix.errorMeters.toFixed(1)} m` : '< 1 m'}
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]">RECEIVER BIAS (b_rx)</span>
-              <span className="text-cyan-300 font-bold">
+              <span className="text-[var(--text-muted)] block text-[10px]">RECEIVER BIAS (b_rx)</span>
+              <span className="text-[var(--accent-eloran)] font-bold">
                 {activeFix.clockBiasNs !== undefined ? `${activeFix.clockBiasNs.toFixed(1)} ns` : '0.0 ns'}
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]" title="Simplified k×σ estimate — NOT a formal integrity bound per RTCM MPS">HPL (simplified 3σ) ⓘ</span>
-              <span className="text-zinc-300">
+              <span className="text-[var(--text-muted)] block text-[10px]" title="Simplified k├ù╧â estimate ΓÇö NOT a formal integrity bound per RTCM MPS">HPL (simplified 3╧â) Γôÿ</span>
+              <span className="text-[var(--text-secondary)]">
                 {activeFix.hplMeters?.toFixed(1) || '0.0'} m
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]">HDOP / TDOP</span>
-              <span className="text-zinc-300">
+              <span className="text-[var(--text-muted)] block text-[10px]">HDOP / TDOP</span>
+              <span className="text-[var(--text-secondary)]">
                 {activeFix.hdop?.toFixed(2) || '1.00'} / {activeFix.tdop?.toFixed(2) || '1.00'}
               </span>
             </div>
             <div>
-              <span className="text-zinc-500 block text-[10px]">RESIDUAL (RMS)</span>
-              <span className="text-zinc-300">
+              <span className="text-[var(--text-muted)] block text-[10px]">RESIDUAL (RMS)</span>
+              <span className="text-[var(--text-secondary)]">
                 {activeFix.residualMeters?.toFixed(2) || '0.00'} m
               </span>
             </div>
-            <div className="col-span-2 pt-1 border-t border-zinc-800/60 flex items-center justify-between text-[10px]">
-              <span className="text-zinc-500">Delay Model:</span>
-              <span className={`font-mono ${settings.enableSecondaryFactor ? 'text-amber-400 font-semibold' : 'text-zinc-400'}`}>
+            <div className="col-span-2 pt-1 border-t border-[var(--border-subtle)]/60 flex items-center justify-between text-[10px]">
+              <span className="text-[var(--text-muted)]">Delay Model:</span>
+              <span className={`font-mono ${settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-semibold' : 'text-[var(--text-dim)]'}`}>
                 {settings.enableSecondaryFactor
                   ? 'PF + SF + ASF (SF active)'
                   : 'Secondary Factor: off (UNVERIFIED model)'}
@@ -247,8 +247,8 @@ export default function DisplayPanel({ isELoran = false }) {
       )}
 
       {/* PNT Solver Algorithm Selection */}
-      <div className="space-y-2 pt-2 border-t border-zinc-800/80">
-        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+      <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
           PNT Solver Architecture
         </label>
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
@@ -256,12 +256,12 @@ export default function DisplayPanel({ isELoran = false }) {
             onClick={() => updateSettings({ solverMode: 'pseudorange' })}
             className={`p-2 rounded border text-left transition flex flex-col gap-1 ${
               settings.solverMode === 'pseudorange'
-                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
           >
             <span className="font-bold">Pseudorange (2D + Clock Bias)</span>
-            <span className="text-[10px] text-zinc-500 leading-tight">
+            <span className="text-[10px] text-[var(--text-muted)] leading-tight">
               Estimates 2D position (x, y) and receiver clock bias b_rx. Supports multi-chain.
             </span>
           </button>
@@ -270,36 +270,36 @@ export default function DisplayPanel({ isELoran = false }) {
             onClick={() => updateSettings({ solverMode: 'tdoa' })}
             className={`p-2 rounded border text-left transition flex flex-col gap-1 ${
               settings.solverMode === 'tdoa'
-                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
           >
             <span className="font-bold">Hyperbolic TDOA</span>
-            <span className="text-[10px] text-zinc-500 leading-tight">
+            <span className="text-[10px] text-[var(--text-muted)] leading-tight">
               Classic master-differenced pairs. Assumes ideal sync.
             </span>
           </button>
         </div>
       </div>
 
-      {/* Standards & Atmospheric Refraction (Primary Factor η) */}
-      <div className="space-y-2 pt-2 border-t border-zinc-800/80">
-        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
-          Primary Factor Refractive Index (η)
+      {/* Standards & Atmospheric Refraction (Primary Factor ╬╖) */}
+      <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+          Primary Factor Refractive Index (╬╖)
         </label>
         <select
           value={settings.refractiveIndex}
           onChange={(e) => updateSettings({ refractiveIndex: parseFloat(e.target.value) })}
-          className="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-200 font-mono"
+          className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary)] font-mono"
         >
           {Object.values(REFRACTIVE_INDEX_PRESETS).map((p) => (
             <option key={p.id} value={p.value}>
-              {p.name} (η = {p.value})
+              {p.name} (╬╖ = {p.value})
             </option>
           ))}
         </select>
-        <p className="text-[10px] text-zinc-500">
-          Propagation speed v = c / η. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 µs delay over 1000 km.
+        <p className="text-[10px] text-[var(--text-muted)]">
+          Propagation speed v = c / ╬╖. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 ┬╡s delay over 1000 km.
         </p>
 
         <Toggle
@@ -308,24 +308,24 @@ export default function DisplayPanel({ isELoran = false }) {
           checked={settings.enableSecondaryFactor}
           onChange={(checked) => updateSettings({ enableSecondaryFactor: checked })}
         />
-        <div className="text-[10px] font-mono px-2 py-1 rounded bg-zinc-950 border border-zinc-800 flex items-center justify-between">
-          <span className="text-zinc-500">Status:</span>
-          <span className={settings.enableSecondaryFactor ? 'text-amber-400 font-bold' : 'text-zinc-400'}>
+        <div className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between">
+          <span className="text-[var(--text-muted)]">Status:</span>
+          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold' : 'text-[var(--text-dim)]'}>
             {settings.enableSecondaryFactor
-              ? 'Secondary Factor: ON (UNVERIFIED model – discontinuous at 100 sm)'
+              ? 'Secondary Factor: ON (UNVERIFIED model ΓÇô discontinuous at 100 sm)'
               : 'Secondary Factor: off (UNVERIFIED model)'}
           </span>
         </div>
       </div>
 
       {/* Cycle Slip & TOA Noise Model (Boyce 2006 / Rhee 2021) */}
-      <div className="space-y-3 pt-2 border-t border-zinc-800/80 font-mono text-xs">
+      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)] font-mono text-xs">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-zinc-400 uppercase tracking-wider block">
+          <label className="font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
             Cycle Slip & TOA Noise Model
           </label>
           {settings.enableCycleSlips && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] flex items-center gap-1">
               <ShieldAlert size={11} /> Cycle Slip Active
             </span>
           )}
@@ -333,39 +333,39 @@ export default function DisplayPanel({ isELoran = false }) {
 
         {/* Status Pills */}
         <div className="flex flex-wrap gap-2 text-[10px]">
-          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
             Model: Boyce ILA 2006 (SOURCED)
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
             Noise: Rhee et al. 2021 (SOURCED)
           </span>
         </div>
 
         <Toggle
           label="Simulate Carrier Cycle Slips"
-          description="Triggers wrong-cycle selection (±10 µs / ~3 km error) when SNR degrades"
+          description="Triggers wrong-cycle selection (┬▒10 ┬╡s / ~3 km error) when SNR degrades"
           checked={settings.enableCycleSlips}
           onChange={(checked) => updateSettings({ enableCycleSlips: checked })}
         />
 
-        <div className="space-y-2.5 bg-zinc-950 p-3 rounded-xl border border-zinc-800/80">
+        <div className="space-y-2.5 bg-[var(--bg-canvas)] p-3 rounded-xl border border-[var(--border-subtle)]">
           <div>
-            <label className="block text-zinc-400 text-[11px] mb-1">
+            <label className="block text-[var(--text-dim)] text-[11px] mb-1">
               Active Cycle Selection Model
             </label>
             <select
               value={settings.cycleSlipModel || 'boyce-ratio'}
               onChange={(e) => updateSettings({ cycleSlipModel: e.target.value })}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-zinc-100"
+              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
             >
               <option value="boyce-ratio">
                 Boyce Theoretical Rician Ratio (SOURCED, ILA 2006)
               </option>
               <option value="austron-28">
-                Austron New Empirical (28 µs) (SOURCED, Boyce Eq. 6)
+                Austron New Empirical (28 ┬╡s) (SOURCED, Boyce Eq. 6)
               </option>
               <option value="austron-42">
-                Austron Old Empirical (42 µs) (SOURCED, Boyce Eq. 5)
+                Austron Old Empirical (42 ┬╡s) (SOURCED, Boyce Eq. 5)
               </option>
             </select>
           </div>
@@ -415,16 +415,16 @@ export default function DisplayPanel({ isELoran = false }) {
           />
 
           {/* Live Calculated Readout */}
-          <div className="pt-2 border-t border-zinc-800 text-[10px] space-y-1 text-zinc-400">
+          <div className="pt-2 border-t border-[var(--border-subtle)] text-[10px] space-y-1 text-[var(--text-dim)]">
             <div className="flex justify-between">
-              <span>Total SNR (N · SNR):</span>
-              <span className="text-zinc-200 font-bold">
+              <span>Total SNR (N ┬╖ SNR):</span>
+              <span className="text-[var(--text-primary)] font-bold">
                 {((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10))).toFixed(1)} dB
               </span>
             </div>
             <div className="flex justify-between">
-              <span>TOA Error Std Dev (σ_i):</span>
-              <span className="text-cyan-400 font-bold">
+              <span>TOA Error Std Dev (╧â_i):</span>
+              <span className="text-[var(--accent-eloran)] font-bold">
                 {computeToaNoiseStdDevMeters({
                   snrDb: settings.snrDb || 18,
                   pulsesAveraged: settings.pulsesAveraged || 10,
@@ -440,7 +440,7 @@ export default function DisplayPanel({ isELoran = false }) {
             </div>
             <div className="flex justify-between">
               <span>Wrong-Cycle Selection P[E]:</span>
-              <span className="text-amber-400 font-bold">
+              <span className="text-[var(--accent-loran-c)] font-bold">
                 {((settings.cycleSlipModel === 'austron-42'
                   ? computeAustronWrongCycleProbability((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10)), 'old')
                   : settings.cycleSlipModel === 'austron-28'
@@ -453,8 +453,8 @@ export default function DisplayPanel({ isELoran = false }) {
       </div>
 
       {/* Layer Visibility Toggles */}
-      <div className="space-y-3 pt-2 border-t border-zinc-800/80">
-        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
           Map Visual Layers
         </label>
 
@@ -481,8 +481,8 @@ export default function DisplayPanel({ isELoran = false }) {
       </div>
 
       {/* Numerical Grid Settings */}
-      <div className="space-y-3 pt-2 border-t border-zinc-800/80">
-        <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
           Grid Mesh & Decimation
         </label>
 
@@ -509,24 +509,24 @@ export default function DisplayPanel({ isELoran = false }) {
         />
 
         <div>
-          <label className="block text-zinc-300 text-xs mb-1">Contour Display Units</label>
+          <label className="block text-[var(--text-secondary)] text-xs mb-1">Contour Display Units</label>
           <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             <button
               onClick={() => updateSettings({ contourUnit: 'meters' })}
               className={`py-1.5 rounded border transition ${
                 settings.contourUnit === 'meters'
-                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
               }`}
             >
-              Meters (Range Δ)
+              Meters (Range ╬ö)
             </button>
             <button
               onClick={() => updateSettings({ contourUnit: 'seconds' })}
               className={`py-1.5 rounded border transition ${
                 settings.contourUnit === 'seconds'
-                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
               }`}
             >
               Seconds (TDOA)
@@ -536,37 +536,37 @@ export default function DisplayPanel({ isELoran = false }) {
       </div>
 
       {/* Model Fidelity & Provenance Registry */}
-      <div className="space-y-3 pt-2 border-t border-zinc-800/80 font-mono text-xs">
+      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)] font-mono text-xs">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-cyan-400" /> Model Fidelity & Provenance
+          <label className="font-semibold text-[var(--text-dim)] uppercase tracking-wider block flex items-center gap-1.5">
+            <CheckCircle2 size={13} className="text-[var(--accent-eloran)]" /> Model Fidelity & Provenance
           </label>
-          <span className="text-[10px] text-zinc-500">docs/PROVENANCE.md</span>
+          <span className="text-[10px] text-[var(--text-muted)]">docs/PROVENANCE.md</span>
         </div>
 
-        <div className="bg-zinc-950 rounded-xl border border-zinc-800 p-3 space-y-2.5 text-[11px]">
+        <div className="bg-[var(--bg-canvas)] rounded-xl border border-[var(--border-subtle)] p-3 space-y-2.5 text-[11px]">
           {/* Primary Factor */}
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
             <div>
-              <div className="font-bold text-zinc-200">Primary Factor (PF)</div>
-              <div className="text-[10px] text-zinc-500">v = c / η (Atmospheric refraction)</div>
+              <div className="font-bold text-[var(--text-primary)]">Primary Factor (PF)</div>
+              <div className="text-[10px] text-[var(--text-muted)]">v = c / ╬╖ (Atmospheric refraction)</div>
             </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
               SOURCED (RTCM / USCG)
             </span>
           </div>
 
           {/* Secondary Factor */}
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
             <div>
-              <div className="font-bold text-zinc-200">Secondary Factor (SF)</div>
-              <div className="text-[10px] text-zinc-500">Brunavs seawater delay (5 S/m)</div>
+              <div className="font-bold text-[var(--text-primary)]">Secondary Factor (SF)</div>
+              <div className="text-[10px] text-[var(--text-muted)]">Brunavs seawater delay (5 S/m)</div>
             </div>
             <span
               className={`px-1.5 py-0.5 rounded text-[10px] border ${
                 settings.enableSecondaryFactor
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  : 'bg-zinc-800/60 text-zinc-400 border-zinc-700'
+                  ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border-[var(--status-warn-border)]'
+                  : 'bg-[var(--bg-subtle)] text-[var(--text-dim)] border-[var(--border-default)]'
               }`}
             >
               {settings.enableSecondaryFactor ? 'ON (UNVERIFIED)' : 'OFF (UNVERIFIED)'}
@@ -574,29 +574,29 @@ export default function DisplayPanel({ isELoran = false }) {
           </div>
 
           {/* Mixed-Path ASF */}
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
             <div>
-              <div className="font-bold text-zinc-200">Mixed-Path ASF (Millington)</div>
-              <div className="text-[10px] text-zinc-500">
+              <div className="font-bold text-[var(--text-primary)]">Mixed-Path ASF (Millington)</div>
+              <div className="text-[10px] text-[var(--text-muted)]">
                 {settings.asfModelMode === 'millington'
-                  ? `Terrain σ = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
+                  ? `Terrain ╧â = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
                   : 'Safe AST Formula Override'}
               </div>
             </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
               SOURCED (ITU-R P.832) / UNVERIFIED (k)
             </span>
           </div>
 
           {/* Cycle Selection */}
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
             <div>
-              <div className="font-bold text-zinc-200">Cycle Selection Ratio Test</div>
-              <div className="text-[10px] text-zinc-500">
-                Envelope ratio excursion [R(25), R(35)] (±5 µs)
+              <div className="font-bold text-[var(--text-primary)]">Cycle Selection Ratio Test</div>
+              <div className="text-[10px] text-[var(--text-muted)]">
+                Envelope ratio excursion [R(25), R(35)] (┬▒5 ┬╡s)
               </div>
             </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
               SOURCED (Boyce ILA 2006)
             </span>
           </div>
@@ -604,12 +604,12 @@ export default function DisplayPanel({ isELoran = false }) {
           {/* TOA Noise Model */}
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-bold text-zinc-200">TOA Measurement Noise</div>
-              <div className="text-[10px] text-zinc-500">
-                σ_i² = J_i² + K² / (N · SNR_i)
+              <div className="font-bold text-[var(--text-primary)]">TOA Measurement Noise</div>
+              <div className="text-[10px] text-[var(--text-muted)]">
+                ╧â_i┬▓ = J_i┬▓ + K┬▓ / (N ┬╖ SNR_i)
               </div>
             </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
               SOURCED (Rhee et al. 2021)
             </span>
           </div>
@@ -618,3 +618,5 @@ export default function DisplayPanel({ isELoran = false }) {
     </div>
   );
 }
+
+

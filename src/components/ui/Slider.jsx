@@ -14,10 +14,13 @@ export default function Slider({
   return (
     <div className={`space-y-1.5 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="flex justify-between items-center text-xs">
-        <span className="text-zinc-300 font-medium" title={tooltip}>
+        <span className="font-medium" style={{ color: 'var(--text-secondary)' }} title={tooltip}>
           {label}
         </span>
-        <span className="font-mono text-cyan-400 bg-zinc-800/80 px-1.5 py-0.5 rounded text-[11px]">
+        <span
+          className="font-mono px-1.5 py-0.5 rounded text-[11px]"
+          style={{ color: 'var(--accent-eloran)', background: 'var(--accent-eloran-subtle)' }}
+        >
           {value} {unit}
         </span>
       </div>
@@ -28,7 +31,8 @@ export default function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-hidden"
+        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer focus:outline-hidden"
+        style={{ accentColor: 'var(--accent-eloran)', background: 'var(--bg-muted)' }}
       />
     </div>
   );

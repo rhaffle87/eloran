@@ -1,51 +1,146 @@
 @import "tailwindcss";
 
-/* =====================================================
+/* ==========================================================================
    LORAN LAB — Design System Tokens
-   Aesthetic: "Industrial Signal" (precision-instrument dark)
-   - Base: near-black ink, not plain zinc
-   - eLoran accent: cyan-500 (#06b6d4)
-   - Loran-C accent: amber-400 (#f59e0b)
-   - Data/telemetry surfaces: zinc-900 with hairline borders
-   - Typography: Space Grotesk (UI) + JetBrains Mono (data)
-   ===================================================== */
+   Aesthetic: Editorial Utilitarian & Precision Maritime Instrumentation
+   Dual Theme Architecture:
+   - Light (Bright): Warm Bone Monochrome & Muted Pastels
+   - Dark: Deep Carbon Obsidian & Tactile Instrument Glow
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+
+  /* Surfaces & Canvases */
+  --bg-canvas: #fbfbfa;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f4f3f0;
+  --bg-muted: #eae8e3;
+  --bg-elevated: #ffffff;
+
+  /* Structural Hairline Borders */
+  --border-subtle: #eaeaea;
+  --border-strong: #d4d4d8;
+  --border-focus: #0284c7;
+
+  /* Typographic Contrast */
+  --text-primary: #111827;      /* Deep charcoal */
+  --text-secondary: #4b5563;    /* Cool slate */
+  --text-muted: #6b7280;        /* Restrained secondary */
+  --text-dim: #9ca3af;          /* Subtle metadata */
+
+  /* Signal Semantic Pastels */
+  --accent-eloran: #0284c7;
+  --accent-eloran-subtle: #e0f2fe;
+  --accent-eloran-border: #bae6fd;
+
+  --accent-loran-c: #d97706;
+  --accent-loran-c-subtle: #fef3c7;
+  --accent-loran-c-border: #fde68a;
+
+  --status-ok: #16a34a;
+  --status-ok-subtle: #dcfce7;
+  --status-ok-border: #bbf7d0;
+
+  --status-warn: #d97706;
+  --status-warn-subtle: #fef3c7;
+  --status-warn-border: #fde68a;
+
+  --status-danger: #dc2626;
+  --status-danger-subtle: #fee2e2;
+  --status-danger-border: #fecaca;
+
+  /* Shadows (ultra-diffuse, low opacity) */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  /* Legacy variable aliases for zero-break compatibility */
+  --surface-base: var(--bg-canvas);
+  --surface-layer: var(--bg-subtle);
+  --surface-card: var(--bg-surface);
+  --surface-border: var(--border-subtle);
+  --surface-muted: var(--bg-muted);
+  --color-eloran: var(--accent-eloran);
+  --color-loran-c: var(--accent-loran-c);
+  --color-ok: var(--status-ok);
+  --color-warn: var(--status-warn);
+  --color-danger: var(--status-danger);
+  --glow-eloran: rgba(2, 132, 199, 0.12);
+  --glow-loran-c: rgba(217, 119, 6, 0.12);
+}
+
+.dark,
+[data-theme="dark"] {
+  /* Surfaces & Canvases */
+  --bg-canvas: #090a0c;
+  --bg-surface: #121316;
+  --bg-subtle: #181a1f;
+  --bg-muted: #23252a;
+  --bg-elevated: #1a1c22;
+
+  /* Structural Hairline Borders */
+  --border-subtle: #232529;
+  --border-strong: #32353c;
+  --border-focus: #06b6d4;
+
+  /* Typographic Contrast */
+  --text-primary: #f3f4f6;      /* Off-white */
+  --text-secondary: #9ca3af;    /* Light slate */
+  --text-muted: #6b7280;
+  --text-dim: #4b5563;
+
+  /* Signal Semantic Accents */
+  --accent-eloran: #06b6d4;
+  --accent-eloran-subtle: rgba(6, 182, 212, 0.10);
+  --accent-eloran-border: rgba(6, 182, 212, 0.25);
+
+  --accent-loran-c: #f59e0b;
+  --accent-loran-c-subtle: rgba(245, 158, 11, 0.10);
+  --accent-loran-c-border: rgba(245, 158, 11, 0.25);
+
+  --status-ok: #10b981;
+  --status-ok-subtle: rgba(16, 185, 129, 0.12);
+  --status-ok-border: rgba(16, 185, 129, 0.25);
+
+  --status-warn: #f59e0b;
+  --status-warn-subtle: rgba(245, 158, 11, 0.12);
+  --status-warn-border: rgba(245, 158, 11, 0.25);
+
+  --status-danger: #ef4444;
+  --status-danger-subtle: rgba(239, 68, 68, 0.12);
+  --status-danger-border: rgba(239, 68, 68, 0.25);
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+  /* Legacy variable aliases */
+  --surface-base: var(--bg-canvas);
+  --surface-layer: var(--bg-subtle);
+  --surface-card: var(--bg-surface);
+  --surface-border: var(--border-subtle);
+  --surface-muted: var(--bg-muted);
+  --color-eloran: var(--accent-eloran);
+  --color-loran-c: var(--accent-loran-c);
+  --color-ok: var(--status-ok);
+  --color-warn: var(--status-warn);
+  --color-danger: var(--status-danger);
+  --glow-eloran: rgba(6, 182, 212, 0.15);
+  --glow-loran-c: rgba(245, 158, 11, 0.15);
+}
 
 @layer base {
-  :root {
-    --font-display: 'Space Grotesk', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
-
-    /* Brand colors */
-    --color-eloran: #06b6d4;     /* cyan-500 — eLoran / modern */
-    --color-loran-c: #f59e0b;    /* amber-400 — Loran-C legacy */
-    --color-ok: #34d399;         /* emerald-400 */
-    --color-warn: #fbbf24;       /* amber-400 */
-    --color-danger: #f87171;     /* red-400 */
-
-    /* Surface scale */
-    --surface-base:    #080b0e;  /* near-black with a blue undertone */
-    --surface-layer:   #0e1318;
-    --surface-card:    #141b22;
-    --surface-border:  #1e2a33;
-    --surface-muted:   #243040;
-
-    /* Text scale */
-    --text-primary:   #e8eef4;
-    --text-secondary: #8fa0b0;
-    --text-dim:       #4a6070;
-
-    /* Glow / shadow */
-    --glow-eloran:  rgba(6, 182, 212, 0.15);
-    --glow-loran-c: rgba(245, 158, 11, 0.15);
-  }
-
   html {
     scroll-behavior: smooth;
+    color-scheme: light dark;
   }
 
   body {
-    font-family: var(--font-display);
-    background-color: var(--surface-base);
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -56,125 +151,103 @@
   }
 }
 
-/* ─── Custom Scrollbars ─────────────────────────────── */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: var(--surface-layer);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--surface-muted);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #3a5060;
+/* ─── Typography Classes ────────────────────────────── */
+.font-editorial {
+  font-family: var(--font-serif);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
-/* ─── MapLibre Popup Overrides ───────────────────────── */
-.maplibregl-popup-content {
-  background-color: var(--surface-card) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--surface-border) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.6) !important;
-  padding: 12px !important;
-  font-family: var(--font-mono) !important;
-  font-size: 11px !important;
-}
-.maplibregl-popup-anchor-top .maplibregl-popup-tip    { border-bottom-color: var(--surface-card) !important; }
-.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface-card) !important; }
-.maplibregl-popup-anchor-left .maplibregl-popup-tip   { border-right-color: var(--surface-card) !important; }
-.maplibregl-popup-anchor-right .maplibregl-popup-tip  { border-left-color: var(--surface-card) !important; }
-
-/* ─── Animations ────────────────────────────────────── */
-
-/* Radar ping on transmitter markers */
-@keyframes radar-pulse {
-  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
-  70%  { transform: scale(1);    box-shadow: 0 0 0 14px rgba(6, 182, 212, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
-}
-.radar-ping {
-  animation: radar-pulse 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+/* ─── Bento Box & Panel Utilities ───────────────────── */
+.bento-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow-subtle);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-/* Scanline texture overlay for hero sections */
-@keyframes scanline-drift {
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 6px; }
-}
-.scanlines {
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.18) 2px,
-    rgba(0,0,0,0.18) 3px
-  );
-  animation: scanline-drift 0.12s linear infinite;
-  pointer-events: none;
+.bento-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
 }
 
-/* Signal sweep animation (for active sim badge) */
-@keyframes signal-sweep {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
-}
-.signal-blink {
-  animation: signal-sweep 1.8s ease-in-out infinite;
-}
-
-/* Entrance: fade + slide up */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-up {
-  animation: fade-up 0.5s ease-out both;
-}
-.animate-fade-up-delay-1 { animation: fade-up 0.5s 0.1s ease-out both; }
-.animate-fade-up-delay-2 { animation: fade-up 0.5s 0.2s ease-out both; }
-.animate-fade-up-delay-3 { animation: fade-up 0.5s 0.35s ease-out both; }
-
-/* Telemetry number counter flash */
-@keyframes data-flash {
-  0%   { color: var(--color-eloran); }
-  100% { color: inherit; }
-}
-.data-update {
-  animation: data-flash 0.4s ease-out;
-}
-
-/* ─── Component Utilities ───────────────────────────── */
-
-/* Surface card with hairline border */
 .panel-card {
-  background-color: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 10px;
-}
-.panel-card:hover {
-  border-color: var(--surface-muted);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
 }
 
-/* Telemetry label / value pairs */
-.tele-label {
+.panel-card:hover {
+  border-color: var(--border-strong);
+}
+
+/* ─── Tactile Keystroke Micro-UI ────────────────────── */
+.kbd-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
   font-family: var(--font-mono);
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-}
-.tele-value {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-primary);
   font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08);
 }
 
-/* Status pill variants */
+/* ─── Tactile Buttons ───────────────────────────────── */
+.btn-tactile-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--text-primary);
+  color: var(--bg-canvas);
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
+  user-select: none;
+}
+.btn-tactile-primary:hover {
+  opacity: 0.92;
+}
+.btn-tactile-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-tactile-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  transition: transform 0.12s ease, border-color 0.15s ease, background-color 0.15s ease;
+  user-select: none;
+}
+.btn-tactile-secondary:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-muted);
+}
+.btn-tactile-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ─── Status Pills ──────────────────────────────────── */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -188,9 +261,67 @@
   letter-spacing: 0.06em;
   border: 1px solid transparent;
 }
-.pill-ok      { background: rgba(52,211,153,0.1); color: var(--color-ok);     border-color: rgba(52,211,153,0.25); }
-.pill-warn    { background: rgba(251,191,36,0.1);  color: var(--color-warn);   border-color: rgba(251,191,36,0.25); }
-.pill-danger  { background: rgba(248,113,113,0.1); color: var(--color-danger); border-color: rgba(248,113,113,0.25); }
-.pill-eloran  { background: rgba(6,182,212,0.08);  color: var(--color-eloran); border-color: rgba(6,182,212,0.25); }
-.pill-loran-c { background: rgba(245,158,11,0.08); color: var(--color-loran-c);border-color: rgba(245,158,11,0.25); }
-.pill-ghost   { background: transparent; color: var(--text-dim); border-color: var(--surface-border); }
+.pill-ok      { background: var(--status-ok-subtle);     color: var(--status-ok);     border-color: var(--status-ok-border); }
+.pill-warn    { background: var(--status-warn-subtle);   color: var(--status-warn);   border-color: var(--status-warn-border); }
+.pill-danger  { background: var(--status-danger-subtle); color: var(--status-danger); border-color: var(--status-danger-border); }
+.pill-eloran  { background: var(--accent-eloran-subtle); color: var(--accent-eloran); border-color: var(--accent-eloran-border); }
+.pill-loran-c { background: var(--accent-loran-c-subtle);color: var(--accent-loran-c);border-color: var(--accent-loran-c-border); }
+.pill-ghost   { background: var(--bg-subtle); color: var(--text-dim); border-color: var(--border-subtle); }
+
+/* ─── Custom Scrollbars ─────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ─── MapLibre Popup Overrides ───────────────────────── */
+.maplibregl-popup-content {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 12px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip    { border-bottom-color: var(--bg-surface) !important; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--bg-surface) !important; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip   { border-right-color: var(--bg-surface) !important; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip  { border-left-color: var(--bg-surface) !important; }
+
+/* ─── Animations ────────────────────────────────────── */
+@keyframes radar-pulse {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 14px rgba(6, 182, 212, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+}
+.radar-ping {
+  animation: radar-pulse 2.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes signal-sweep {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.signal-blink {
+  animation: signal-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

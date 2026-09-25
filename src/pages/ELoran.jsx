@@ -8,50 +8,52 @@ import FusionPanel from '../components/panels/FusionPanel.jsx';
 import DisplayPanel from '../components/panels/DisplayPanel.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 
+/** Map-mode toolbar button — theme-aware */
+function ModeButton({ active, onClick, title, accentVar, children }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="px-2.5 py-1.5 rounded-md transition text-xs font-mono"
+      style={active
+        ? { background: `var(${accentVar}-subtle)`, color: `var(${accentVar})`, border: `1px solid var(${accentVar}-border)`, fontWeight: 700 }
+        : { color: 'var(--text-secondary)', background: 'transparent', border: '1px solid transparent' }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-muted)'; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function ELoran() {
-  const [activeTab, setActiveTab] = useState('stations'); // 'stations' | 'clocks' | 'asf' | 'fusion' | 'display'
-  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
+  const [activeTab, setActiveTab] = useState('stations');
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
+  );
 
   const { mapMode, setMapMode, addStation, evaluateReceivers } = useSimulationStore();
 
   const handleMapClick = (lngLat) => {
     if (mapMode === 'add-master') {
       addStation({
-        role: 'master',
-        label: `M${Date.now().toString().slice(-3)}`,
-        lat: lngLat.lat,
-        lng: lngLat.lng,
-        txDbm: 20,
-        griMs: 1000,
-        offsetSec: 0,
-        ddsEnabled: true,
-        clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
+        role: 'master', label: `M${Date.now().toString().slice(-3)}`,
+        lat: lngLat.lat, lng: lngLat.lng, txDbm: 20, griMs: 1000, offsetSec: 0,
+        ddsEnabled: true, clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
         diffCorrections: { enabled: true, avgMeters: 0 },
       });
       setMapMode('pan');
       setTimeout(() => evaluateReceivers(), 50);
     } else if (mapMode === 'add-slave') {
       addStation({
-        role: 'slave',
-        label: `S${Date.now().toString().slice(-3)}`,
-        lat: lngLat.lat,
-        lng: lngLat.lng,
-        txDbm: 18,
-        griMs: 1000,
-        offsetSec: 0.015,
-        ddsEnabled: false,
-        clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
+        role: 'slave', label: `S${Date.now().toString().slice(-3)}`,
+        lat: lngLat.lat, lng: lngLat.lng, txDbm: 18, griMs: 1000, offsetSec: 0.015,
+        ddsEnabled: false, clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
       });
       setMapMode('pan');
       setTimeout(() => evaluateReceivers(), 50);
     } else if (mapMode === 'add-receiver') {
-      addStation({
-        role: 'receiver',
-        label: `R${Date.now().toString().slice(-3)}`,
-        lat: lngLat.lat,
-        lng: lngLat.lng,
-        fuseMode: 'fusion',
-      });
+      addStation({ role: 'receiver', label: `R${Date.now().toString().slice(-3)}`, lat: lngLat.lat, lng: lngLat.lng, fuseMode: 'fusion' });
       setMapMode('pan');
       setTimeout(() => evaluateReceivers(), 50);
     }
@@ -59,81 +61,69 @@ export default function ELoran() {
 
   const tabs = [
     { id: 'stations', label: 'Stations', icon: Radio },
-    { id: 'clocks', label: 'Clocks', icon: Clock },
-    { id: 'asf', label: 'ASF / dLoran', icon: Sparkles },
-    { id: 'fusion', label: 'GNSS Fusion', icon: Navigation },
-    { id: 'display', label: 'Mesh & Layers', icon: Layers },
+    { id: 'clocks',   label: 'Clocks',   icon: Clock },
+    { id: 'asf',      label: 'ASF',      icon: Sparkles },
+    { id: 'fusion',   label: 'Fusion',   icon: Navigation },
+    { id: 'display',  label: 'Mesh',     icon: Layers },
   ];
 
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] flex overflow-hidden bg-zinc-950 font-sans">
-      {/* Map is the Hero */}
+    <div
+      className="relative w-full h-[calc(100vh-4rem)] flex overflow-hidden"
+      style={{ background: 'var(--bg-canvas)' }}
+    >
+      {/* Map hero */}
       <div className="flex-1 relative h-full">
         <MapView onMapClick={handleMapClick} isELoran={true} />
 
-        {/* Tactical Mode toolbar overlay on map */}
-        <div className="absolute top-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg p-1 flex items-center gap-1 shadow-2xl font-mono text-xs">
-          <button
-            onClick={() => setMapMode('pan')}
-            className={`px-2.5 sm:px-3 py-1.5 rounded-md transition text-xs ${
-              mapMode === 'pan'
-                ? 'bg-cyan-500 text-black font-bold'
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-            }`}
-            title="Pan & Inspect (Shortkey: P)"
-          >
-            <span className="hidden sm:inline">Pan (P)</span>
+        {/* Tactical mode toolbar overlay */}
+        <div
+          className="absolute top-4 right-4 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-0.5 shadow-xl"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            boxShadow: 'var(--shadow-card)',
+          }}
+        >
+          <ModeButton active={mapMode === 'pan'} onClick={() => setMapMode('pan')} title="Pan & Inspect (P)" accentVar="--accent-eloran">
+            <span className="hidden sm:inline">Pan <span className="kbd-chip ml-1">P</span></span>
             <span className="sm:hidden">Pan</span>
-          </button>
-          <button
-            onClick={() => setMapMode('add-master')}
-            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
-              mapMode === 'add-master'
-                ? 'bg-cyan-400 text-black font-bold'
-                : 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800'
-            }`}
-            title="Click map to place Master station (Shortkey: M)"
-          >
-            <span className="hidden sm:inline">+Master (M)</span>
+          </ModeButton>
+          <ModeButton active={mapMode === 'add-master'} onClick={() => setMapMode('add-master')} title="Place Master (M)" accentVar="--accent-eloran">
+            <span className="hidden sm:inline">+Master <span className="kbd-chip ml-1">M</span></span>
             <span className="sm:hidden">+M</span>
-          </button>
-          <button
-            onClick={() => setMapMode('add-slave')}
-            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
-              mapMode === 'add-slave'
-                ? 'bg-amber-400 text-black font-bold'
-                : 'text-zinc-400 hover:text-amber-300 hover:bg-zinc-800'
-            }`}
-            title="Click map to place Secondary station (Shortkey: S)"
-          >
-            <span className="hidden sm:inline">+Secondary (S)</span>
+          </ModeButton>
+          <ModeButton active={mapMode === 'add-slave'} onClick={() => setMapMode('add-slave')} title="Place Secondary (S)" accentVar="--accent-loran-c">
+            <span className="hidden sm:inline">+Secondary <span className="kbd-chip ml-1">S</span></span>
             <span className="sm:hidden">+S</span>
-          </button>
-          <button
-            onClick={() => setMapMode('add-receiver')}
-            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
-              mapMode === 'add-receiver'
-                ? 'bg-emerald-400 text-black font-bold'
-                : 'text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800'
-            }`}
-            title="Click map to place Receiver (Shortkey: R)"
-          >
-            <span className="hidden sm:inline">+Receiver (R)</span>
+          </ModeButton>
+          <ModeButton active={mapMode === 'add-receiver'} onClick={() => setMapMode('add-receiver')} title="Place Receiver (R)" accentVar="--status-ok">
+            <span className="hidden sm:inline">+Receiver <span className="kbd-chip ml-1">R</span></span>
             <span className="sm:hidden">+R</span>
-          </button>
+          </ModeButton>
         </div>
       </div>
 
-      {/* Collapsible Left Console Drawer */}
+      {/* Collapsible right console drawer */}
       <div
-        className={`relative z-30 transition-all duration-300 ease-in-out border-l border-zinc-800 bg-zinc-900/95 backdrop-blur-md flex flex-col ${
-          sidebarOpen ? 'w-full max-w-[380px] lg:w-[420px]' : 'w-0 border-l-0 overflow-hidden'
+        className={`relative z-30 transition-all duration-300 ease-in-out flex flex-col ${
+          sidebarOpen ? 'w-full max-w-[380px] lg:w-[420px]' : 'w-0 overflow-hidden'
         }`}
+        style={{
+          borderLeft: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
+          background: 'var(--bg-surface)',
+        }}
       >
-        {/* Toggle Collapse Tab */}
+        {/* Collapse toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -left-7 top-4 z-40 bg-zinc-900 border border-zinc-800 border-r-0 text-zinc-400 hover:text-zinc-100 p-1.5 rounded-l-md shadow-xl transition"
+          className="absolute -left-7 top-4 z-40 p-1.5 rounded-l-md shadow-xl transition"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRight: 'none',
+            color: 'var(--text-secondary)',
+          }}
           title={sidebarOpen ? 'Collapse console' : 'Expand console'}
         >
           {sidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -141,44 +131,51 @@ export default function ELoran() {
 
         {sidebarOpen && (
           <div className="flex flex-col h-full overflow-hidden">
-            {/* Console Header & Tabs */}
-            <div className="p-4 border-b border-zinc-800 bg-zinc-950/60">
+            {/* Console header */}
+            <div
+              className="p-4"
+              style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
+            >
               <div className="flex items-center justify-between mb-3">
-                <div className="font-mono font-bold text-xs uppercase tracking-widest text-cyan-400 flex items-center gap-2">
-                  <Compass size={15} /> eLoran Precision Suite
+                <div
+                  className="font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-2"
+                  style={{ color: 'var(--accent-eloran)' }}
+                >
+                  <Compass size={15} aria-hidden="true" /> eLoran Precision Suite
                 </div>
-                <span className="text-[10px] text-zinc-500 font-mono">DDS • ASF • PNT Fusion</span>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--text-dim)' }}>
+                  DDS · ASF · PNT Fusion
+                </span>
               </div>
 
-              {/* Subsystem Navigation Bar */}
-              <div className="grid grid-cols-5 border border-zinc-800 rounded-lg p-0.5 bg-zinc-950 font-mono text-[11px]">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`py-1.5 rounded text-center transition flex flex-col items-center gap-1 ${
-                        activeTab === tab.id
-                          ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                    >
-                      <Icon size={12} />
-                      <span className="text-[9px] leading-none">{tab.label}</span>
-                    </button>
-                  );
-                })}
+              {/* Subsystem tab bar */}
+              <div
+                className="grid grid-cols-5 rounded-lg p-0.5 font-mono text-[10px]"
+                style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
+              >
+                {tabs.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className="py-1.5 rounded text-center transition flex flex-col items-center gap-0.5"
+                    style={activeTab === id
+                      ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+                      : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                  >
+                    <Icon size={11} aria-hidden="true" />
+                    <span className="text-[9px] leading-none">{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Active Subsystem Panel */}
+            {/* Active subsystem panel */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {activeTab === 'stations' && <StationEditor isELoran={true} />}
-              {activeTab === 'clocks' && <ClockPanel />}
-              {activeTab === 'asf' && <AsfPanel />}
-              {activeTab === 'fusion' && <FusionPanel />}
-              {activeTab === 'display' && <DisplayPanel isELoran={true} />}
+              {activeTab === 'clocks'   && <ClockPanel />}
+              {activeTab === 'asf'      && <AsfPanel />}
+              {activeTab === 'fusion'   && <FusionPanel />}
+              {activeTab === 'display'  && <DisplayPanel isELoran={true} />}
             </div>
           </div>
         )}

@@ -240,8 +240,18 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
     const dx = inv[0][0] * JTr[0] + inv[0][1] * JTr[1];
     const dy = inv[1][0] * JTr[0] + inv[1][1] * JTr[1];
 
+    if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > 1e7) {
+      converged = false;
+      break;
+    }
+
     x0 += dx;
     y0 += dy;
+
+    if (Math.hypot(x0, y0) > 20000000) {
+      converged = false;
+      break;
+    }
 
     JTJ_final = JTJ;
     r_final = r.slice();
@@ -252,7 +262,17 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
     }
   }
 
-  const { lat, lng } = localXYToLatLng(x0, y0, refLat);
+  // Safe coordinate conversion with bounded validation
+  let lat = initialGuess.lat;
+  let lng = initialGuess.lng;
+
+  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 10000000) {
+    const converted = localXYToLatLng(x0, y0, refLat);
+    if (Number.isFinite(converted.lat) && Number.isFinite(converted.lng)) {
+      lat = Math.max(-90, Math.min(90, converted.lat));
+      lng = ((((converted.lng + 180) % 360) + 360) % 360) - 180;
+    }
+  }
 
   // Residual variance in meters^2
   const m = r_final.length;
@@ -287,7 +307,8 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
   const detC = cov[0][0] * cov[1][1] - cov[0][1] * cov[0][1];
   const discriminant = Math.sqrt(Math.max(0, (trace * trace) / 4 - detC));
   const lambda1 = Math.max(0, trace / 2 + discriminant);
-  const hplMeters = 3 * Math.sqrt(lambda1);
+  const rawHpl = 3 * Math.sqrt(lambda1);
+  const hplMeters = Number.isFinite(rawHpl) ? Math.min(99999, rawHpl) : 99999;
 
   const meanSqResidual = r_final.length
     ? Math.sqrt(r_final.reduce((s, v) => s + v * v, 0) / r_final.length)
@@ -300,7 +321,8 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
     hplMeters,
     iterations: iter + 1,
     converged,
-    residualMeters: meanSqResidual,
+    noSolution: !converged,
+    residualMeters: Number.isFinite(meanSqResidual) ? meanSqResidual : 999999,
   };
 }
 
@@ -439,9 +461,24 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
     const dy = invHTH[1][0] * HTr[0] + invHTH[1][1] * HTr[1] + invHTH[1][2] * HTr[2];
     const dcbrx = invHTH[2][0] * HTr[0] + invHTH[2][1] * HTr[1] + invHTH[2][2] * HTr[2];
 
+    if (
+      !Number.isFinite(dx) ||
+      !Number.isFinite(dy) ||
+      !Number.isFinite(dcbrx) ||
+      Math.hypot(dx, dy) > 1e7
+    ) {
+      converged = false;
+      break;
+    }
+
     x0 += dx;
     y0 += dy;
     cbrx += dcbrx;
+
+    if (Math.hypot(x0, y0) > 20000000) {
+      converged = false;
+      break;
+    }
 
     HTH_final = HTH;
     r_final = r.slice();
@@ -452,8 +489,19 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
     }
   }
 
-  const { lat, lng } = localXYToLatLng(x0, y0, refLat);
-  const clockBiasSec = cbrx / SPEED_OF_LIGHT;
+  // Safe coordinate conversion with bounded validation
+  let lat = initialGuess.lat;
+  let lng = initialGuess.lng;
+
+  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 10000000) {
+    const converted = localXYToLatLng(x0, y0, refLat);
+    if (Number.isFinite(converted.lat) && Number.isFinite(converted.lng)) {
+      lat = Math.max(-90, Math.min(90, converted.lat));
+      lng = ((((converted.lng + 180) % 360) + 360) % 360) - 180;
+    }
+  }
+
+  const clockBiasSec = Number.isFinite(cbrx) ? cbrx / SPEED_OF_LIGHT : 0;
 
   let hdop = 99.9;
   let tdop = 99.9;
@@ -464,9 +512,13 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
   if (HTH_final) {
     const invHTH = invert3x3(HTH_final);
     if (invHTH) {
-      hdop = Math.sqrt(Math.max(0, invHTH[0][0] + invHTH[1][1]));
-      tdop = Math.sqrt(Math.max(0, invHTH[2][2]));
-      gdop = Math.sqrt(Math.max(0, invHTH[0][0] + invHTH[1][1] + invHTH[2][2]));
+      const rawHdop = Math.sqrt(Math.max(0, invHTH[0][0] + invHTH[1][1]));
+      const rawTdop = Math.sqrt(Math.max(0, invHTH[2][2]));
+      const rawGdop = Math.sqrt(Math.max(0, invHTH[0][0] + invHTH[1][1] + invHTH[2][2]));
+
+      hdop = Number.isFinite(rawHdop) ? Math.min(99.9, rawHdop) : 99.9;
+      tdop = Number.isFinite(rawTdop) ? Math.min(99.9, rawTdop) : 99.9;
+      gdop = Number.isFinite(rawGdop) ? Math.min(99.9, rawGdop) : 99.9;
 
       // 1-sigma timing variance (assume 10 ns nominal Loran receiver jitter ~3 meters)
       const sigma2 = Math.pow(3.0, 2);
@@ -479,7 +531,8 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
       const detC = cov2D[0][0] * cov2D[1][1] - cov2D[0][1] * cov2D[0][1];
       const discriminant = Math.sqrt(Math.max(0, (trace * trace) / 4 - detC));
       const lambda1 = Math.max(0, trace / 2 + discriminant);
-      hplMeters = 3 * Math.sqrt(lambda1);
+      const rawHpl = 3 * Math.sqrt(lambda1);
+      hplMeters = Number.isFinite(rawHpl) ? Math.min(99999, rawHpl) : 99999;
     }
   }
 
@@ -498,6 +551,7 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
     hplMeters,
     iterations: iter + 1,
     converged,
-    residualMeters: meanSqResidual,
+    noSolution: !converged,
+    residualMeters: Number.isFinite(meanSqResidual) ? meanSqResidual : 999999,
   };
 }

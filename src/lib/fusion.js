@@ -53,30 +53,65 @@ export function fusePositions(
   weights = null
 ) {
   if (mode === 'eLoran' || !gnssFix) {
-    const err = truePos ? haversineDistance(truePos, eloranFix) : 0;
+    const rawLat = Number.isFinite(eloranFix?.lat) ? eloranFix.lat : (truePos?.lat ?? 0);
+    const rawLng = Number.isFinite(eloranFix?.lng) ? eloranFix.lng : (truePos?.lng ?? 0);
+    const safeLat = Math.max(-90, Math.min(90, rawLat));
+    const safeLng = ((((rawLng + 180) % 360) + 360) % 360) - 180;
+    const safeFix = { ...eloranFix, lat: safeLat, lng: safeLng };
+    const err = truePos ? haversineDistance(truePos, safeFix) : 0;
     return {
-      lat: eloranFix.lat,
-      lng: eloranFix.lng,
-      covariance: eloranFix.covariance || [[0, 0], [0, 0]],
-      hplMeters: eloranFix.hplMeters || 0,
-      errorMeters: err,
+      lat: safeLat,
+      lng: safeLng,
+      covariance: eloranFix?.covariance || [[0, 0], [0, 0]],
+      hplMeters: Number.isFinite(eloranFix?.hplMeters) ? eloranFix.hplMeters : 0,
+      errorMeters: Number.isFinite(err) ? err : 0,
       mode: 'eLoran',
       weightingMethod: 'single-source',
+      converged: eloranFix?.converged ?? true,
+      noSolution: eloranFix?.noSolution ?? false,
     };
   }
 
   if (mode === 'GNSS' || !eloranFix) {
-    const err = truePos ? haversineDistance(truePos, gnssFix) : 0;
-    const gnssTrace = (gnssFix.covariance?.[0]?.[0] || 64) + (gnssFix.covariance?.[1]?.[1] || 64);
+    const rawLat = Number.isFinite(gnssFix?.lat) ? gnssFix.lat : (truePos?.lat ?? 0);
+    const rawLng = Number.isFinite(gnssFix?.lng) ? gnssFix.lng : (truePos?.lng ?? 0);
+    const safeLat = Math.max(-90, Math.min(90, rawLat));
+    const safeLng = ((((rawLng + 180) % 360) + 360) % 360) - 180;
+    const safeFix = { ...gnssFix, lat: safeLat, lng: safeLng };
+    const err = truePos ? haversineDistance(truePos, safeFix) : 0;
+    const gnssTrace = (gnssFix?.covariance?.[0]?.[0] || 64) + (gnssFix?.covariance?.[1]?.[1] || 64);
     const gnssHpl = 3 * Math.sqrt(gnssTrace / 2);
     return {
-      lat: gnssFix.lat,
-      lng: gnssFix.lng,
-      covariance: gnssFix.covariance,
-      hplMeters: gnssHpl,
-      errorMeters: err,
+      lat: safeLat,
+      lng: safeLng,
+      covariance: gnssFix?.covariance,
+      hplMeters: Number.isFinite(gnssHpl) ? gnssHpl : 0,
+      errorMeters: Number.isFinite(err) ? err : 0,
       mode: 'GNSS',
       weightingMethod: 'single-source',
+      converged: true,
+      noSolution: false,
+    };
+  }
+
+  // If eLoran has no solution or diverged, rely purely on GNSS
+  if (eloranFix.noSolution || eloranFix.converged === false) {
+    const rawLat = Number.isFinite(gnssFix?.lat) ? gnssFix.lat : (truePos?.lat ?? 0);
+    const rawLng = Number.isFinite(gnssFix?.lng) ? gnssFix.lng : (truePos?.lng ?? 0);
+    const safeLat = Math.max(-90, Math.min(90, rawLat));
+    const safeLng = ((((rawLng + 180) % 360) + 360) % 360) - 180;
+    const safeFix = { ...gnssFix, lat: safeLat, lng: safeLng };
+    const err = truePos ? haversineDistance(truePos, safeFix) : 0;
+    return {
+      lat: safeLat,
+      lng: safeLng,
+      covariance: gnssFix?.covariance,
+      hplMeters: gnssFix?.hplMeters || 30,
+      errorMeters: Number.isFinite(err) ? err : 0,
+      mode: 'fusion-fallback-gnss',
+      weightingMethod: 'gnss-only-fallback',
+      converged: false,
+      noSolution: false,
     };
   }
 
@@ -105,8 +140,12 @@ export function fusePositions(
     nG = invVarG / sumInv;
   }
 
-  const fusedLat = eloranFix.lat * nE + gnssFix.lat * nG;
-  const fusedLng = eloranFix.lng * nE + gnssFix.lng * nG;
+  const rawFusedLat = eloranFix.lat * nE + gnssFix.lat * nG;
+  const rawFusedLng = eloranFix.lng * nE + gnssFix.lng * nG;
+  const fusedLat = Number.isFinite(rawFusedLat) ? Math.max(-90, Math.min(90, rawFusedLat)) : gnssFix.lat;
+  const fusedLng = Number.isFinite(rawFusedLng)
+    ? ((((rawFusedLng + 180) % 360) + 360) % 360) - 180
+    : gnssFix.lng;
 
   // Covariance combination: Cov_fused = nE^2 * Cov_E + nG^2 * Cov_G
   const fusedCov = [

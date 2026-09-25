@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSimulationStore } from '../../state/simulationStore.js';
-import { haversineDistance, destinationPoint, initialBearing } from '../../lib/geodesy.js';
+import { haversineDistance, destinationPoint, initialBearing, isValidLngLat } from '../../lib/geodesy.js';
 import { computeGDOPAtPoint } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 
 function isMapStyleReady(map) {
   return Boolean(map && map.style && typeof map.isStyleLoaded === 'function' && map.isStyleLoaded());
 }
+
 
 export default function MapView({ onMapClick, isELoran = false }) {
   const mapContainer = useRef(null);
@@ -185,6 +186,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
       mapInstance.on('sourcedata', handleTileLoaded);
       mapInstance.on('data', handleTileLoaded);
 
+      // Gracefully handle style image missing events (e.g. wood-pattern, circle-11 in vector styles)
+      mapInstance.on('styleimagemissing', (e) => {
+        const id = e.id;
+        if (!mapInstance.hasImage(id)) {
+          mapInstance.addImage(id, {
+            width: 1,
+            height: 1,
+            data: new Uint8Array([0, 0, 0, 0]),
+          });
+        }
+      });
+
       mapInstance.on('mousemove', (e) => {
         const { lat, lng } = e.lngLat;
         setCursorPos({ lat, lng });
@@ -253,6 +266,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
     allStations.forEach((station) => {
       currentLabels.add(station.label);
 
+      if (!isValidLngLat(station.lng, station.lat)) {
+        console.warn(`[MapView] Skipping marker for station ${station.label} with invalid coordinates: [${station.lng}, ${station.lat}]`);
+        return;
+      }
+
       if (!markersRef.current[station.label]) {
         const el = document.createElement('div');
         el.className = `station-marker marker-${station.type}`;
@@ -306,7 +324,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (mapMode === 'pan') {
+          if (mapMode === 'pan' && isValidLngLat(station.lng, station.lat)) {
             const popupContent = `
               <div class="space-y-1">
                 <div class="font-bold text-cyan-400 text-xs">${station.label} (${station.type.toUpperCase()})</div>
@@ -342,7 +360,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
     receivers.forEach((rx) => {
       const fix = receiverFixes[rx.label];
-      if (fix && fix.lat !== undefined && fix.lng !== undefined) {
+      const hasValidFix = fix && isValidLngLat(fix.lng, fix.lat) && fix.converged !== false && !fix.noSolution;
+
+      if (hasValidFix) {
         if (!estMarkerRef.current[rx.label]) {
           const el = document.createElement('div');
           el.className = 'estimated-fix-marker';
@@ -362,12 +382,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
         } else {
           estMarkerRef.current[rx.label].setLngLat([fix.lng, fix.lat]);
         }
-      } else if (estMarkerRef.current[rx.label]) {
-        estMarkerRef.current[rx.label].remove();
-        delete estMarkerRef.current[rx.label];
+      } else {
+        if (estMarkerRef.current[rx.label]) {
+          estMarkerRef.current[rx.label].remove();
+          delete estMarkerRef.current[rx.label];
+        }
+        if (fix && !isValidLngLat(fix.lng, fix.lat)) {
+          console.warn(`[MapView] Skipping estimated fix marker for receiver ${rx.label}: invalid coordinates [${fix?.lng}, ${fix?.lat}]`);
+        }
       }
     });
   }, [receivers, receiverFixes]);
+
 
   // Safe removal helper for MapLibre layers and sources
   const safeRemoveLayerAndSource = useCallback((map, layerId, sourceId) => {

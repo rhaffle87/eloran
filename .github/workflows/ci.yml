@@ -31,6 +31,10 @@ jobs:
       - name: ESLint (zero warnings gate)
         run: npm run lint -- --max-warnings 0
 
+      - name: Check Provenance (non-blocking drift monitor)
+        run: npm run check:provenance
+        continue-on-error: true
+
       - name: Vitest unit tests
         run: npm run test -- --run --reporter=verbose
 

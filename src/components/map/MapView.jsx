@@ -327,11 +327,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
           if (mapMode === 'pan' && isValidLngLat(station.lng, station.lat)) {
             const popupContent = `
               <div class="space-y-1">
-                <div class="font-bold text-cyan-400 text-xs">${station.label} (${station.type.toUpperCase()})</div>
-                <div class="text-[11px] text-zinc-300">Lat: ${station.lat.toFixed(5)}°</div>
-                <div class="text-[11px] text-zinc-300">Lng: ${station.lng.toFixed(5)}°</div>
-                ${station.txDbm ? `<div class="text-[11px] text-zinc-400">Power: ${station.txDbm} dBm</div>` : ''}
-                ${station.clock?.type ? `<div class="text-[11px] text-zinc-400">Clock: ${station.clock.type}</div>` : ''}
+                <div style="font-family:monospace;font-weight:700;font-size:12px;color:var(--accent-eloran)">${station.label} (${station.type.toUpperCase()})</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lat: ${station.lat.toFixed(5)}°</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lng: ${station.lng.toFixed(5)}°</div>
+                ${station.txDbm ? `<div style="font-size:11px;color:var(--text-muted)">Power: ${station.txDbm} dBm</div>` : ''}
+                ${station.clock?.type ? `<div style="font-size:11px;color:var(--text-muted)">Clock: ${station.clock.type}</div>` : ''}
               </div>
             `;
             new maplibregl.Popup({ offset: 15 }).setLngLat([station.lng, station.lat]).setHTML(popupContent).addTo(map);
@@ -586,19 +586,21 @@ export default function MapView({ onMapClick, isELoran = false }) {
   };
 
   return (
-    <div className="relative w-full h-full min-h-[500px] bg-zinc-950 overflow-hidden select-none">
+    <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Dismissible Fallback Notice */}
       {showFallbackNotice && (
         <div
           data-testid="radar-fallback-notice"
-          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/50 text-amber-300 text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-mono shadow-2xl backdrop-blur-md animate-fade-in"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--status-warn-border)', color: 'var(--status-warn)' }}
         >
           <span>{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
           <button
             onClick={() => setShowFallbackNotice(false)}
-            className="text-zinc-400 hover:text-zinc-100 font-bold px-1.5 py-0.5 rounded hover:bg-zinc-800 transition leading-none cursor-pointer"
+            className="font-bold px-1.5 py-0.5 rounded transition leading-none cursor-pointer"
+            style={{ color: 'var(--text-muted)' }}
             aria-label="Dismiss notice"
           >
             ✕
@@ -608,22 +610,30 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       {/* Real-time telemetry HUD overlay */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-2 sm:gap-4">
+        <div
+          className="backdrop-blur-md rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono shadow-xl pointer-events-auto flex items-center gap-2 sm:gap-4"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
+        >
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400'}`}></span>
-            <span className="text-zinc-400 uppercase tracking-wider text-[10px]">MODE:</span>
-            <span className="font-bold text-cyan-300 uppercase">{mapMode}</span>
+            <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'animate-pulse' : ''}`}
+              style={{ background: isStyleLoaded ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
+            />
+            <span className="uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-dim)' }}>MODE:</span>
+            <span className="font-bold uppercase" style={{ color: 'var(--accent-eloran)' }}>{mapMode}</span>
           </div>
           {cursorPos && (
-            <div className="hidden sm:inline text-zinc-300 text-[11px]">
-              <span className="text-zinc-500 mr-1">POS:</span>
+            <div className="hidden sm:inline text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+              <span className="mr-1" style={{ color: 'var(--text-dim)' }}>POS:</span>
               {cursorPos.lat.toFixed(4)}°, {cursorPos.lng.toFixed(4)}°
             </div>
           )}
           {cursorGdop !== null && (
-            <div className="text-zinc-300 text-[11px]">
-              <span className="text-zinc-500 mr-1">GDOP:</span>
-              <span className={`font-bold ${cursorGdop < 3 ? 'text-emerald-400' : cursorGdop < 8 ? 'text-amber-400' : 'text-red-400'}`}>
+            <div className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+              <span className="mr-1" style={{ color: 'var(--text-dim)' }}>GDOP:</span>
+              <span
+                className="font-bold"
+                style={{ color: cursorGdop < 3 ? 'var(--status-ok)' : cursorGdop < 8 ? 'var(--status-warn)' : 'var(--status-danger)' }}
+              >
                 {cursorGdop}
               </span>
             </div>
@@ -632,16 +642,19 @@ export default function MapView({ onMapClick, isELoran = false }) {
       </div>
 
       {/* Map Tile Switcher & Fallback selector */}
-      <div className="absolute top-16 sm:top-14 left-4 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg">
+      <div
+        className="absolute top-16 sm:top-14 left-4 z-10 backdrop-blur-md rounded-full px-2 py-1 text-[11px] font-mono flex items-center gap-1 shadow-lg"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.92 }}
+      >
         {Object.values(TILE_PROVIDERS).map((p) => (
           <button
             key={p.id}
             onClick={() => handleSwitchProvider(p.id)}
-            className={`px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] ${
-              activeTileProvider === p.id
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
+            className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px]"
+            style={activeTileProvider === p.id
+              ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+              : { color: 'var(--text-muted)', border: '1px solid transparent' }
+            }
           >
             {p.id === 'openfreemap-dark'
               ? 'OpenFreeMap'
@@ -654,40 +667,45 @@ export default function MapView({ onMapClick, isELoran = false }) {
         ))}
       </div>
 
-      {/* Collapsible / Position-safe Station Symbols Legend */}
+      {/* Collapsible Station Symbols Legend */}
       <div className="absolute bottom-8 sm:bottom-10 left-4 z-10 font-mono text-xs">
         {showLegend ? (
-          <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in">
-            <div className="flex items-center justify-between gap-3 text-[10px] text-zinc-400 uppercase font-bold tracking-wider mb-1">
+          <div
+            className="backdrop-blur-md rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between gap-3 text-[10px] uppercase font-bold tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>
               <span>Station Symbols</span>
               <button
                 onClick={() => setShowLegend(false)}
-                className="text-zinc-500 hover:text-zinc-300 font-bold px-1 rounded cursor-pointer leading-none"
+                className="font-bold px-1 rounded cursor-pointer leading-none"
+                style={{ color: 'var(--text-dim)' }}
                 aria-label="Hide symbols legend"
               >
                 ✕
               </button>
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white shrink-0"></span> Master (M)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--accent-eloran)' }} /> Master (M)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 border border-white shrink-0"></span> Secondary (S)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--accent-loran-c)' }} /> Secondary (S)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white shrink-0"></span> True Receiver (R)
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--status-ok)' }} /> True Receiver (R)
             </div>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full border-2 border-red-500 shrink-0"></span> Estimated PNT Fix
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: 'var(--status-danger)' }} /> Estimated PNT Fix
             </div>
           </div>
         ) : (
           <button
             onClick={() => setShowLegend(true)}
-            className="bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md"
+            className="backdrop-blur-md rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
             aria-label="Show symbols legend"
           >
-            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-eloran)' }} />
             <span>Symbols</span>
           </button>
         )}

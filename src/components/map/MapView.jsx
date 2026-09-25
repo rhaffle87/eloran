@@ -281,7 +281,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
         const size = station.type === 'master' ? 22 : 18;
         const el = document.createElement('div');
         el.className = `station-marker marker-${station.type}`;
-        el.style.position = 'relative';
+        el.dataset.label = station.label;
+        el.dataset.lng = String(station.lng);
+        el.dataset.lat = String(station.lat);
+        el.dataset.type = station.type;
+        el.style.position = 'absolute';
+        el.style.top = '0';
+        el.style.left = '0';
         el.style.width = `${size}px`;
         el.style.height = `${size}px`;
         el.style.cursor = 'grab';
@@ -353,6 +359,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
         markersRef.current[station.label] = marker;
       } else {
         markersRef.current[station.label].setLngLat([station.lng, station.lat]);
+        const existingEl = markersRef.current[station.label].getElement();
+        if (existingEl) {
+          existingEl.dataset.lng = String(station.lng);
+          existingEl.dataset.lat = String(station.lat);
+        }
       }
     });
 
@@ -463,6 +474,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       const geojson = { type: 'FeatureCollection', features };
+      if (typeof window !== 'undefined') {
+        window.__baselineGeoJson = geojson;
+      }
 
       safeRemoveLayerAndSource(map, layerId, sourceId);
 
@@ -483,6 +497,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
 
     return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__baselineGeoJson;
+      }
       safeRemoveLayerAndSource(map, layerId, sourceId);
     };
   }, [masters, slaves, baselinesVisible, isStyleLoaded, safeRemoveLayerAndSource]);

@@ -1,67 +1,163 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Marker to Baseline Alignment Suite', () => {
-  test('station pin circle centers match line endpoint coordinates within 1px', async ({ page }) => {
+  test('station pin circle centers match true map.project geographic coordinates and baseline endpoints within 1px', async ({ page }) => {
     await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
 
-    // Wait for MapLibre instance to initialize and markers to render
+    // Wait for MapLibre instance, station markers, and baseline GeoJSON layer to initialize
     await page.waitForFunction(() => {
       const map = window.__maplibreInstance;
       const markers = document.querySelectorAll('.station-marker');
-      return Boolean(map && markers.length >= 3);
+      const baselineFeatures = window.__baselineGeoJson?.features;
+      return Boolean(map && markers.length >= 3 && baselineFeatures && baselineFeatures.length > 0);
     }, { timeout: 15000 });
 
-    // Let map settle
+    // Allow map projection & layout rendering to settle
     await page.waitForTimeout(2000);
 
-    const coordChecks = await page.evaluate(() => {
+    const auditData = await page.evaluate(() => {
       const map = window.__maplibreInstance;
-      const canvasRect = map.getCanvas().getBoundingClientRect();
-      const checkResults = [];
+      const canvas = map.getCanvas();
+      const canvasRect = canvas.getBoundingClientRect();
       const markers = document.querySelectorAll('.station-marker');
+
+      // Query baseline GeoJSON source directly
+      const baselineFeatures = window.__baselineGeoJson?.features || [];
+
+      const results = [];
 
       markers.forEach((markerEl) => {
         const dot = markerEl.querySelector('.station-pin-dot') || markerEl.firstElementChild;
         const tag = markerEl.querySelector('.station-pin-label') || markerEl.lastElementChild;
-        const label = tag ? tag.innerText.trim() : '';
+        const label = markerEl.dataset.label || (tag ? tag.innerText.trim() : '');
+        const lng = parseFloat(markerEl.dataset.lng);
+        const lat = parseFloat(markerEl.dataset.lat);
+        const type = markerEl.dataset.type;
 
         const dotRect = dot.getBoundingClientRect();
-        const dotCenter = {
+        // Physical screen pixel center of the rendered circular pin, relative to map canvas
+        const dotScreenCenter = {
           x: (dotRect.left + dotRect.width / 2) - canvasRect.left,
           y: (dotRect.top + dotRect.height / 2) - canvasRect.top,
         };
 
-        // Also check marker element rect directly:
-        // markerEl width and height were set to match dot size (22px or 18px)
-        const elRect = markerEl.getBoundingClientRect();
-        const elCenter = {
-          x: (elRect.left + markerEl.offsetWidth / 2) - canvasRect.left,
-          y: (elRect.top + markerEl.offsetHeight / 2) - canvasRect.top,
-        };
+        // True mathematical geographic projection via MapLibre GL
+        const expectedProjected = map.project([lng, lat]);
 
-        checkResults.push({
+        // Find corresponding endpoint in baseline layer features
+        let baselineCoord = null;
+        if (type === 'master') {
+          // Master is start vertex (index 0) of the baseline lines
+          const feature = baselineFeatures.find((f) => f.geometry?.coordinates?.length >= 2);
+          if (feature) {
+            baselineCoord = feature.geometry.coordinates[0];
+          }
+        } else if (type === 'slave') {
+          // Secondary is vertex 1 of the baseline line matching this secondary
+          const feature = baselineFeatures.find(
+            (f) => f.properties?.label?.includes(label) || f.properties?.id?.includes(label)
+          );
+          if (feature) {
+            baselineCoord = feature.geometry.coordinates[1];
+          } else {
+            for (const f of baselineFeatures) {
+              const pt = f.geometry?.coordinates?.[1];
+              if (pt && Math.abs(pt[0] - lng) < 1e-4 && Math.abs(pt[1] - lat) < 1e-4) {
+                baselineCoord = pt;
+                break;
+              }
+            }
+          }
+        }
+
+        let baselineProjected = null;
+        let diffBaselineMarkerX = null;
+        let diffBaselineMarkerY = null;
+        let diffBaselineProjX = null;
+        let diffBaselineProjY = null;
+
+        if (baselineCoord) {
+          baselineProjected = map.project(baselineCoord);
+          diffBaselineMarkerX = Math.abs(dotScreenCenter.x - baselineProjected.x);
+          diffBaselineMarkerY = Math.abs(dotScreenCenter.y - baselineProjected.y);
+          diffBaselineProjX = Math.abs(baselineProjected.x - expectedProjected.x);
+          diffBaselineProjY = Math.abs(baselineProjected.y - expectedProjected.y);
+        }
+
+        const diffMarkerProjX = Math.abs(dotScreenCenter.x - expectedProjected.x);
+        const diffMarkerProjY = Math.abs(dotScreenCenter.y - expectedProjected.y);
+
+        results.push({
           label,
-          offsetWidth: markerEl.offsetWidth,
-          offsetHeight: markerEl.offsetHeight,
-          dotWidth: dotRect.width,
-          dotHeight: dotRect.height,
-          dotCenter,
-          elCenter,
-          diffDotElX: Math.abs(dotCenter.x - elCenter.x),
-          diffDotElY: Math.abs(dotCenter.y - elCenter.y),
+          type,
+          coords: [lng, lat],
+          dotScreenCenter: {
+            x: Number(dotScreenCenter.x.toFixed(3)),
+            y: Number(dotScreenCenter.y.toFixed(3)),
+          },
+          expectedProjected: {
+            x: Number(expectedProjected.x.toFixed(3)),
+            y: Number(expectedProjected.y.toFixed(3)),
+          },
+          baselineProjected: baselineProjected
+            ? {
+                x: Number(baselineProjected.x.toFixed(3)),
+                y: Number(baselineProjected.y.toFixed(3)),
+              }
+            : null,
+          diffMarkerProjX: Number(diffMarkerProjX.toFixed(3)),
+          diffMarkerProjY: Number(diffMarkerProjY.toFixed(3)),
+          diffBaselineMarkerX: diffBaselineMarkerX !== null ? Number(diffBaselineMarkerX.toFixed(3)) : null,
+          diffBaselineMarkerY: diffBaselineMarkerY !== null ? Number(diffBaselineMarkerY.toFixed(3)) : null,
+          diffBaselineProjX: diffBaselineProjX !== null ? Number(diffBaselineProjX.toFixed(3)) : null,
+          diffBaselineProjY: diffBaselineProjY !== null ? Number(diffBaselineProjY.toFixed(3)) : null,
         });
       });
 
-      return checkResults;
+      return {
+        results,
+        baselineFeatureCount: baselineFeatures.length,
+      };
     });
 
-    console.log('Alignment Checks:', JSON.stringify(coordChecks, null, 2));
+    console.log('Rigorous Marker-to-Projection & Baseline Alignment Results:');
+    console.log(JSON.stringify(auditData, null, 2));
 
-    expect(coordChecks.length).toBeGreaterThanOrEqual(3);
-    for (const check of coordChecks) {
-      // The pin dot center must precisely equal the marker's anchor point (offset width / 2, offset height / 2)
-      expect(check.diffDotElX, `Station ${check.label} X dot-to-anchor offset`).toBeLessThanOrEqual(0.5);
-      expect(check.diffDotElY, `Station ${check.label} Y dot-to-anchor offset`).toBeLessThanOrEqual(0.5);
+    expect(auditData.results.length).toBeGreaterThanOrEqual(3);
+    expect(auditData.baselineFeatureCount).toBeGreaterThan(0);
+
+    for (const item of auditData.results) {
+      // 1. Assertion: Pin screen center must match map.project([lng, lat]) within 1.0px (subpixel boundary)
+      expect(
+        item.diffMarkerProjX,
+        `Station ${item.label} X offset between DOM pin center and true map.project projection`
+      ).toBeLessThanOrEqual(1.0);
+      expect(
+        item.diffMarkerProjY,
+        `Station ${item.label} Y offset between DOM pin center and true map.project projection`
+      ).toBeLessThanOrEqual(1.0);
+
+      // 2. Assertion: If transmitter is part of baseline layer, baseline endpoint must match pin screen center within 1.0px
+      if (item.baselineProjected) {
+        expect(
+          item.diffBaselineMarkerX,
+          `Station ${item.label} X offset between baseline layer endpoint and DOM pin center`
+        ).toBeLessThanOrEqual(1.0);
+        expect(
+          item.diffBaselineMarkerY,
+          `Station ${item.label} Y offset between baseline layer endpoint and DOM pin center`
+        ).toBeLessThanOrEqual(1.0);
+
+        // 3. Assertion: Baseline source coordinate must match map.project([lng, lat]) within 0.1px
+        expect(
+          item.diffBaselineProjX,
+          `Station ${item.label} baseline source coordinate drift against station coordinate`
+        ).toBeLessThanOrEqual(0.1);
+        expect(
+          item.diffBaselineProjY,
+          `Station ${item.label} baseline source coordinate drift against station coordinate`
+        ).toBeLessThanOrEqual(0.1);
+      }
     }
   });
 });

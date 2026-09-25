@@ -1,8 +1,11 @@
 /**
- * Safe Sandboxed ASF (Additional Secondary Factor) Expression Evaluator
- * Implements a strict Whitelist-based Recursive Descent AST Parser.
- * Never uses `eval` or `new Function` on user text.
+ * Safe Sandboxed ASF (Additional Secondary Factor) Expression Evaluator & Millington Mixed-Path Library
+ * Implements:
+ * 1. Safe AST Recursive Descent Expression Parser (Strict Whitelist, No eval)
+ * 2. Physical Mixed-Path Groundwave ASF via Millington's Method (ITU-R P.832 & Williams & Last 2000)
  */
+
+import { SPEED_OF_LIGHT, haversineDistance } from './geodesy.js';
 
 // Supported math functions created with null prototype to avoid prototype pollution
 const ALLOWED_FUNCS = Object.create(null);
@@ -276,5 +279,207 @@ export function compileAsfExpression(exprStr) {
   return function asfEvaluator(lat, lng) {
     const val = evaluator({ lat, lng });
     return Number.isFinite(val) ? val : 0;
+  };
+}
+
+/**
+ * ============================================================================
+ * MIXED-PATH ADDITIONAL SECONDARY FACTOR (ASF) VIA MILLINGTON'S METHOD
+ *
+ * Sourced ground conductivities:
+ *   - ITU-R P.832-4 (2015), "World Atlas of Ground Conductivities"
+ *   - ITU-R P.368-10 (2022), "Ground-wave propagation curves for frequencies
+ *     between 10 kHz and 30 MHz"
+ *
+ * Mixed-path phase delay reference:
+ *   - Williams & Last, "Mapping the ASFs of the Northwest European Loran-C System,"
+ *     The Journal of Navigation, 53(2), pp. 225–235, 2000.
+ *   - Millington, G. (1949), "Ground-wave propagation over an inhomogeneous smooth earth."
+ * ============================================================================
+ */
+
+/**
+ * Standard ground conductivity categories per ITU-R Recommendation P.832-4.
+ * Conductivities in Siemens per meter (S/m).
+ */
+export const ITU_R_P832_CONDUCTIVITIES = {
+  seawater: {
+    id: 'seawater',
+    label: 'Seawater (5 S/m)',
+    sigma: 5.0,
+    category: 'Sea',
+    provenance: 'SOURCED (ITU-R P.832)',
+  },
+  marsh_wet_soil: {
+    id: 'marsh_wet_soil',
+    label: 'Highly Conductive Marsh / Wet Soil (0.01 S/m)',
+    sigma: 0.01,
+    category: 'Land - High',
+    provenance: 'SOURCED (ITU-R P.832)',
+  },
+  agricultural_forest: {
+    id: 'agricultural_forest',
+    label: 'Agricultural / Forest Land (0.003 S/m)',
+    sigma: 0.003,
+    category: 'Land - Medium',
+    provenance: 'SOURCED (ITU-R P.832)',
+  },
+  rocky_mountain: {
+    id: 'rocky_mountain',
+    label: 'Low Conductivity / Rocky Mountain (0.001 S/m)',
+    sigma: 0.001,
+    category: 'Land - Low',
+    provenance: 'SOURCED (ITU-R P.832)',
+  },
+  very_dry_granite: {
+    id: 'very_dry_granite',
+    label: 'Very Dry Soil / Industrial Granite (0.0001 S/m)',
+    sigma: 0.0001,
+    category: 'Land - Very Low',
+    provenance: 'SOURCED (ITU-R P.832)',
+  },
+};
+
+/**
+ * Default empirical scaling parameter for groundwave phase delay.
+ * Relates conductivity deficit to phase delay in microseconds per km:
+ *   asf_us = dist_km * k_scale * (1 / sqrt(sigma) - 1 / sqrt(5.0))
+ * 
+ * Marked UNVERIFIED: while conductivity is SOURCED, the empirical proportionality
+ * constant depends on local sub-surface strata depth profiles and seasonal water tables.
+ */
+export const DEFAULT_MILLINGTON_SCALE = 0.0008;
+
+/**
+ * Computes homogeneous path ASF phase lag in microseconds relative to an all-seawater path.
+ * Sourced: Over all-seawater (sigma >= 5 S/m), ASF is zero by definition.
+ * 
+ * @param {number} distKm - Path distance in kilometers (>= 0)
+ * @param {number} sigma - Ground conductivity in S/m (> 0)
+ * @param {number} [scale=DEFAULT_MILLINGTON_SCALE] - Empirical scale constant (UNVERIFIED)
+ * @returns {number} Phase lag in microseconds (>= 0)
+ */
+export function computeHomogeneousAsfMicroseconds(distKm, sigma, scale = DEFAULT_MILLINGTON_SCALE) {
+  if (distKm <= 0 || sigma >= 5.0) return 0;
+  const safeSigma = Math.max(1e-5, sigma);
+  const diff = (1.0 / Math.sqrt(safeSigma)) - (1.0 / Math.sqrt(5.0));
+  return Math.max(0, distKm * scale * diff);
+}
+
+/**
+ * Computes mixed-path ASF in microseconds using Millington's method.
+ * Evaluates the forward path profile, reverses the path profile, and averages
+ * the two to enforce electromagnetic reciprocity across land/sea boundaries.
+ * 
+ * @param {Array<{distKm: number, sigma: number}>} segments - Ordered path segments from Tx to Rx
+ * @param {number} [scale=DEFAULT_MILLINGTON_SCALE] - Empirical scaling factor
+ * @returns {number} Mixed-path ASF in microseconds
+ */
+export function computeMillingtonAsfMicroseconds(segments, scale = DEFAULT_MILLINGTON_SCALE) {
+  if (!segments || segments.length === 0) return 0;
+
+  // Filter out non-positive segments
+  const valid = segments.filter((s) => s.distKm > 0);
+  if (valid.length === 0) return 0;
+
+  const M = valid.length;
+  if (M === 1) {
+    return computeHomogeneousAsfMicroseconds(valid[0].distKm, valid[0].sigma, scale);
+  }
+
+  // Cumulative boundary distances from Tx: x[0] = 0, x[1] = d1, x[2] = d1 + d2, ...
+  const x = [0];
+  for (let i = 0; i < M; i++) {
+    x.push(x[i] + valid[i].distKm);
+  }
+
+  // 1. Forward phase evaluation (Tx -> Rx)
+  // Phi_F = asf(x[1], s[0]) + sum_{k=1}^{M-1} [ asf(x[k+1], s[k]) - asf(x[k], s[k]) ]
+  let phiF = computeHomogeneousAsfMicroseconds(x[1], valid[0].sigma, scale);
+  for (let k = 1; k < M; k++) {
+    const delta = computeHomogeneousAsfMicroseconds(x[k + 1], valid[k].sigma, scale)
+                - computeHomogeneousAsfMicroseconds(x[k], valid[k].sigma, scale);
+    phiF += delta;
+  }
+
+  // 2. Reverse phase evaluation (Rx -> Tx)
+  const revValid = [...valid].reverse();
+  const y = [0];
+  for (let i = 0; i < M; i++) {
+    y.push(y[i] + revValid[i].distKm);
+  }
+
+  let phiR = computeHomogeneousAsfMicroseconds(y[1], revValid[0].sigma, scale);
+  for (let k = 1; k < M; k++) {
+    const delta = computeHomogeneousAsfMicroseconds(y[k + 1], revValid[k].sigma, scale)
+                - computeHomogeneousAsfMicroseconds(y[k], revValid[k].sigma, scale);
+    phiR += delta;
+  }
+
+  // Reciprocal Millington average: (Phi_F + Phi_R) / 2
+  return Math.max(0, 0.5 * (phiF + phiR));
+}
+
+/**
+ * Computes mixed-path ASF in meters for a propagation path with a specified land fraction.
+ * 
+ * @param {object} params
+ * @param {number} params.totalDistMeters - Total great circle distance in meters
+ * @param {number} [params.landFraction=0.5] - Fraction of path over land [0.0 = all sea, 1.0 = all land]
+ * @param {number} [params.landSigma=0.003] - Land conductivity in S/m (ITU-R P.832)
+ * @param {number} [params.scale=DEFAULT_MILLINGTON_SCALE] - Empirical scale constant (UNVERIFIED)
+ * @returns {number} Additional Secondary Factor in meters
+ */
+export function computeMixedPathAsfMeters({
+  totalDistMeters,
+  landFraction = 0.5,
+  landSigma = 0.003,
+  scale = DEFAULT_MILLINGTON_SCALE,
+}) {
+  if (totalDistMeters <= 0 || landFraction <= 0 || landSigma >= 5.0) {
+    return 0;
+  }
+
+  const fLand = Math.max(0, Math.min(1.0, landFraction));
+  const totalKm = totalDistMeters / 1000.0;
+  const seaDistKm = (1.0 - fLand) * totalKm;
+  const landDistKm = fLand * totalKm;
+
+  // 2-segment path: Seawater (5 S/m) and Land (landSigma)
+  const segments = [
+    { distKm: seaDistKm, sigma: 5.0 },
+    { distKm: landDistKm, sigma: landSigma },
+  ];
+
+  const asfUs = computeMillingtonAsfMicroseconds(segments, scale);
+  // Convert microseconds to meters: meters = us * 1e-6 * c
+  return asfUs * 1e-6 * SPEED_OF_LIGHT;
+}
+
+/**
+ * Creates an ASF evaluator function (lat, lng) => asfMeters for a transmitter station
+ * based on the physical Millington mixed-path model.
+ * 
+ * @param {object} params
+ * @param {object} params.station - Station with { lat, lng }
+ * @param {number} [params.landFraction=0.5] - Path land fraction [0.0 to 1.0]
+ * @param {number} [params.landSigma=0.003] - Land conductivity in S/m
+ * @param {number} [params.scale=DEFAULT_MILLINGTON_SCALE] - Scale factor
+ * @returns {(lat: number, lng: number) => number} Evaluator function
+ */
+export function createMillingtonAsfEvaluator({
+  station,
+  landFraction = 0.5,
+  landSigma = 0.003,
+  scale = DEFAULT_MILLINGTON_SCALE,
+}) {
+  return function millingtonEvaluator(lat, lng) {
+    const distMeters = haversineDistance(station, { lat, lng });
+    return computeMixedPathAsfMeters({
+      totalDistMeters: distMeters,
+      landFraction,
+      landSigma,
+      scale,
+    });
   };
 }

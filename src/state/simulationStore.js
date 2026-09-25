@@ -11,6 +11,8 @@ import {
   solvePositionPseudorange,
   computeArrivalSec,
   simulateCycleSlip,
+  computeToaNoiseStdDevMeters,
+  DEFAULT_TOA_NOISE_PARAMS,
 } from '../lib/tdoa.js';
 import {
   SPEED_OF_LIGHT,
@@ -19,6 +21,11 @@ import {
 } from '../lib/geodesy.js';
 import { fusePositions, simulateGnssFix } from '../lib/fusion.js';
 import { broadcastDdsEvents } from '../lib/dds.js';
+import {
+  createMillingtonAsfEvaluator,
+  compileAsfExpression,
+  DEFAULT_MILLINGTON_SCALE,
+} from '../lib/asf.js';
 
 export const useSimulationStore = create((set, get) => ({
   // Active Scenario & Stations
@@ -54,8 +61,15 @@ export const useSimulationStore = create((set, get) => ({
     refractiveIndex: DEFAULT_REFRACTIVE_INDEX, // RTCM MPS: 1.000338, Handbook: 1.000284, China: 1.000315
     enableSecondaryFactor: false, // UNVERIFIED: disabled by default due to 100 statute mile discontinuity
     enableCycleSlips: false, // Boyce 2006 wrong-cycle selection (±10 µs / ~3 km error)
+    cycleSlipModel: 'boyce-ratio', // 'boyce-ratio' (Boyce 2006) | 'austron-28' (New) | 'austron-42' (Old)
     snrDb: 18,
     pulsesAveraged: 10,
+    jitterMeters: DEFAULT_TOA_NOISE_PARAMS.jitterMeters, // SOURCED: 6.0 m (Rhee et al. 2021)
+    kConstantMeters: DEFAULT_TOA_NOISE_PARAMS.kConstantMeters, // SOURCED: 337.5 m (Rhee et al. 2021)
+    asfModelMode: 'millington', // 'millington' (Physical Mixed-Path) | 'formula' (AST Override)
+    asfLandFraction: 0.5,
+    asfLandSigma: 0.003, // ITU-R P.832 Agricultural/Forest
+    asfMillingtonScale: DEFAULT_MILLINGTON_SCALE, // UNVERIFIED: 0.0008
     enableDDS: true,
     enableIntegrity: true,
     integrityThresholdMeters: 50,
@@ -165,16 +179,56 @@ export const useSimulationStore = create((set, get) => ({
     const { masters, slaves, receivers, simTimeSec, settings } = get();
     if (!masters.length || !receivers.length) return;
 
-    const refMaster = masters[0];
+    // Attach ASF evaluator (Millington mixed-path or AST formula override) to station
+    const attachAsf = (st) => {
+      if (settings.asfModelMode === 'millington') {
+        return {
+          ...st,
+          asfEvaluator: createMillingtonAsfEvaluator({
+            station: st,
+            landFraction: settings.asfLandFraction ?? 0.5,
+            landSigma: settings.asfLandSigma ?? 0.003,
+            scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
+          }),
+        };
+      }
+      if (settings.asfModelMode === 'formula' && st.asfFormula && st.asfFormula !== '0') {
+        try {
+          return { ...st, asfEvaluator: compileAsfExpression(st.asfFormula) };
+        } catch {
+          return { ...st, asfEvaluator: () => 0 };
+        }
+      }
+      return st;
+    };
+
+    const evaluatedMasters = masters.map(attachAsf);
+    const evaluatedSlaves = slaves.map(attachAsf);
+    const refMaster = evaluatedMasters[0];
+
+    const toaNoiseStdDevMeters = computeToaNoiseStdDevMeters({
+      snrDb: settings.snrDb || 18,
+      pulsesAveraged: settings.pulsesAveraged || 10,
+      jitterMeters: settings.jitterMeters || DEFAULT_TOA_NOISE_PARAMS.jitterMeters,
+      kConstantMeters: settings.kConstantMeters || DEFAULT_TOA_NOISE_PARAMS.kConstantMeters,
+    });
+    const toaNoiseStdDevSec = toaNoiseStdDevMeters / SPEED_OF_LIGHT;
+
+    const sampleGaussianSec = () => {
+      const u1 = Math.max(1e-12, Math.random());
+      const u2 = Math.random();
+      return toaNoiseStdDevSec * Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+    };
+
     const fixes = {};
 
     receivers.forEach((rx) => {
       let eloranSol;
       let rawTdoaPairs = [];
 
-      if (settings.solverMode === 'pseudorange' && (masters.length + slaves.length >= 3)) {
+      if (settings.solverMode === 'pseudorange' && (evaluatedMasters.length + evaluatedSlaves.length >= 3)) {
         // Modern 3D Pseudorange solver with Receiver Clock Bias (b_rx)
-        const allTransmitters = [...masters, ...slaves];
+        const allTransmitters = [...evaluatedMasters, ...evaluatedSlaves];
         const observations = allTransmitters.map((st) => {
           let arrivalSec = computeArrivalSec(
             st,
@@ -185,12 +239,18 @@ export const useSimulationStore = create((set, get) => ({
             settings.enableSecondaryFactor
           );
 
+          if (settings.noiseMode === 'random') {
+            arrivalSec += sampleGaussianSec();
+          }
+
           let slipped = false;
           if (settings.enableCycleSlips) {
             const slipRes = simulateCycleSlip(
               arrivalSec,
               settings.snrDb || 18,
-              settings.pulsesAveraged || 10
+              settings.pulsesAveraged || 10,
+              Math.random,
+              settings.cycleSlipModel || 'boyce-ratio'
             );
             arrivalSec = slipRes.arrivalSec;
             slipped = slipRes.slipped;
@@ -209,17 +269,26 @@ export const useSimulationStore = create((set, get) => ({
         });
 
         // Also build TDOA pairs for display in LOP telemetry
-        rawTdoaPairs = slaves.map((s) => ({
+        rawTdoaPairs = evaluatedSlaves.map((s) => ({
           master: refMaster,
           slave: s,
           tdoaSec: computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex),
         }));
       } else {
         // Classical Hyperbolic TDOA Gauss-Newton solver
-        rawTdoaPairs = slaves.map((s) => {
+        rawTdoaPairs = evaluatedSlaves.map((s) => {
           let tdoa = computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex);
+          if (settings.noiseMode === 'random') {
+            tdoa += sampleGaussianSec();
+          }
           if (settings.enableCycleSlips) {
-            tdoa = simulateCycleSlip(tdoa, settings.snrDb || 18, settings.pulsesAveraged || 10).arrivalSec;
+            tdoa = simulateCycleSlip(
+              tdoa,
+              settings.snrDb || 18,
+              settings.pulsesAveraged || 10,
+              Math.random,
+              settings.cycleSlipModel || 'boyce-ratio'
+            ).arrivalSec;
           }
           return {
             master: refMaster,
@@ -266,6 +335,10 @@ export const useSimulationStore = create((set, get) => ({
         solverMode: settings.solverMode,
         converged: fused.converged ?? eloranSol.converged ?? true,
         noSolution: fused.noSolution ?? eloranSol.noSolution ?? false,
+        toaNoiseStdDevMeters,
+        asfModelMode: settings.asfModelMode,
+        cycleSlipModel: settings.cycleSlipModel,
+
       };
     });
 

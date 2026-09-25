@@ -140,8 +140,45 @@ export default function FusionPanel() {
                 Ground Truth: <span className="text-zinc-400">{rx.lat.toFixed(5)}°, {rx.lng.toFixed(5)}°</span>
               </div>
             )}
+            {fix.toaNoiseStdDevMeters !== undefined && (
+              <div className="flex justify-between items-center pt-1 text-[10px]">
+                <span className="text-zinc-500">TOA Measurement Noise σ_i:</span>
+                <span className="text-cyan-300 font-bold">
+                  {fix.toaNoiseStdDevMeters.toFixed(2)} m ({(fix.toaNoiseStdDevMeters / 0.299792).toFixed(1)} ns)
+                </span>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Active Models Provenance Indicators */}
+        <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap gap-1.5 text-[9px]">
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Model: PF Refraction (SOURCED)
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Model: TOA Noise (SOURCED)
+          </span>
+          {settings.asfModelMode === 'millington' ? (
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Model: Millington ASF (SOURCED/UNVERIFIED)
+            </span>
+          ) : (
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              Model: AST ASF (UNVERIFIED)
+            </span>
+          )}
+          {settings.enableSecondaryFactor && (
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              Model: SF Seawater (UNVERIFIED)
+            </span>
+          )}
+          {settings.enableCycleSlips && (
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Model: Boyce Cycle Slip (SOURCED)
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Integrity Threshold Settings */}

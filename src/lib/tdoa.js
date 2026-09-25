@@ -17,9 +17,62 @@ import {
   localXYToLatLng,
 } from './geodesy.js';
 import { simulateClockOffset } from './clocks.js';
+import {
+  computeAustronWrongCycleProbability,
+  computeTheoreticalRiceWrongCycleProbability,
+} from './pulse.js';
 
 export const CARRIER_CYCLE_PERIOD_SEC = 10e-6; // 10 µs (100 kHz Loran-C carrier)
 export const CYCLE_SLIP_DISTANCE_METERS = SPEED_OF_LIGHT * CARRIER_CYCLE_PERIOD_SEC; // ~2,998 meters (~3 km)
+
+/**
+ * Nominal TOA measurement error parameters sourced from Korean eLoran simulator:
+ * Reference: Rhee, Kim, Son, & Seo, "Enhanced Accuracy Simulator for a Future Korean
+ * Nationwide eLoran System," IEEE Access, 2021 / arXiv:2108.06008.
+ * Formula: sigma_i^2 = J_i^2 + K^2 / (N_pulses * SNR_i)
+ *   - J_i: Transmitter jitter (nominal 6.0 m ~ 20 ns, or 4.0 m ~ 13.3 ns) [SOURCED]
+ *   - K: Measurement scaling constant (337.5 m ~ 1.126 µs) [SOURCED, Lo et al. 2008 / Rhee 2021]
+ */
+export const DEFAULT_TOA_NOISE_PARAMS = {
+  jitterMeters: 6.0,
+  kConstantMeters: 337.5,
+  pulsesAveraged: 10,
+  sourced: true,
+  citation: 'Rhee, Kim, Son, & Seo (2021), IEEE Access / arXiv:2108.06008',
+};
+
+/**
+ * Computes standard deviation of TOA measurement error in meters.
+ * Sourced: Rhee et al. (2021, Eq. 1):
+ *   sigma_i^2 = J_i^2 + K^2 / (N_pulses * SNR_i)
+ *
+ * @param {object} params
+ * @param {number} params.snrDb - Signal-to-noise ratio in dB
+ * @param {number} [params.pulsesAveraged=10] - Number of accumulated pulses (GRI-dependent)
+ * @param {number} [params.jitterMeters=6.0] - Transmitter jitter J_i in meters
+ * @param {number} [params.kConstantMeters=337.5] - Empirical scale constant K in meters
+ * @returns {number} Standard deviation sigma_i in meters
+ */
+export function computeToaNoiseStdDevMeters({
+  snrDb,
+  pulsesAveraged = 10,
+  jitterMeters = 6.0,
+  kConstantMeters = 337.5,
+}) {
+  const snrLinear = Math.pow(10, Math.max(-30, Math.min(60, snrDb)) / 10);
+  const n = Math.max(1, pulsesAveraged);
+  const varianceM2 = (jitterMeters ** 2) + ((kConstantMeters ** 2) / (n * snrLinear));
+  return Math.sqrt(Math.max(0, varianceM2));
+}
+
+/**
+ * Computes standard deviation of TOA measurement error in seconds.
+ * @param {object} params
+ * @returns {number} Standard deviation in seconds
+ */
+export function computeToaNoiseStdDevSeconds(params) {
+  return computeToaNoiseStdDevMeters(params) / SPEED_OF_LIGHT;
+}
 
 /**
  * Computes modeled arrival time (seconds) from a transmitter station to a receiver coordinate.
@@ -117,21 +170,39 @@ export function computeTDOAPair(
 
 /**
  * Simulates cycle slip error (wrong-cycle selection) based on Boyce (ILA 2006) model.
- * A wrong cycle selection is defined as a TOA timing error > 10 µs (~3 km step).
+ * A wrong cycle selection causes the receiver to lock to an adjacent zero crossing (±1 carrier cycle = ±10 µs ~ 3 km step).
+ * 
+ * Supports:
+ *   - 'boyce-ratio': Theoretical Rician envelope ratio model (Boyce 2006, Section II-D) [SOURCED]
+ *   - 'austron-28': Modern Austron 28 µs empirical bound (Boyce 2006 Eq. 6) [SOURCED]
+ *   - 'austron-42': Historical Austron 5000 42 µs bound (Boyce 2006 Eq. 5) [SOURCED]
  * 
  * @param {number} arrivalSec - True arrival time
- * @param {number} snrDb - Signal-to-noise ratio in dB
+ * @param {number} snrDb - Per-pulse signal-to-noise ratio in dB
  * @param {number} [pulsesAveraged=10] - Number of Loran pulses integrated
  * @param {() => number} [rng=Math.random] - PRNG function
- * @returns {{ arrivalSec: number, slipped: boolean, cycleOffset: number }}
+ * @param {'boyce-ratio' | 'austron-28' | 'austron-42'} [model='boyce-ratio'] - Accuracy model
+ * @returns {{ arrivalSec: number, slipped: boolean, cycleOffset: number, slipProbability: number, model: string }}
  */
-export function simulateCycleSlip(arrivalSec, snrDb, pulsesAveraged = 10, rng = Math.random) {
-  // Linear effective SNR accounting for coherent pulse integration
-  const snrLinear = Math.pow(10, snrDb / 10) * Math.max(1, pulsesAveraged);
-  
-  // Boyce 2006 empirical wrong-cycle probability model
-  // At SNR_eff < 12 dB, envelope-to-cycle tracking risks slipping by ±1 carrier period
-  const slipProbability = 0.5 * Math.max(0, 1 - Math.tanh((snrLinear - 8) / 6));
+export function simulateCycleSlip(
+  arrivalSec,
+  snrDb,
+  pulsesAveraged = 10,
+  rng = Math.random,
+  model = 'boyce-ratio'
+) {
+  // Total SNR in dB = 10 * log10(N * SNR) = snrDb + 10 * log10(N)
+  const totalSnrDb = snrDb + 10 * Math.log10(Math.max(1, pulsesAveraged));
+
+  let slipProbability = 0;
+  if (model === 'austron-42') {
+    slipProbability = computeAustronWrongCycleProbability(totalSnrDb, 'old');
+  } else if (model === 'austron-28') {
+    slipProbability = computeAustronWrongCycleProbability(totalSnrDb, 'new');
+  } else {
+    // 'boyce-ratio' default theoretical Rician model
+    slipProbability = computeTheoreticalRiceWrongCycleProbability(totalSnrDb);
+  }
 
   if (rng() < slipProbability) {
     // 1 carrier cycle slip = ±10 microseconds
@@ -140,6 +211,8 @@ export function simulateCycleSlip(arrivalSec, snrDb, pulsesAveraged = 10, rng = 
       arrivalSec: arrivalSec + direction * CARRIER_CYCLE_PERIOD_SEC,
       slipped: true,
       cycleOffset: direction,
+      slipProbability,
+      model,
     };
   }
 
@@ -147,6 +220,8 @@ export function simulateCycleSlip(arrivalSec, snrDb, pulsesAveraged = 10, rng = 
     arrivalSec,
     slipped: false,
     cycleOffset: 0,
+    slipProbability,
+    model,
   };
 }
 

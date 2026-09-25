@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
    LORAN LAB — Design System Tokens
@@ -24,28 +25,36 @@
   /* Structural Hairline Borders */
   --border-subtle: #eaeaea;
   --border-strong: #d4d4d8;
-  --border-focus: #0284c7;
+  --border-focus: #0369a1;
 
-  /* Typographic Contrast */
-  --text-primary: #111827;      /* Deep charcoal */
-  --text-secondary: #4b5563;    /* Cool slate */
-  --text-muted: #6b7280;        /* Restrained secondary */
-  --text-dim: #9ca3af;          /* Subtle metadata */
+  /* Typographic Contrast (WCAG 2 AA calibrated) */
+  --text-primary: #111827;      /* Deep charcoal — 16:1 */
+  --text-secondary: #374151;    /* Cool slate — 9:1 */
+  --text-muted: #4b5563;        /* Restrained secondary — 7:1 */
+  --text-dim: #59636e;          /* Subtle metadata — 5.5:1 on #f4f3f0 ✓ WCAG AA */
 
-  /* Signal Semantic Pastels */
-  --accent-eloran: #0284c7;
+  /* Signal Semantic Accents (WCAG 2 AA calibrated) */
+  --accent-eloran: #075985;     /* Deep maritime blue — 6.6:1 on subtle, 7.5:1 on #ffffff ✓ */
   --accent-eloran-subtle: #e0f2fe;
   --accent-eloran-border: #bae6fd;
 
-  --accent-loran-c: #d97706;
+  --accent-loran-c: #92400e;    /* Warm copper amber — 6.4:1 on subtle, 7.1:1 on #ffffff ✓ */
   --accent-loran-c-subtle: #fef3c7;
   --accent-loran-c-border: #fde68a;
 
-  --status-ok: #16a34a;
+  /* Banner Tokens */
+  --banner-edu-bg: #fffbeb;
+  --banner-edu-border: #fde68a;
+  --banner-edu-text: #92400e;
+  --banner-edu-title: #78350f;
+
+  --btn-eloran-text: #ffffff;
+
+  --status-ok: #15803d;
   --status-ok-subtle: #dcfce7;
   --status-ok-border: #bbf7d0;
 
-  --status-warn: #d97706;
+  --status-warn: #b45309;
   --status-warn-subtle: #fef3c7;
   --status-warn-border: #fde68a;
 
@@ -89,8 +98,8 @@
   /* Typographic Contrast */
   --text-primary: #f3f4f6;      /* Off-white */
   --text-secondary: #9ca3af;    /* Light slate */
-  --text-muted: #6b7280;
-  --text-dim: #4b5563;
+  --text-muted: #94a3b8;         /* Subdued — 5.3:1 on canvas ✓ WCAG AA */
+  --text-dim: #8b949e;           /* Dim metadata — 4.8:1 on #090a0c ✓ WCAG AA */
 
   /* Signal Semantic Accents */
   --accent-eloran: #06b6d4;
@@ -100,6 +109,14 @@
   --accent-loran-c: #f59e0b;
   --accent-loran-c-subtle: rgba(245, 158, 11, 0.10);
   --accent-loran-c-border: rgba(245, 158, 11, 0.25);
+
+  /* Banner Tokens */
+  --banner-edu-bg: rgba(245, 158, 11, 0.10);
+  --banner-edu-border: rgba(245, 158, 11, 0.25);
+  --banner-edu-text: #fde68a;
+  --banner-edu-title: #fcd34d;
+
+  --btn-eloran-text: #080b0e;
 
   --status-ok: #10b981;
   --status-ok-subtle: rgba(16, 185, 129, 0.12);

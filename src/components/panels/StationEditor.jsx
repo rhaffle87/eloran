@@ -112,12 +112,14 @@ export default function StationEditor({ isELoran = false }) {
       {/* Preset selector */}
       <div>
         <label
+          htmlFor="scenario-preset-select"
           className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
           style={{ color: 'var(--text-dim)' }}
         >
           Scenario Presets
         </label>
         <select
+          id="scenario-preset-select"
           value={activePresetId}
           onChange={(e) => loadPreset(e.target.value)}
           style={inputStyle}
@@ -174,9 +176,9 @@ export default function StationEditor({ isELoran = false }) {
           <button
             onClick={resetAll}
             className="text-[11px] flex items-center gap-1 transition"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--status-danger)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
           >
             <RotateCcw size={12} /> Clear all
           </button>

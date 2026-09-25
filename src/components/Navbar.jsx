@@ -33,7 +33,7 @@ function BrandLogo() {
             v1.1
           </span>
         </div>
-        <div className="text-[10px] text-[var(--text-dim)] font-mono hidden sm:block">
+        <div className="text-xs text-[var(--text-secondary)] font-mono hidden sm:block">
           Radionavigation & Physics Testbed
         </div>
       </div>
@@ -46,6 +46,7 @@ function SimStatusBadge({ isSimRunning, simTimeSec, activePreset }) {
     <div className="hidden lg:flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-2.5 py-1 rounded-md font-mono text-[11px] text-[var(--text-secondary)]">
       <span
         className={`w-1.5 h-1.5 rounded-full ${isSimRunning ? 'bg-[var(--accent-eloran)] signal-blink' : 'bg-[var(--border-strong)]'}`}
+        role="img"
         aria-label={isSimRunning ? 'Simulation running' : 'Simulation stopped'}
       />
       <span className="text-[var(--text-dim)]">T:</span>

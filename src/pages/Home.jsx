@@ -179,7 +179,7 @@ export default function Home() {
             <Link
               to="/eloran"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-mono font-bold text-sm transition-all shadow-[0_0_24px_var(--glow-eloran)] hover:shadow-[0_0_36px_var(--glow-eloran)]"
-              style={{ background: 'var(--color-eloran)', color: '#080b0e' }}
+              style={{ background: 'var(--color-eloran)', color: 'var(--btn-eloran-text)' }}
             >
               <Compass size={17} aria-hidden="true" /> eLoran Simulator <ArrowRight size={15} aria-hidden="true" />
             </Link>

@@ -68,7 +68,9 @@ test.describe('LORAN LAB E2E Suite', () => {
       page.on('request', (req) => {
         try {
           const urlObj = new URL(req.url());
-          if (urlObj.protocol.startsWith('http') && !urlObj.host.includes('localhost') && !urlObj.host.includes('127.0.0.1')) {
+          const baseOrigin = process.env.BASE_URL ? new URL(process.env.BASE_URL).origin : '';
+          const isSelf = urlObj.host.includes('localhost') || urlObj.host.includes('127.0.0.1') || (baseOrigin && urlObj.origin === baseOrigin);
+          if (urlObj.protocol.startsWith('http') && !isSelf) {
             observedExternalHosts.add(urlObj.host);
           }
         } catch {

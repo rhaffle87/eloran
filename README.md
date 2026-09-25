@@ -24,7 +24,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 - [**REFERENCES.md**](docs/REFERENCES.md) — Sourced literature compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans & Helwig 2003, Hargreaves 2010), and physics formulas.
 - [**PROVENANCE.md**](docs/PROVENANCE.md) — Provenance tracking, retrievable URLs/DOIs for all literature, and register of items marked UNVERIFIED.
 - [**DATA_NOTES.md**](docs/DATA_NOTES.md) — Global transmitter status (US/Canada 2010 shutdown, European 2015 decommissioning, Anthorn UK timing role, active China and Russia chains).
-- [**TILES.md**](docs/TILES.md) — Centralized map tile configuration, offline radar canvas fallback, and self-hosted tile instructions.
+- [**TILES.md**](docs/TILES.md) — Centralized map tile configuration (OpenFreeMap vector default, OSM raster, authenticated CARTO, and offline radar canvas fallback).
 - [**THIRD_PARTY_NOTICES.md**](THIRD_PARTY_NOTICES.md) — Full licensing and copyright notices for MapLibre GL, Proj4js, PapaParse, Turf.js, dev dependencies, and fonts.
 - [**LICENSE**](LICENSE) — Standard Open-Source MIT License.
 
@@ -61,7 +61,7 @@ eloran/
 │   │   ├── simulationStore.js   # Single reactive Zustand state store
 │   │   └── presets.js           # Calibrated scenarios (North China Sea, North Sea Historical, etc.)
 │   ├── components/
-│   │   ├── map/                 # MapView (MapLibre GL raster), Contours, Markers, GDOP overlay
+│   │   ├── map/                 # MapView (MapLibre GL vector & raster), Contours, Markers, GDOP overlay
 │   │   ├── panels/              # StationEditor, ClockPanel, AsfPanel, FusionPanel, DisplayPanel
 │   │   ├── charts/              # PulseViewer (oscilloscope with SVG export)
 │   │   └── ui/                  # Modal, Slider, Toggle, ErrorBoundary, SystemBanners

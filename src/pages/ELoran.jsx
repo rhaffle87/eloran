@@ -10,7 +10,7 @@ import { useSimulationStore } from '../state/simulationStore.js';
 
 export default function ELoran() {
   const [activeTab, setActiveTab] = useState('stations'); // 'stations' | 'clocks' | 'asf' | 'fusion' | 'display'
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
 
   const { mapMode, setMapMode, addStation, evaluateReceivers } = useSimulationStore();
 
@@ -75,47 +75,51 @@ export default function ELoran() {
         <div className="absolute top-4 right-4 z-20 bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-lg p-1 flex items-center gap-1 shadow-2xl font-mono text-xs">
           <button
             onClick={() => setMapMode('pan')}
-            className={`px-3 py-1.5 rounded-md transition ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-md transition text-xs ${
               mapMode === 'pan'
                 ? 'bg-cyan-500 text-black font-bold'
                 : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             }`}
             title="Pan & Inspect (Shortkey: P)"
           >
-            Pan (P)
+            <span className="hidden sm:inline">Pan (P)</span>
+            <span className="sm:hidden">Pan</span>
           </button>
           <button
             onClick={() => setMapMode('add-master')}
-            className={`px-3 py-1.5 rounded-md transition ${
+            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
               mapMode === 'add-master'
                 ? 'bg-cyan-400 text-black font-bold'
                 : 'text-zinc-400 hover:text-cyan-300 hover:bg-zinc-800'
             }`}
             title="Click map to place Master station (Shortkey: M)"
           >
-            +Master (M)
+            <span className="hidden sm:inline">+Master (M)</span>
+            <span className="sm:hidden">+M</span>
           </button>
           <button
             onClick={() => setMapMode('add-slave')}
-            className={`px-3 py-1.5 rounded-md transition ${
+            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
               mapMode === 'add-slave'
                 ? 'bg-amber-400 text-black font-bold'
                 : 'text-zinc-400 hover:text-amber-300 hover:bg-zinc-800'
             }`}
             title="Click map to place Secondary station (Shortkey: S)"
           >
-            +Secondary (S)
+            <span className="hidden sm:inline">+Secondary (S)</span>
+            <span className="sm:hidden">+S</span>
           </button>
           <button
             onClick={() => setMapMode('add-receiver')}
-            className={`px-3 py-1.5 rounded-md transition ${
+            className={`px-2 sm:px-3 py-1.5 rounded-md transition text-xs ${
               mapMode === 'add-receiver'
                 ? 'bg-emerald-400 text-black font-bold'
                 : 'text-zinc-400 hover:text-emerald-300 hover:bg-zinc-800'
             }`}
             title="Click map to place Receiver (Shortkey: R)"
           >
-            +Receiver (R)
+            <span className="hidden sm:inline">+Receiver (R)</span>
+            <span className="sm:hidden">+R</span>
           </button>
         </div>
       </div>
@@ -123,7 +127,7 @@ export default function ELoran() {
       {/* Collapsible Left Console Drawer */}
       <div
         className={`relative z-30 transition-all duration-300 ease-in-out border-l border-zinc-800 bg-zinc-900/95 backdrop-blur-md flex flex-col ${
-          sidebarOpen ? 'w-[420px]' : 'w-0 border-l-0 overflow-hidden'
+          sidebarOpen ? 'w-full max-w-[380px] lg:w-[420px]' : 'w-0 border-l-0 overflow-hidden'
         }`}
       >
         {/* Toggle Collapse Tab */}

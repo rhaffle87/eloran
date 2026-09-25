@@ -35,7 +35,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; connect-src 'self' blob: https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; worker-src blob:; child-src blob:; frame-ancestors 'none'; form-action 'none'; base-uri 'self';"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://tiles.openfreemap.org https://*.openfreemap.org; img-src 'self' data: blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; connect-src 'self' blob: https://tiles.openfreemap.org https://*.openfreemap.org https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com; worker-src blob:; child-src blob:; frame-ancestors 'none'; form-action 'none'; base-uri 'self';"
         },
         {
           "key": "X-DNS-Prefetch-Control",

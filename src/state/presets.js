@@ -141,16 +141,16 @@ export const PRESET_SCENARIOS = {
 
   bohai_yellow_sea_active: {
     id: 'bohai_yellow_sea_active',
-    name: 'Bohai & Yellow Sea Chain — GRI 7430 (Active)',
+    name: 'North China Sea Chain — GRI 7430 (Active)',
     status: 'active',
-    description: 'Active Chinese eLoran North Chain (GRI 7430). Master: Rongcheng (37°04\'N 122°19\'E). Secondaries: Xuancheng (31°04\'N 118°53\'E) and Helong (42°43\'N 128°55\'E). Coordinates from NGA Pub 117 (Radio Aids to Navigation, Chapter 6, 2023 ed.) and Zhang et al. (2024) ILA-42 paper. Transmits navigation pulses plus 9th-pulse LDC differential corrections. GRI = 7430 (74.3 ms group interval). Note: GRI 6780 is the separate South China Sea chain (Hexian master).',
+    description: 'Active Chinese eLoran North China Sea Chain (GRI 7430). Master: Rongcheng (37°04\'N 122°19\'E). Secondaries: Xuancheng (X, 31°04\'N 118°53\'E) and Helong (Y, 42°43\'N 129°06\'E). Coordinates from NGA Pub 117 (Radio Aids to Navigation, Chapter 6). Transmits navigation pulses plus 9th-pulse LDC differential corrections. GRI = 7430 (74.3 ms group interval). Note: GRI 6780 is the separate South China Sea chain (Hexian master).',
     center: [121.5, 36.5],
     zoom: 6,
     masters: [
       {
         role: 'master',
         // Source: NGA Pub 117 (2023), Chapter 6 — Chinese Loran-C/eLoran stations
-        // Rongcheng (荣成) 37°04'N 122°19'E → 37.0667°N, 122.3167°E
+        // Rongcheng 37°04'N 122°19'E → 37.066667°N, 122.316667°E
         label: 'Rongcheng-M (Active)',
         lat: 37.066667,
         lng: 122.316667,
@@ -167,8 +167,8 @@ export const PRESET_SCENARIOS = {
     slaves: [
       {
         role: 'slave',
-        // Source: NGA Pub 117 (2023) — Xuancheng (宣城) 31°04'N 118°53'E → 31.0667°N, 118.8833°E
-        label: 'Xuancheng-S1 (Active)',
+        // Source: NGA Pub 117 (2023), Chapter 6 — Xuancheng (X) 31°04'N 118°53'E → 31.066667°N, 118.883333°E
+        label: 'Xuancheng-X (Active)',
         lat: 31.066667,
         lng: 118.883333,
         txDbm: 26,
@@ -182,10 +182,10 @@ export const PRESET_SCENARIOS = {
       },
       {
         role: 'slave',
-        // Source: NGA Pub 117 (2023) — Helong (和龙) 42°43'N 128°55'E → 42.7167°N, 128.9167°E
-        label: 'Helong-S2 (Active)',
+        // Source: NGA Pub 117 (2023), Chapter 6 — Helong (Y) 42°43'N 129°06'E → 42.716667°N, 129.100000°E
+        label: 'Helong-Y (Active)',
         lat: 42.716667,
-        lng: 128.916667,
+        lng: 129.100000,
         txDbm: 26,
         griMs: 7430,
         offsetSec: 0.028,

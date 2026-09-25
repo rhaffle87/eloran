@@ -13,7 +13,7 @@
 
 Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transmit ultra-low-power microwave signals (~1.5 GHz) from ~20,000 km in medium Earth orbit. As a consequence, satellite signals are highly susceptible to intentional jamming, spoofing, multipath degradation, and solar space weather events.
 
-**eLoran (enhanced Loran)** is the internationally standardized, terrestrial, low-frequency (100 kHz) navigation system providing high-power (hundreds of kilowatts to megawatts), unjammable, autonomous Positioning, Navigation, and Timing (PNT).
+**eLoran (enhanced Loran)** is the internationally standardized, terrestrial, low-frequency (100 kHz) navigation system providing high-power (hundreds of kilowatts to megawatts) signals that share no common failure modes with GNSS, delivering resilient, autonomous Positioning, Navigation, and Timing (PNT).
 
 **LORAN LAB** is a standalone, web-based engineering simulation suite designed to model, visualize, and analyze hyperbolic and pseudorange radio navigation chains with mathematical rigor.
 
@@ -21,10 +21,11 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ## 2. Documentation & Research Standards
 
-- [**REFERENCES.md**](docs/REFERENCES.md) — Comprehensive compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, PhD theses (Pelgrum 2006, Offermans 2003), and verified physics formula sheet.
+- [**REFERENCES.md**](docs/REFERENCES.md) — Sourced literature compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans & Helwig 2003, Hargreaves 2010), and physics formulas.
+- [**PROVENANCE.md**](docs/PROVENANCE.md) — Provenance tracking, retrievable URLs/DOIs for all literature, and register of items marked UNVERIFIED.
 - [**DATA_NOTES.md**](docs/DATA_NOTES.md) — Global transmitter status (US/Canada 2010 shutdown, European 2015 decommissioning, Anthorn UK timing role, active China and Russia chains).
 - [**TILES.md**](docs/TILES.md) — Centralized map tile configuration, offline radar canvas fallback, and self-hosted tile instructions.
-- [**THIRD_PARTY_NOTICES.md**](THIRD_PARTY_NOTICES.md) — Full licensing and copyright notices for MapLibre GL, Proj4js, PapaParse, Turf.js, etc.
+- [**THIRD_PARTY_NOTICES.md**](THIRD_PARTY_NOTICES.md) — Full licensing and copyright notices for MapLibre GL, Proj4js, PapaParse, Turf.js, dev dependencies, and fonts.
 - [**LICENSE**](LICENSE) — Standard Open-Source MIT License.
 
 ---
@@ -35,6 +36,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 eloran/
 ├── docs/
 │   ├── REFERENCES.md            # Standards, formulas, and literature compendium
+│   ├── PROVENANCE.md            # Provenance audit, citation links & unverified ledger
 │   ├── DATA_NOTES.md            # Global station operational history & coordinates
 │   ├── TILES.md                 # Tile providers, usage limits & offline mode
 │   └── EXTRACTION_NOTES.md      # Mathematical specifications & legacy audit
@@ -46,7 +48,7 @@ eloran/
 │   │   ├── asf.js               # Safe recursive-descent AST formula parser & evaluator
 │   │   ├── clocks.js            # Cesium, Rubidium, GPSDO, Quartz drift & bias models
 │   │   ├── dds.js               # Eurofix 9th-pulse PPM telemetry generator
-│   │   ├── fusion.js            # Weighted covariance GNSS-eLoran multi-sensor fusion
+│   │   ├── fusion.js            # Inverse-covariance weighted GNSS-eLoran multi-sensor fusion
 │   │   ├── pulse.js             # 100 kHz carrier, raised-cosine envelope, GRI timing
 │   │   ├── contours.js          # Marching squares 2D contouring + RDP simplification
 │   │   ├── stations.js          # Station schema, validation, boundary guards, CSV/GeoJSON
@@ -57,7 +59,7 @@ eloran/
 │   │   └── workerClient.js      # Cancellable Promise wrapper with transferable buffers
 │   ├── state/
 │   │   ├── simulationStore.js   # Single reactive Zustand state store
-│   │   └── presets.js           # Calibrated scenarios (Bohai Sea, North Sea Historical, etc.)
+│   │   └── presets.js           # Calibrated scenarios (North China Sea, North Sea Historical, etc.)
 │   ├── components/
 │   │   ├── map/                 # MapView (MapLibre GL raster), Contours, Markers, GDOP overlay
 │   │   ├── panels/              # StationEditor, ClockPanel, AsfPanel, FusionPanel, DisplayPanel
@@ -71,7 +73,7 @@ eloran/
 ## 4. Physics & Navigation Engine
 
 ### 1. Dual Positioning Solvers
-- **Modern 3D Pseudorange Multilateration**: Directly solves the state vector $\mathbf{x} = [x, y, c \cdot b_{rx}]^T$, simultaneously estimating horizontal coordinates $(x, y)$ and receiver clock bias $b_{rx}$ in nanoseconds relative to UTC. Supports multi-chain and multi-rate reception without requiring a shared master.
+- **Modern 2D+Time Pseudorange Multilateration**: Directly solves the state vector $\mathbf{x} = [x, y, c \cdot b_{rx}]^T$, simultaneously estimating horizontal coordinates $(x, y)$ and receiver clock bias $b_{rx}$ in nanoseconds. Supports cross-chain and all-in-view reception given a common UTC time base (or estimating one receiver clock bias per independent chain), removing the classical requirement for a single shared master station.
 - **Classical Hyperbolic TDOA**: Iterative Gauss-Newton solver on range differences $(d_S - d_M)$ relative to a reference master station.
 
 ### 2. Atmospheric & Propagation Modeling
@@ -79,7 +81,7 @@ eloran/
   - RTCM MPS: $\eta = 1.000338$ ($c = 299,792,458\text{ m/s}$)
   - USCG Loran-C User Handbook: $\eta = 1.000284$
   - China National Standard: $\eta = 1.000315$
-- **Secondary Factor (SF)**: Empirical Brunavs (1977) polynomial modeling all-seawater groundwave delay ($\sigma = 5\text{ S/m}$, $\varepsilon_r = 80$ at $100\text{ kHz}$).
+- **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known ~0.236 µs / ~71 m step discontinuity at 100 statute miles; disabled by default with a visible UI indicator `Secondary Factor: off (UNVERIFIED model)` wherever results depend on PF+SF+ASF).
 - **Additional Secondary Factor (ASF)**: Real-time spatial polynomial and raster evaluation of overland phase delays.
 
 ### 3. Cycle Slip Modeling (Boyce 2006)
@@ -98,6 +100,9 @@ npm test
 
 # Run ESLint validation
 npm run lint
+
+# Run citation & provenance verification (local audit)
+npm run check:provenance
 
 # Start Vite development server
 npm run dev

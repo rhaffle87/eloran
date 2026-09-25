@@ -21,7 +21,12 @@ import { simplifyRDP } from '../contours.js';
 import { compileAsfExpression, validateAsfExpression } from '../asf.js';
 import { parseStationsCsv, exportStationsCsv } from '../stations.js';
 import { simulateClockOffset, createMulberry32 } from '../clocks.js';
-import { evaluatePulse } from '../pulse.js';
+import {
+  evaluatePulse,
+  evaluateStandardLoranPulseMicroseconds,
+  evaluateCarrierMicroseconds,
+} from '../pulse.js';
+import { fusePositions } from '../fusion.js';
 
 describe('Geodesy and Coordinate Transformations', () => {
   it('computes geodesic distance vs known values (London to Paris ~343 km)', () => {
@@ -306,6 +311,114 @@ describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () =
     expect(solution.hdop).toBeGreaterThan(0);
     expect(solution.tdop).toBeGreaterThan(0);
     expect(solution.gdop).toBeGreaterThan(0);
+  });
+
+  it.fails('expects physical continuity of the Secondary Factor (SF) polynomial across the 100 statute mile boundary (expected failure until continuous coefficients are implemented)', () => {
+    const sm100Meters = 100 * 1609.344;
+    // Evaluate just below 100 statute miles (short-range branch)
+    const sfBelow = computeSecondaryFactorSec(sm100Meters - 1);
+    // Evaluate at/above 100 statute miles (long-range branch)
+    const sfAbove = computeSecondaryFactorSec(sm100Meters + 1);
+
+    const sfBelowUs = sfBelow * 1e6;
+    const sfAboveUs = sfAbove * 1e6;
+    const jumpUs = Math.abs(sfBelowUs - sfAboveUs);
+
+    // A physically continuous model must have jump < 0.001 µs (< 0.3 m) across the 100 sm threshold.
+    // In the historical polynomial, this jump is ~0.236 µs (~71 m), which fails this assertion.
+    // Marked as it.fails: when continuous Brunavs coefficients are implemented, this will turn green.
+    expect(jumpUs).toBeLessThan(0.001);
+  });
+});
+
+describe('100 kHz RF Waveform and Pulse Carrier Physics', () => {
+  it('verifies carrier period is exactly 10 µs with t in microseconds', () => {
+    // Carrier term: sin(2 * pi * 0.1 * t + PC) where f = 0.1 cycles/µs -> period Tc = 10 µs
+    const t0 = evaluateCarrierMicroseconds(0);
+    const tQuarter = evaluateCarrierMicroseconds(2.5); // Peak positive
+    const tHalf = evaluateCarrierMicroseconds(5.0);    // Zero-crossing (negative-going)
+    const tThreeQuarter = evaluateCarrierMicroseconds(7.5); // Peak negative
+    const tPeriod = evaluateCarrierMicroseconds(10.0); // Complete 1 cycle
+
+    expect(t0).toBeCloseTo(0, 7);
+    expect(tQuarter).toBeCloseTo(1, 7);
+    expect(tHalf).toBeCloseTo(0, 7);
+    expect(tThreeQuarter).toBeCloseTo(-1, 7);
+    expect(tPeriod).toBeCloseTo(0, 7);
+
+    // Periodicity test: c(t + 10 µs) == c(t) for arbitrary t
+    for (let t = 0.5; t < 50; t += 3.7) {
+      expect(evaluateCarrierMicroseconds(t + 10)).toBeCloseTo(evaluateCarrierMicroseconds(t), 6);
+    }
+  });
+
+  it('verifies Standard Zero Crossing (SZC) is at exactly 30 µs and is positive-going', () => {
+    // At t = 30 µs, exactly 3 full cycles of 10 µs have elapsed
+    const valAtSZC = evaluateCarrierMicroseconds(30.0);
+    expect(valAtSZC).toBeCloseTo(0, 7);
+
+    // Check that it is positive-going (derivative > 0)
+    const justBefore = evaluateCarrierMicroseconds(29.9);
+    const justAfter = evaluateCarrierMicroseconds(30.1);
+    expect(justBefore).toBeLessThan(0);
+    expect(justAfter).toBeGreaterThan(0);
+
+    // Confirm that the full Loran pulse at t = 30 µs is at zero crossing with non-zero envelope
+    const pulseAtSZC = evaluateStandardLoranPulseMicroseconds(30.0);
+    expect(pulseAtSZC).toBeCloseTo(0, 6);
+    const pulseJustAfter = evaluateStandardLoranPulseMicroseconds(30.1);
+    expect(pulseJustAfter).toBeGreaterThan(0);
+  });
+
+  it('verifies envelope peak timing is at 65 µs', () => {
+    // Carrier at 65 µs is sin(2*pi*0.1*65) = sin(13*pi) = 0
+    // Check the envelope magnitude directly (t^2 * exp(-2t/65))
+    const env60 = (60 ** 2) * Math.exp((-2 * 60) / 65);
+    const env65 = (65 ** 2) * Math.exp((-2 * 65) / 65);
+    const env70 = (70 ** 2) * Math.exp((-2 * 70) / 65);
+
+    expect(env65).toBeGreaterThan(env60);
+    expect(env65).toBeGreaterThan(env70);
+  });
+});
+
+describe('Multi-Sensor PNT Fusion (Inverse-Covariance BLUE)', () => {
+  it('dynamically weights sensors inversely proportional to their variance', () => {
+    // Scenario: eLoran has high precision (cov = 4 m² = 2x2m), GNSS has degraded precision (cov = 100 m² = 10x10m)
+    const eloranFix = {
+      lat: 50.0,
+      lng: 1.0,
+      covariance: [[4, 0], [0, 4]],
+      hplMeters: 6,
+    };
+    const gnssFix = {
+      lat: 50.001,
+      lng: 1.001,
+      covariance: [[100, 0], [0, 100]],
+    };
+
+    const fused = fusePositions(eloranFix, gnssFix, 'fusion');
+    expect(fused.mode).toBe('fusion');
+    expect(fused.weightingMethod).toBe('inverse-covariance');
+
+    // eLoran variance is 4, GNSS variance is 100
+    // Weight eLoran = (1/4) / (1/4 + 1/100) = 0.25 / 0.26 ≈ 0.9615
+    // Weight GNSS = (1/100) / (1/4 + 1/100) = 0.01 / 0.26 ≈ 0.0385
+    expect(fused.weights.eloran).toBeGreaterThan(0.95);
+    expect(fused.weights.gnss).toBeLessThan(0.05);
+
+    // Fused position should be much closer to eLoran
+    expect(fused.lat).toBeCloseTo(eloranFix.lat, 4);
+  });
+
+  it('labels manual fixed weights as educational demo mode', () => {
+    const eloranFix = { lat: 0, lng: 0, covariance: [[16, 0], [0, 16]] };
+    const gnssFix = { lat: 1, lng: 1, covariance: [[16, 0], [0, 16]] };
+
+    const demoFused = fusePositions(eloranFix, gnssFix, 'fusion', null, { eloran: 0.6, gnss: 0.4 });
+    expect(demoFused.weightingMethod).toBe('fixed-weights-demo');
+    expect(demoFused.weights.eloran).toBeCloseTo(0.6, 2);
+    expect(demoFused.weights.gnss).toBeCloseTo(0.4, 2);
   });
 });
 

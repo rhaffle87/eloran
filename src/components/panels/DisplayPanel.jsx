@@ -229,6 +229,14 @@ export default function DisplayPanel({ isELoran = false }) {
                 {activeFix.residualMeters?.toFixed(2) || '0.00'} m
               </span>
             </div>
+            <div className="col-span-2 pt-1 border-t border-zinc-800/60 flex items-center justify-between text-[10px]">
+              <span className="text-zinc-500">Delay Model:</span>
+              <span className={`font-mono ${settings.enableSecondaryFactor ? 'text-amber-400 font-semibold' : 'text-zinc-400'}`}>
+                {settings.enableSecondaryFactor
+                  ? 'PF + SF + ASF (SF active)'
+                  : 'Secondary Factor: off (UNVERIFIED model)'}
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -295,6 +303,14 @@ export default function DisplayPanel({ isELoran = false }) {
           checked={settings.enableSecondaryFactor}
           onChange={(checked) => updateSettings({ enableSecondaryFactor: checked })}
         />
+        <div className="text-[10px] font-mono px-2 py-1 rounded bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+          <span className="text-zinc-500">Status:</span>
+          <span className={settings.enableSecondaryFactor ? 'text-amber-400 font-bold' : 'text-zinc-400'}>
+            {settings.enableSecondaryFactor
+              ? 'Secondary Factor: ON (UNVERIFIED model – discontinuous at 100 sm)'
+              : 'Secondary Factor: off (UNVERIFIED model)'}
+          </span>
+        </div>
       </div>
 
       {/* Cycle Slip / Wrong-Cycle Selection Simulation (Boyce 2006) */}

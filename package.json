@@ -11,11 +11,13 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:a11y": "node scripts/audit-a11y.cjs",
+    "test:utf8": "node scripts/verify-utf8.cjs",
     "check:provenance": "node scripts/check-provenance.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
     "@turf/turf": "^7.2.0",
+    "katex": "^0.18.9",
     "lucide-react": "^0.546.0",
     "maplibre-gl": "^5.10.0",
     "papaparse": "^5.5.3",

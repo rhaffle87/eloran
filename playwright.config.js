@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.BASE_URL || 'http://localhost:4173';
+const baseURL = process.env.BASE_URL || 'http://localhost:5173';
 
 export default defineConfig({
   testDir: './e2e',
@@ -24,9 +24,9 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: 'npm run build && vite preview --port 4173',
-        port: 4173,
-        reuseExistingServer: !process.env.CI,
+        command: 'npx vite --port 5173',
+        port: 5173,
+        reuseExistingServer: true,
         timeout: 60000,
       },
 });

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Cpu, ShieldCheck, Heart, Radio, ExternalLink, BookOpen } from 'lucide-react';
 
+import MathView from '../components/ui/MathView.jsx';
+
 const TECH_STACK = [
   'React 19', 'Vite 7', 'React Router v7', 'Tailwind CSS v4',
   'Zustand', 'MapLibre GL', 'Proj4', 'Turf.js', 'PapaParse', 'Vitest', 'Web Workers',
@@ -10,18 +12,22 @@ const ARCHITECTURE_CARDS = [
   {
     title: '1. Well-Conditioned Gauss-Newton Solver',
     body: 'Discovered and fixed a critical bug in the legacy solver where Jacobians scaled in seconds (1/c) caused matrix determinants of order 10⁻³⁴ to prematurely trigger the 10⁻¹² singularity abort on iteration 0. Refactored into metre range-difference space, ensuring rapid 4-iteration convergence.',
+    formula: '\\Delta \\mathbf{x} = \\left( J^T J \\right)^{-1} J^T \\Delta \\mathbf{\\rho}, \\quad \\det(J^T J) > 10^{-12}',
   },
   {
     title: '2. Sandboxed AST Expression Parser',
     body: 'Replaced unsafe new Function and eval statements with a strict whitelist Recursive Descent Parser and null-prototype token dispatch. Completely immune to code injection.',
+    formula: '\\text{Eval}: \\operatorname{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
   },
   {
     title: '3. Decoupled Pure Physics Library',
-    body: 'Separated all mathematical and geodesy logic into pure, testable modules in src/lib/, validated by a 16-test Vitest suite covering geodesics, TDOA symmetry, GDOP on known geometries, and RDP decimation.',
+    body: 'Separated all mathematical and geodesy logic into pure, testable modules in src/lib/, validated by a 50-test Vitest suite covering geodesics, TDOA symmetry, GDOP on known geometries, and RDP decimation.',
+    formula: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF}(\\eta) + \\text{SF}(\\sigma) + \\text{ASF}(d, \\sigma)',
   },
   {
     title: '4. 100 kHz Modulated Carrier Oscilloscope',
     body: 'Upgraded the RF waveform viewer from a static envelope display to a high-resolution 100 kHz carrier synthesizer with GRI grid overlays, per-station delay flags, and ionospheric skywave multi-path modelling.',
+    formula: 's(t) = A \\cdot t^2 e^{-2t/t_p} \\sin(2\\pi f_0 t), \\quad f_0 = 100\\text{ kHz}',
   },
 ];
 
@@ -105,11 +111,21 @@ export default function About() {
           {ARCHITECTURE_CARDS.map((card) => (
             <div
               key={card.title}
-              className="p-4 rounded-xl space-y-1.5"
+              className="p-4 rounded-xl space-y-2 flex flex-col justify-between"
               style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
             >
-              <div className="font-bold font-mono" style={{ color: 'var(--accent-eloran)' }}>{card.title}</div>
-              <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>{card.body}</p>
+              <div>
+                <div className="font-bold font-mono" style={{ color: 'var(--accent-eloran)' }}>{card.title}</div>
+                <p className="leading-relaxed mt-1" style={{ color: 'var(--text-muted)' }}>{card.body}</p>
+              </div>
+              {card.formula && (
+                <div
+                  className="mt-2 px-3 py-1.5 rounded-lg overflow-x-auto"
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <MathView math={card.formula} />
+                </div>
+              )}
             </div>
           ))}
         </div>

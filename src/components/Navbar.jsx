@@ -112,7 +112,7 @@ export default function Navbar() {
               onClick={toggleTheme}
               className="p-1.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition"
               title={`Switch to ${effectiveTheme === 'dark' ? 'Light' : 'Dark'} mode`}
-              aria-label="Toggle theme mode"
+              aria-label={effectiveTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             >
               {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>

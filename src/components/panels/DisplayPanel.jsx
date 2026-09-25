@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
@@ -201,7 +201,7 @@ export default function DisplayPanel({ isELoran = false }) {
             <div>
               <span className="text-[var(--text-muted)] block text-[10px]">FIX POSITION</span>
               <span className="text-[var(--text-primary)]">
-                {activeFix.lat?.toFixed(5)}┬░, {activeFix.lng?.toFixed(5)}┬░
+                {activeFix.lat?.toFixed(5)}°, {activeFix.lng?.toFixed(5)}°
               </span>
             </div>
             <div>
@@ -217,7 +217,7 @@ export default function DisplayPanel({ isELoran = false }) {
               </span>
             </div>
             <div>
-              <span className="text-[var(--text-muted)] block text-[10px]" title="Simplified k├ù╧â estimate ΓÇö NOT a formal integrity bound per RTCM MPS">HPL (simplified 3╧â) Γôÿ</span>
+              <span className="text-[var(--text-muted)] block text-[10px]" title="Simplified k×σ estimate — NOT a formal integrity bound per RTCM MPS">HPL (simplified 3σ) ⓘ</span>
               <span className="text-[var(--text-secondary)]">
                 {activeFix.hplMeters?.toFixed(1) || '0.0'} m
               </span>
@@ -282,10 +282,10 @@ export default function DisplayPanel({ isELoran = false }) {
         </div>
       </div>
 
-      {/* Standards & Atmospheric Refraction (Primary Factor ╬╖) */}
+      {/* Standards & Atmospheric Refraction (Primary Factor η) */}
       <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
         <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          Primary Factor Refractive Index (╬╖)
+          Primary Factor Refractive Index (η)
         </label>
         <select
           value={settings.refractiveIndex}
@@ -294,12 +294,12 @@ export default function DisplayPanel({ isELoran = false }) {
         >
           {Object.values(REFRACTIVE_INDEX_PRESETS).map((p) => (
             <option key={p.id} value={p.value}>
-              {p.name} (╬╖ = {p.value})
+              {p.name} (η = {p.value})
             </option>
           ))}
         </select>
         <p className="text-[10px] text-[var(--text-muted)]">
-          Propagation speed v = c / ╬╖. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 ┬╡s delay over 1000 km.
+          Propagation speed v = c / η. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 µs delay over 1000 km.
         </p>
 
         <Toggle
@@ -312,7 +312,7 @@ export default function DisplayPanel({ isELoran = false }) {
           <span className="text-[var(--text-muted)]">Status:</span>
           <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold' : 'text-[var(--text-dim)]'}>
             {settings.enableSecondaryFactor
-              ? 'Secondary Factor: ON (UNVERIFIED model ΓÇô discontinuous at 100 sm)'
+              ? 'Secondary Factor: ON (UNVERIFIED model — discontinuous at 100 sm)'
               : 'Secondary Factor: off (UNVERIFIED model)'}
           </span>
         </div>
@@ -343,7 +343,7 @@ export default function DisplayPanel({ isELoran = false }) {
 
         <Toggle
           label="Simulate Carrier Cycle Slips"
-          description="Triggers wrong-cycle selection (┬▒10 ┬╡s / ~3 km error) when SNR degrades"
+          description="Triggers wrong-cycle selection (±10 µs / ~3 km error) when SNR degrades"
           checked={settings.enableCycleSlips}
           onChange={(checked) => updateSettings({ enableCycleSlips: checked })}
         />
@@ -362,10 +362,10 @@ export default function DisplayPanel({ isELoran = false }) {
                 Boyce Theoretical Rician Ratio (SOURCED, ILA 2006)
               </option>
               <option value="austron-28">
-                Austron New Empirical (28 ┬╡s) (SOURCED, Boyce Eq. 6)
+                Austron New Empirical (28 µs) (SOURCED, Boyce Eq. 6)
               </option>
               <option value="austron-42">
-                Austron Old Empirical (42 ┬╡s) (SOURCED, Boyce Eq. 5)
+                Austron Old Empirical (42 µs) (SOURCED, Boyce Eq. 5)
               </option>
             </select>
           </div>
@@ -417,13 +417,13 @@ export default function DisplayPanel({ isELoran = false }) {
           {/* Live Calculated Readout */}
           <div className="pt-2 border-t border-[var(--border-subtle)] text-[10px] space-y-1 text-[var(--text-dim)]">
             <div className="flex justify-between">
-              <span>Total SNR (N ┬╖ SNR):</span>
+              <span>Total SNR (N · SNR):</span>
               <span className="text-[var(--text-primary)] font-bold">
                 {((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10))).toFixed(1)} dB
               </span>
             </div>
             <div className="flex justify-between">
-              <span>TOA Error Std Dev (╧â_i):</span>
+              <span>TOA Error Std Dev (σ_i):</span>
               <span className="text-[var(--accent-eloran)] font-bold">
                 {computeToaNoiseStdDevMeters({
                   snrDb: settings.snrDb || 18,
@@ -519,7 +519,7 @@ export default function DisplayPanel({ isELoran = false }) {
                   : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
               }`}
             >
-              Meters (Range ╬ö)
+              Meters (Range Δ)
             </button>
             <button
               onClick={() => updateSettings({ contourUnit: 'seconds' })}
@@ -549,7 +549,7 @@ export default function DisplayPanel({ isELoran = false }) {
           <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
             <div>
               <div className="font-bold text-[var(--text-primary)]">Primary Factor (PF)</div>
-              <div className="text-[10px] text-[var(--text-muted)]">v = c / ╬╖ (Atmospheric refraction)</div>
+              <div className="text-[10px] text-[var(--text-muted)]">v = c / η (Atmospheric refraction)</div>
             </div>
             <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
               SOURCED (RTCM / USCG)
@@ -579,7 +579,7 @@ export default function DisplayPanel({ isELoran = false }) {
               <div className="font-bold text-[var(--text-primary)]">Mixed-Path ASF (Millington)</div>
               <div className="text-[10px] text-[var(--text-muted)]">
                 {settings.asfModelMode === 'millington'
-                  ? `Terrain ╧â = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
+                  ? `Terrain σ = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
                   : 'Safe AST Formula Override'}
               </div>
             </div>
@@ -593,7 +593,7 @@ export default function DisplayPanel({ isELoran = false }) {
             <div>
               <div className="font-bold text-[var(--text-primary)]">Cycle Selection Ratio Test</div>
               <div className="text-[10px] text-[var(--text-muted)]">
-                Envelope ratio excursion [R(25), R(35)] (┬▒5 ┬╡s)
+                Envelope ratio excursion [R(25), R(35)] (±5 µs)
               </div>
             </div>
             <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
@@ -605,8 +605,8 @@ export default function DisplayPanel({ isELoran = false }) {
           <div className="flex items-center justify-between">
             <div>
               <div className="font-bold text-[var(--text-primary)]">TOA Measurement Noise</div>
-              <div className="text-[10px] text-[var(--text-muted)]">
-                ╧â_i┬▓ = J_i┬▓ + K┬▓ / (N ┬╖ SNR_i)
+              <div className="text-[10px] text-[var(--text-muted)] font-mono">
+                σ_i² = J_i² + K² / (N · SNR_i)
               </div>
             </div>
             <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">

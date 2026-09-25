@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
@@ -142,7 +142,7 @@ export default function AsfPanel() {
               <CheckCircle2 size={11} /> Model: Millington Mixed-Path (SOURCED / UNVERIFIED)
             </span>
             <span className="text-[10px] text-[var(--text-muted)]">
-              Conductivity: ITU-R P.832 (SOURCED) ΓÇó Scale k: UNVERIFIED
+              Conductivity: ITU-R P.832 (SOURCED) • Scale k: UNVERIFIED
             </span>
           </div>
 
@@ -174,7 +174,7 @@ export default function AsfPanel() {
             <div className="text-[10px] text-[var(--text-muted)] flex justify-between">
               <span>Seawater reference: 5.0 S/m</span>
               <span className="text-[var(--accent-eloran)] font-bold">
-                Selected ╧â = {settings.asfLandSigma ?? 0.003} S/m
+                Selected σ = {settings.asfLandSigma ?? 0.003} S/m
               </span>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function AsfPanel() {
           <div className="bg-[var(--bg-subtle)] rounded-lg p-3 border border-[var(--border-subtle)] space-y-2">
             <div className="text-[11px] font-bold text-[var(--text-secondary)] flex items-center justify-between">
               <span>Path Distance vs Predicted ASF Delay</span>
-              <span className="text-[10px] text-[var(--status-ok)] font-medium">Γ£ô Monotonicity Guaranteed</span>
+              <span className="text-[10px] text-[var(--status-ok)] font-medium">✓ Monotonicity Guaranteed</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
               <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--border-subtle)]">
@@ -235,7 +235,7 @@ export default function AsfPanel() {
             <div className="text-[10px] text-[var(--text-dim)] leading-tight">
               {settings.asfLandFraction === 0 ? (
                 <span className="text-[var(--accent-eloran)] font-semibold">
-                  All-Seawater Path: ASF delay is exactly 0.00 m (0.00 ┬╡s).
+                  All-Seawater Path: ASF delay is exactly 0.00 m (0.00 µs).
                 </span>
               ) : (
                 <span>

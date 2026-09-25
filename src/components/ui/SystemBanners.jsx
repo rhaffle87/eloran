@@ -2,12 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, ShieldAlert, X } from 'lucide-react';
 
 export function EducationalDisclaimerBanner() {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem('loran_edu_notice_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('loran_edu_notice_dismissed', 'true');
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   if (dismissed) return null;
 
   return (
     <div
+      role="region"
+      aria-label="Educational Disclaimer"
       className="border-b px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30 select-none"
       style={{
         background: 'var(--banner-edu-bg)',
@@ -26,8 +45,8 @@ export function EducationalDisclaimerBanner() {
         </span>
       </div>
       <button
-        onClick={() => setDismissed(true)}
-        className="p-0.5 rounded transition opacity-80 hover:opacity-100"
+        onClick={handleDismiss}
+        className="p-0.5 rounded transition opacity-80 hover:opacity-100 cursor-pointer"
         style={{ color: 'var(--banner-edu-title)' }}
         title="Dismiss notice"
         aria-label="Dismiss educational notice"

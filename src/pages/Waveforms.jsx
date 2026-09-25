@@ -2,25 +2,29 @@ import React from 'react';
 import { Activity, Info, Radio, Zap } from 'lucide-react';
 import PulseViewer from '../components/charts/PulseViewer.jsx';
 import CycleSelectionPanel from '../components/charts/CycleSelectionPanel.jsx';
+import MathView from '../components/ui/MathView.jsx';
 
 const INFO_CARDS = [
   {
     icon: Radio,
     accentVar: '--accent-eloran',
     title: '100 kHz Standard Pulse',
-    body: 'Every Loran pulse is transmitted on a centre frequency of 100 kHz with 99% of its spectral energy confined within the 90–110 kHz band. The standard envelope follows a raised-cosine rise: E(t) = 0.5(1 + cos(πt / T_p)).',
+    body: 'Every Loran pulse is transmitted on a centre frequency of 100 kHz with 99% of its spectral energy confined within the 90–110 kHz band. Standard raised-cosine envelope:',
+    formula: 'E(t) = 0.5\\left(1 + \\cos\\left(\\frac{\\pi t}{T_p}\\right)\\right)',
   },
   {
     icon: Zap,
     accentVar: '--accent-loran-c',
     title: 'GRI Timing Structure',
-    body: 'The Group Repetition Interval (GRI) defines the period in tens of microseconds between consecutive pulse groups emitted by the chain. For example, GRI 8330 repeats every 83.30 ms.',
+    body: 'The Group Repetition Interval (GRI) defines the period in tens of microseconds between consecutive pulse groups emitted by the chain:',
+    formula: 'T_{\\text{GRI}} = \\text{GRI} \\times 10\\,\\mu\\text{s}',
   },
   {
     icon: Info,
     accentVar: '--status-ok',
     title: 'Skywave Discrimination',
-    body: 'Loran receivers sample the groundwave at the standard 3rd cycle (30 µs from onset) to measure precise arrival before ionospheric reflected skywaves arrive, which typically follow 35–50 µs later.',
+    body: 'Loran receivers sample the groundwave at the standard 3rd cycle (30 µs from onset) prior to the arrival of skywaves:',
+    formula: 't_{\\text{sample}} = 3 \\cdot T_{\\text{carrier}} = 30\\,\\mu\\text{s} < t_{\\text{skywave}}',
   },
 ];
 
@@ -82,21 +86,31 @@ export default function Waveforms() {
 
       {/* Physics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 font-mono text-xs">
-        {INFO_CARDS.map(({ icon: Icon, accentVar, title, body }) => (
+        {INFO_CARDS.map(({ icon: Icon, accentVar, title, body, formula }) => (
           <div
             key={title}
-            className="p-4 rounded-xl space-y-2"
+            className="p-4 rounded-xl space-y-2 flex flex-col justify-between"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
           >
-            <div
-              className="flex items-center gap-2 font-bold"
-              style={{ color: `var(${accentVar})` }}
-            >
-              <Icon size={14} aria-hidden="true" /> {title}
+            <div className="space-y-2">
+              <div
+                className="flex items-center gap-2 font-bold"
+                style={{ color: `var(${accentVar})` }}
+              >
+                <Icon size={14} aria-hidden="true" /> {title}
+              </div>
+              <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                {body}
+              </p>
             </div>
-            <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              {body}
-            </p>
+            {formula && (
+              <div
+                className="mt-2 px-3 py-1.5 rounded-lg overflow-x-auto"
+                style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
+              >
+                <MathView math={formula} />
+              </div>
+            )}
           </div>
         ))}
       </div>

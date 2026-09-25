@@ -7,12 +7,12 @@ import { create } from 'zustand';
  */
 
 function getSystemPreference() {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function getStoredTheme() {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   try {
     const saved = localStorage.getItem('loran_theme');
     if (saved === 'light' || saved === 'dark' || saved === 'system') {
@@ -21,7 +21,7 @@ function getStoredTheme() {
   } catch {
     // fallback if localStorage is restricted
   }
-  return 'dark'; // Default to precision dark instrument mode
+  return 'light'; // Hard-default to crisp editorial maritime light mode
 }
 
 function applyThemeToDOM(theme) {

@@ -238,7 +238,7 @@ self.onmessage = function (e) {
         const sClockOffset = (s.clock?.biasSec || 0) + (s.clock?.driftPerSec || 0) * simTimeSec;
         const mOffset = m.offsetSec || 0;
         const sOffset = s.offsetSec || 0;
-        const pairConstSec = sClockOffset + sOffset - (mClockOffset + mOffset);
+        const _pairConstSec = sClockOffset + sOffset - (mClockOffset + mOffset);
 
         const mDiff = m.diffCorrections?.enabled ? m.diffCorrections.avgMeters || 0 : 0;
         const sDiff = s.diffCorrections?.enabled ? s.diffCorrections.avgMeters || 0 : 0;
@@ -258,8 +258,8 @@ self.onmessage = function (e) {
             const arrM = distM / SPEED_OF_LIGHT + (asfM - mDiff) / SPEED_OF_LIGHT;
             const arrS = distS / SPEED_OF_LIGHT + (asfS - sDiff) / SPEED_OF_LIGHT;
 
-            // TDOA in seconds, with geometric distance difference in meters: (arrS - arrM) * c
-            const tdoaSec = arrS - arrM - pairConstSec;
+            // Geometric range difference (meters): (arrS - arrM) * c = (distS - distM) + (asfS - asfM)
+            const tdoaSec = arrS - arrM;
             grid[idx] = tdoaSec * SPEED_OF_LIGHT; // store in meters
           }
         }

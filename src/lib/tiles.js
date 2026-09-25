@@ -71,10 +71,20 @@ export function getNextFallbackProvider(currentProviderKey) {
 /**
  * Generate a MapLibre style spec for a given tile provider
  * @param {string} providerKey 
+ * @param {string} [theme='dark'] - 'light' | 'dark'
  * @returns {object|string} MapLibre style specification or style URL
  */
-export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER) {
-  const provider = TILE_PROVIDERS[providerKey] || TILE_PROVIDERS[DEFAULT_TILE_PROVIDER];
+export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER, theme = 'dark') {
+  // Normalize alias
+  const normalizedKey = providerKey === 'openfreemap' ? 'openfreemap-dark' : providerKey;
+  const provider = TILE_PROVIDERS[normalizedKey] || TILE_PROVIDERS[DEFAULT_TILE_PROVIDER];
+
+  // Dynamic OpenFreeMap theme switching: bright for light mode, dark for dark mode
+  if (normalizedKey === 'openfreemap-dark') {
+    return theme === 'light'
+      ? 'https://tiles.openfreemap.org/styles/bright'
+      : 'https://tiles.openfreemap.org/styles/dark';
+  }
 
   // Vector styles hosted directly as MapLibre Style JSON
   if (provider.type === 'vector' || provider.styleUrl) {
@@ -82,7 +92,8 @@ export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER) {
   }
 
   if (!provider.url) {
-    // Pure offline dark radar canvas style with synthetic coordinate grid
+    // Pure offline radar canvas style with theme-aware background
+    const isDark = theme === 'dark';
     return {
       version: 8,
       sources: {},
@@ -91,7 +102,7 @@ export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER) {
           id: 'background',
           type: 'background',
           paint: {
-            'background-color': '#09090b', // Zinc 950
+            'background-color': isDark ? '#09090b' : '#f8fafc',
           },
         },
       ],

@@ -5,6 +5,7 @@ import {
   ShieldCheck, TrendingDown, ArrowRight, BookOpen,
 } from 'lucide-react';
 import { useSimulationStore } from '../state/simulationStore.js';
+import MathView from '../components/ui/MathView.jsx';
 
 const concepts = [
   {
@@ -14,7 +15,7 @@ const concepts = [
     accentVar: '--accent-eloran',
     summary:
       'Loran does not measure absolute time-of-flight from transmitter to receiver. Instead, it measures the differential arrival time between synchronized master and secondary transmitters.',
-    math: 'TDOA = t_{arr,S} − t_{arr,M} = (d_S − d_M) / c + t_{coding}',
+    math: '\\text{TDOA} = t_{\\text{arr},S} - t_{\\text{arr},M} = \\frac{d_S - d_M}{c} + t_{\\text{coding}}',
     explanation:
       'For any fixed time difference, the locus of points having a constant distance difference from two fixed stations forms a hyperbola (Line of Position / LOP). The intersection of two or more LOPs uniquely fixes the receiver in two dimensions.',
     presetId: 'jakarta_baseline',
@@ -28,7 +29,7 @@ const concepts = [
     accentVar: '--accent-loran-c',
     summary:
       'How transmitter geometry magnifies timing measurement errors into horizontal positioning uncertainty.',
-    math: 'GDOP = √( trace( (HᵀH)⁻¹ ) )',
+    math: '\\text{GDOP} = \\sqrt{ \\operatorname{Tr}\\left( (H^T H)^{-1} \\right) }',
     explanation:
       'When transmitter stations are nearly collinear or subtend narrow angles relative to the receiver, hyperbolic lines of position intersect at grazing angles. A 10 ns timing jitter translates into hundreds of metres of horizontal position error. Wide angular baseline separation yields optimal geometry (GDOP < 2).',
     presetId: 'high_gdop',
@@ -42,7 +43,7 @@ const concepts = [
     accentVar: '--accent-loran-c',
     summary:
       'Phase delay accumulated as low-frequency groundwaves traverse landmasses of varying soil conductivity and elevation.',
-    math: 't_prop = d/c + PF + SF + ASF(φ, λ)',
+    math: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF} + \\text{SF} + \\text{ASF}(\\varphi, \\lambda)',
     explanation:
       'Loran 100 kHz signals travel via groundwaves following Earth curvature. Over seawater (conductivity ~4 S/m), signals travel near the speed of light. Over dry land or granite (~0.001 S/m), signals slow down, creating spatial errors up to hundreds of metres. eLoran maps and cancels these errors using published ASF grids and real-time differential corrections.',
     presetId: 'north_sea',
@@ -56,7 +57,7 @@ const concepts = [
     accentVar: '--accent-eloran',
     summary:
       'Spectral confinement and periodic pulse timing structure designed to resist interference.',
-    math: 'E(t) = 0.5(1 + cos(πt / T_pulse)), f₀ = 100 kHz',
+    math: 'E(t) = 0.5\\left(1 + \\cos\\left(\\frac{\\pi t}{T_{\\text{pulse}}}\\right)\\right), \\quad f_0 = 100\\text{ kHz}',
     explanation:
       'Each station emits a group of 8 or 9 pulses with a fast rise time to allow sampling at the 3rd carrier cycle (30 µs), prior to the arrival of skywaves reflected off the ionosphere. The GRI uniquely identifies the transmitting chain and prevents multi-chain cross-rate interference.',
     presetId: 'jakarta_baseline',
@@ -70,7 +71,7 @@ const concepts = [
     accentVar: '--status-ok',
     summary:
       'Complementary integration between satellite GNSS and high-power terrestrial eLoran.',
-    math: 'x_fused = w_E · x_eLoran + w_G · x_GNSS',
+    math: '\\mathbf{x}_{\\text{fused}} = w_{\\text{eLoran}} \\mathbf{x}_{\\text{eLoran}} + w_{\\text{GNSS}} \\mathbf{x}_{\\text{GNSS}}',
     explanation:
       'GNSS operates at microwave frequencies (1.2–1.5 GHz) with extremely faint satellite signals (−130 dBm), vulnerable to accidental jamming and intentional spoofing. eLoran operates at 100 kHz (LF) with megawatt transmitter towers emitting high-power terrestrial groundwaves that penetrate cities, fjords, and electronic jamming. Together they provide sovereign, uninterrupted positioning, navigation, and timing (PNT).',
     presetId: 'gnss_denied',
@@ -158,13 +159,13 @@ export default function Learn() {
 
               {/* Math Formula */}
               <div
-                className="px-4 py-2.5 rounded-lg font-mono text-xs overflow-x-auto"
+                className="px-4 py-2.5 rounded-lg text-xs overflow-x-auto flex items-center gap-3"
                 style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
               >
-                <span className="mr-2 text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-dim)' }}>
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider shrink-0" style={{ color: 'var(--text-dim)' }}>
                   Formula:
                 </span>
-                <code style={{ color: `var(${c.accentVar})` }}>{c.math}</code>
+                <MathView math={c.math} />
               </div>
 
               {/* Explanation */}

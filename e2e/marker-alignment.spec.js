@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Marker to Baseline Alignment Suite', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__LORAN_E2E__ = true;
+    });
+  });
+
   test('station pin circle centers match true map.project geographic coordinates and baseline endpoints within 1px', async ({ page }) => {
     await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
 
@@ -157,6 +163,77 @@ test.describe('Marker to Baseline Alignment Suite', () => {
           item.diffBaselineProjY,
           `Station ${item.label} baseline source coordinate drift against station coordinate`
         ).toBeLessThanOrEqual(0.1);
+      }
+    }
+  });
+
+  test('collinear degenerate stations (high_gdop) align perfectly with baseline vectors within 1px', async ({ page }) => {
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => Boolean(window.__maplibreInstance), { timeout: 15000 });
+
+    // Switch to poor geometry collinear preset
+    await page.selectOption('#scenario-preset-select', 'high_gdop');
+    await page.waitForTimeout(2000);
+
+    const auditData = await page.evaluate(() => {
+      const map = window.__maplibreInstance;
+      const canvas = map.getCanvas();
+      const canvasRect = canvas.getBoundingClientRect();
+      const markers = document.querySelectorAll('.station-marker');
+      const baselineFeatures = window.__baselineGeoJson?.features || [];
+
+      const results = [];
+      markers.forEach((markerEl) => {
+        const dot = markerEl.firstElementChild;
+        const label = markerEl.dataset.label;
+        const lng = parseFloat(markerEl.dataset.lng);
+        const lat = parseFloat(markerEl.dataset.lat);
+        const type = markerEl.dataset.type;
+
+        const dotRect = dot.getBoundingClientRect();
+        const dotScreenCenter = {
+          x: (dotRect.left + dotRect.width / 2) - canvasRect.left,
+          y: (dotRect.top + dotRect.height / 2) - canvasRect.top,
+        };
+        const expectedProjected = map.project([lng, lat]);
+
+        let baselineCoord = null;
+        if (type === 'master') {
+          baselineCoord = baselineFeatures[0]?.geometry?.coordinates[0];
+        } else if (type === 'slave') {
+          const feature = baselineFeatures.find(f => f.properties?.label?.includes(label) || f.properties?.id?.includes(label));
+          baselineCoord = feature?.geometry?.coordinates[1];
+        }
+
+        let baselineProjected = null;
+        let diffBaselineMarkerX = null;
+        let diffBaselineMarkerY = null;
+        if (baselineCoord) {
+          baselineProjected = map.project(baselineCoord);
+          diffBaselineMarkerX = Math.abs(dotScreenCenter.x - baselineProjected.x);
+          diffBaselineMarkerY = Math.abs(dotScreenCenter.y - baselineProjected.y);
+        }
+
+        results.push({
+          label,
+          type,
+          diffMarkerProjX: Math.abs(dotScreenCenter.x - expectedProjected.x),
+          diffMarkerProjY: Math.abs(dotScreenCenter.y - expectedProjected.y),
+          diffBaselineMarkerX,
+          diffBaselineMarkerY,
+        });
+      });
+
+      return results;
+    });
+
+    expect(auditData.length).toBeGreaterThanOrEqual(3);
+    for (const item of auditData) {
+      expect(item.diffMarkerProjX).toBeLessThanOrEqual(1.0);
+      expect(item.diffMarkerProjY).toBeLessThanOrEqual(1.0);
+      if (item.diffBaselineMarkerX !== null) {
+        expect(item.diffBaselineMarkerX).toBeLessThanOrEqual(1.0);
+        expect(item.diffBaselineMarkerY).toBeLessThanOrEqual(1.0);
       }
     }
   });

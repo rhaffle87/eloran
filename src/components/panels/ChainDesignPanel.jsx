@@ -24,6 +24,7 @@ import Toggle from '../ui/Toggle.jsx';
 export default function ChainDesignPanel() {
   const {
     designChain,
+    designParams,
     showBaselineExtensions,
     showCrossingAngles,
     toggleBaselineExtensions,
@@ -34,6 +35,7 @@ export default function ChainDesignPanel() {
     removeDesignSecondary,
     setDesignGRI,
     setDesignTDSigma,
+    updateDesignParams,
     loadDesignPreset,
     syncDesignFromActiveStations,
     commitDesignToSimulation,
@@ -42,12 +44,14 @@ export default function ChainDesignPanel() {
 
   const { master, secondaries, griUs, tdSigmaUs } = designChain;
 
-  // Real-time engineering feasibility evaluation
+  // Real-time engineering feasibility evaluation with configurable planning thresholds
   const plan = useMemo(() => {
     return evaluateChainFeasibility(master, secondaries, griUs, {
       maxCoverageDistanceMeters: (designChain.coverageRadiusKm || 600) * 1000,
+      minCodingDelayUs: designParams?.minCodingDelayUs,
+      maxBaselineKm: designParams?.maxBaselineKm,
     });
-  }, [master, secondaries, griUs, designChain.coverageRadiusKm]);
+  }, [master, secondaries, griUs, designChain.coverageRadiusKm, designParams]);
 
   const ideal2drmsMeters = useMemo(() => {
     const sigmaSec = (tdSigmaUs || 0.1) * 1e-6;
@@ -57,6 +61,25 @@ export default function ChainDesignPanel() {
 
   return (
     <div className="space-y-4 font-mono text-xs pb-6">
+      {/* Educational Simulator Disclaimer Banner */}
+      <div
+        className="p-2.5 rounded-lg border flex items-start gap-2.5"
+        style={{
+          background: 'rgba(245, 158, 11, 0.08)',
+          borderColor: 'rgba(245, 158, 11, 0.35)',
+        }}
+      >
+        <AlertTriangle size={15} className="text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="text-[11px] leading-relaxed">
+          <span className="font-bold uppercase tracking-wider block text-amber-500 mb-0.5 text-[10px]">
+            Educational Simulator Disclaimer
+          </span>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            Educational chain-design simulator — not validated for real regulatory chain planning, station licensing, or operational deployment.
+          </span>
+        </div>
+      </div>
+
       {/* Header Banner & Mode State */}
       <div
         className="p-3 rounded-lg border backdrop-blur-md"
@@ -86,57 +109,77 @@ export default function ChainDesignPanel() {
           Design station layouts, compute baseline travel times ($T_b$), emission delays ($ED = T_b + CD$), and verify minimum feasible GRI against USCG COMDTINST M16562.4A standards before activating.
         </p>
 
-        {/* Quick Presets */}
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-          <button
-            onClick={() => loadDesignPreset('uscg-400mi')}
-            className="px-2 py-1 rounded text-[10px] transition border cursor-pointer hover:bg-[var(--bg-muted)]"
-            style={{
-              background: 'var(--bg-canvas)',
-              color: 'var(--text-primary)',
-              borderColor: 'var(--border-subtle)',
-            }}
-            title="Golden 400-mile worked example from USCG Loran-C User Handbook"
-          >
-            USCG 400-mi Golden
-          </button>
-          <button
-            onClick={() => loadDesignPreset('jakarta-proposed')}
-            className="px-2 py-1 rounded text-[10px] transition border cursor-pointer hover:bg-[var(--bg-muted)]"
-            style={{
-              background: 'var(--bg-canvas)',
-              color: 'var(--text-primary)',
-              borderColor: 'var(--border-subtle)',
-            }}
-            title="Jakarta / Sunda Strait coastal maritime chain"
-          >
-            Jakarta Coastal
-          </button>
-          <button
-            onClick={() => loadDesignPreset('us-east-coast')}
-            className="px-2 py-1 rounded text-[10px] transition border cursor-pointer hover:bg-[var(--bg-muted)]"
-            style={{
-              background: 'var(--bg-canvas)',
-              color: 'var(--text-primary)',
-              borderColor: 'var(--border-subtle)',
-            }}
-            title="Historical US East Coast Chain (GRI 9960)"
-          >
-            US East (GRI 9960)
-          </button>
-          <button
-            onClick={syncDesignFromActiveStations}
-            className="px-2 py-1 rounded text-[10px] transition border cursor-pointer flex items-center gap-1 hover:bg-[var(--bg-muted)]"
-            style={{
-              background: 'var(--bg-canvas)',
-              color: 'var(--accent-eloran)',
-              borderColor: 'var(--accent-eloran-border)',
-            }}
-            title="Import active stations from current simulation"
-          >
-            <RefreshCw size={10} aria-hidden="true" />
-            <span>Sync Active</span>
-          </button>
+        {/* Quick Presets with Provenance Badges */}
+        <div className="space-y-1.5 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold" style={{ color: 'var(--text-dim)' }}>Presets & Scenarios</span>
+            <button
+              onClick={syncDesignFromActiveStations}
+              className="px-2 py-0.5 rounded text-[10px] transition border cursor-pointer flex items-center gap-1 hover:bg-[var(--bg-muted)]"
+              style={{
+                background: 'var(--bg-canvas)',
+                color: 'var(--accent-eloran)',
+                borderColor: 'var(--accent-eloran-border)',
+              }}
+              title="Import active stations from current simulation"
+            >
+              <RefreshCw size={10} aria-hidden="true" />
+              <span>Sync Active</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+            <button
+              onClick={() => loadDesignPreset('uscg-400mi')}
+              className="p-2 rounded text-left transition border cursor-pointer hover:bg-[var(--bg-muted)] flex flex-col justify-between"
+              style={{
+                background: 'var(--bg-canvas)',
+                borderColor: 'var(--border-subtle)',
+              }}
+              title="Golden 400-mile worked example from USCG Loran-C User Handbook §2.B"
+            >
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>USCG 400-mi</div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="px-1 py-0.2 rounded text-[8px] bg-blue-500/10 text-blue-500 border border-blue-500/30">
+                  Textbook Benchmark
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => loadDesignPreset('jakarta-proposed')}
+              className="p-2 rounded text-left transition border cursor-pointer hover:bg-[var(--bg-muted)] flex flex-col justify-between"
+              style={{
+                background: 'var(--bg-canvas)',
+                borderColor: 'var(--border-subtle)',
+              }}
+              title="Hypothetical regional planning scenario for the Sunda Strait & Java Sea corridor"
+            >
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Jakarta Coastal</div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="px-1 py-0.2 rounded text-[8px] bg-purple-500/10 text-purple-500 border border-purple-500/30">
+                  Synthetic / Proposal
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => loadDesignPreset('us-east-coast')}
+              className="p-2 rounded text-left transition border cursor-pointer hover:bg-[var(--bg-muted)] flex flex-col justify-between"
+              style={{
+                background: 'var(--bg-canvas)',
+                borderColor: 'var(--border-subtle)',
+              }}
+              title="Historical Northeast U.S. Chain (GRI 9960) per USCG COMDTINST M16562.4A & NGA Pub 117"
+            >
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="px-1 py-0.2 rounded text-[8px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                  Historical USCG
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -390,11 +433,11 @@ export default function ChainDesignPanel() {
                   onChange={(e) => updateDesignSecondary(idx, { codingDelayUs: parseFloat(e.target.value) || 0 })}
                   className="w-full mt-0.5 px-1 py-0.5 rounded bg-[var(--bg-canvas)] border text-[10px] font-mono font-bold"
                   style={{
-                    borderColor: sec.codingDelayUs < USCG_MIN_CODING_DELAY_US ? 'var(--status-danger)' : 'var(--border-subtle)',
-                    color: sec.codingDelayUs < USCG_MIN_CODING_DELAY_US ? 'var(--status-danger)' : 'var(--text-primary)',
+                    borderColor: sec.codingDelayUs < (designParams?.minCodingDelayUs || 10000) ? 'var(--status-danger)' : 'var(--border-subtle)',
+                    color: sec.codingDelayUs < (designParams?.minCodingDelayUs || 10000) ? 'var(--status-danger)' : 'var(--text-primary)',
                   }}
                 />
-                <div className="text-[9px]" style={{ color: 'var(--text-dim)' }}>≥10,000 µs</div>
+                <div className="text-[9px]" style={{ color: 'var(--text-dim)' }}>≥{(designParams?.minCodingDelayUs || 10000).toLocaleString()} µs</div>
               </div>
 
               <div>
@@ -409,6 +452,84 @@ export default function ChainDesignPanel() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Configurable Engineering Planning Thresholds */}
+      <div
+        className="p-3 rounded-lg border space-y-2.5"
+        style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+            Planning Thresholds & Heuristics
+          </div>
+          <span className="px-1.5 py-0.2 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
+            Illustrative default, not a regulatory limit
+          </span>
+        </div>
+
+        <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Tunable geometric and timing rules of thumb used in chain feasibility validation.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <div className="flex items-center justify-between mb-0.5">
+              <label className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>Min Coding Delay (CD)</label>
+            </div>
+            <input
+              id="chain-min-cd-input"
+              data-testid="chain-min-cd-input"
+              type="number"
+              step="500"
+              min="1000"
+              max="30000"
+              value={designParams?.minCodingDelayUs ?? 10000}
+              onChange={(e) => updateDesignParams({ minCodingDelayUs: parseFloat(e.target.value) || 10000 })}
+              className="w-full px-2 py-1 rounded bg-[var(--bg-canvas)] border text-[10px] font-mono"
+              style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            />
+            <div className="text-[9px] mt-0.5" style={{ color: 'var(--text-dim)' }}>Default: 10,000 µs</div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-0.5">
+              <label className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>Max Baseline Distance</label>
+            </div>
+            <input
+              id="chain-max-baseline-input"
+              data-testid="chain-max-baseline-input"
+              type="number"
+              step="500"
+              min="200"
+              max="3500"
+              value={designParams?.maxBaselineKm ?? 1800}
+              onChange={(e) => updateDesignParams({ maxBaselineKm: parseFloat(e.target.value) || 1800 })}
+              className="w-full px-2 py-1 rounded bg-[var(--bg-canvas)] border text-[10px] font-mono"
+              style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            />
+            <div className="text-[9px] mt-0.5" style={{ color: 'var(--text-dim)' }}>Default: 1,800 km</div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-0.5">
+              <label className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>Hazard Cone Half-Angle</label>
+            </div>
+            <input
+              id="chain-hazard-cone-input"
+              data-testid="chain-hazard-cone-input"
+              type="number"
+              step="0.5"
+              min="2"
+              max="30"
+              value={designParams?.hazardConeHalfAngleDeg ?? 10}
+              onChange={(e) => updateDesignParams({ hazardConeHalfAngleDeg: parseFloat(e.target.value) || 10 })}
+              className="w-full px-2 py-1 rounded bg-[var(--bg-canvas)] border text-[10px] font-mono"
+              style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+            />
+            <div className="text-[9px] mt-0.5" style={{ color: 'var(--text-dim)' }}>Default: 10.0° (±)</div>
+          </div>
+        </div>
       </div>
 
       {/* Map Overlays & Inspection Toggles */}

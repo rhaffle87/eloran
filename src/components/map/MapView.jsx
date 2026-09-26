@@ -110,6 +110,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     evaluateReceivers,
     isDesignMode,
     designChain,
+    designParams,
     showBaselineExtensions,
     showCrossingAngles,
     updateDesignMaster,
@@ -119,8 +120,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const stationsRef = useRef({ masters, slaves });
   stationsRef.current = { masters, slaves };
 
-  const designRef = useRef({ isDesignMode, designChain, showCrossingAngles });
-  designRef.current = { isDesignMode, designChain, showCrossingAngles };
+  const designRef = useRef({ isDesignMode, designChain, designParams, showCrossingAngles });
+  designRef.current = { isDesignMode, designChain, designParams, showCrossingAngles };
 
   const [cursorPos, setCursorPos] = useState(null);
   const [cursorGdop, setCursorGdop] = useState(null);
@@ -232,8 +233,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
           setCursorCrossing(gdopRes.minCrossingAngleDeg ?? null);
 
           let inExt = false;
+          const halfWidth = designRef.current.designParams?.hazardConeHalfAngleDeg || 10;
           for (const sec of activeSecondaries) {
-            if (isInsideBaselineExtension({ lat, lng }, activeMaster, sec, 7.5).isExtension) {
+            if (isInsideBaselineExtension({ lat, lng }, activeMaster, sec, halfWidth).isExtension) {
               inExt = true;
               break;
             }
@@ -629,7 +631,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
 
     try {
-      const geojson = generateBaselineExtensionSectors(activeMaster, activeSecondaries, 800000, 7.5);
+      const halfWidth = designParams?.hazardConeHalfAngleDeg || 10;
+      const geojson = generateBaselineExtensionSectors(activeMaster, activeSecondaries, 800000, halfWidth);
       safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
       safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
 
@@ -685,6 +688,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     designChain,
     isDesignMode,
     showBaselineExtensions,
+    designParams,
     isStyleLoaded,
     safeRemoveLayerAndSource,
   ]);

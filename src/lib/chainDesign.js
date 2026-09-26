@@ -51,7 +51,24 @@ export const USCG_SPEC_GDOP = 10.92;
  */
 export const MASTER_PULSE_GROUP_SPAN_US = 9900;
 export const SECONDARY_PULSE_GROUP_SPAN_US = 7000;
-export const USCG_MIN_CODING_DELAY_US = 10000; // Minimum 10,000 µs coding delay
+
+/**
+ * Configurable engineering planning thresholds for Loran chain design.
+ * Note: These are planning heuristics / operational rules-of-thumb rather than rigid statutory limits:
+ *   - minCodingDelayUs (10,000 µs): Derived from Master pulse group duration (10,000 µs) and USCG
+ *     COMDTINST M16562.4A §2.3 assignment practice (first secondary >= 11,000 µs, increments >= 10,000 µs).
+ *   - maxBaselineKm (1,800 km / ~1,000 nmi): Maximum practical Loran groundwave synchronization distance
+ *     over seawater before extreme attenuation and skywave dominance degrades reliability.
+ *   - hazardConeHalfAngleDeg (10°): Angular half-width of the baseline extension hazard cone (total 20° sector)
+ *     where hyperbolic gradient K approaches infinity and lines of position become ambiguous.
+ */
+export const DEFAULT_CHAIN_DESIGN_PARAMS = {
+  minCodingDelayUs: 10000,
+  maxBaselineKm: 1800,
+  hazardConeHalfAngleDeg: 10,
+};
+
+export const USCG_MIN_CODING_DELAY_US = DEFAULT_CHAIN_DESIGN_PARAMS.minCodingDelayUs;
 
 /**
  * Computes baseline travel time in microseconds from baseline distance in meters.
@@ -133,6 +150,8 @@ export function evaluateChainFeasibility(master, secondaries, currentGRIUs, opti
     maxCoverageDistanceMeters = 800000,
     guardTimeUs = 2000,
     eta = DEFAULT_ATMOSPHERIC_REFRACTIVE_INDEX,
+    minCodingDelayUs = DEFAULT_CHAIN_DESIGN_PARAMS.minCodingDelayUs,
+    maxBaselineKm = DEFAULT_CHAIN_DESIGN_PARAMS.maxBaselineKm,
   } = options;
 
   const violations = [];
@@ -172,19 +191,19 @@ export function evaluateChainFeasibility(master, secondaries, currentGRIUs, opti
 
   // 2. Validate individual secondary parameters
   for (const sec of computedSecondaries) {
-    if (sec.codingDelayUs < USCG_MIN_CODING_DELAY_US) {
+    if (sec.codingDelayUs < minCodingDelayUs) {
       violations.push({
         code: 'CODING_DELAY_TOO_LOW',
         stationId: sec.id || sec.name,
-        message: `Secondary ${sec.id || sec.name} coding delay (${sec.codingDelayUs.toFixed(0)} µs) is below USCG minimum of ${USCG_MIN_CODING_DELAY_US} µs.`,
+        message: `Secondary ${sec.id || sec.name} coding delay (${sec.codingDelayUs.toFixed(0)} µs) is below threshold of ${minCodingDelayUs} µs.`,
       });
     }
 
-    if (sec.baselineDistanceMeters > 1800000) {
+    if (sec.baselineDistanceMeters > maxBaselineKm * 1000) {
       warnings.push({
         code: 'BASELINE_EXCESSIVE_LENGTH',
         stationId: sec.id || sec.name,
-        message: `Baseline length to ${sec.id || sec.name} (${(sec.baselineDistanceNm).toFixed(0)} nmi) exceeds 1000 nmi; groundwave attenuation may prevent sync.`,
+        message: `Baseline length to ${sec.id || sec.name} (${(sec.baselineDistanceNm).toFixed(0)} nmi) exceeds planning limit of ${maxBaselineKm} km; groundwave attenuation may prevent sync.`,
       });
     }
   }
@@ -335,9 +354,33 @@ export function computeCrossingAngle(point, master, sec1, sec2) {
 }
 
 /**
- * Computes hyperbolic GDOP at a receiver coordinate:
- * GDOP = 2drms / 2drms*
- * where 2drms* is the ideal baseline reference fix at σ_TD.
+ * Computes operational Hyperbolic GDOP at a receiver coordinate:
+ *   GDOP(x, y) = 2drms(x, y) / 2drms*
+ *
+ * Mathematical Derivation (Pierce et al., 1948, MIT RadLab Vol. 4, Appendix C.3; USCG COMDTINST M16562.4A):
+ *   1. For two hyperbolic LOPs with baseline-subtended angles psi_1, psi_2, and crossing angle theta:
+ *        LOP Gradient: K_i = (c / 2) / sin(psi_i / 2)
+ *        Linear spatial error: s_i = K_i * sigma_TD,i
+ *   2. Radial position standard deviation (drms):
+ *        drms = csc(theta) * sqrt(s_1^2 + s_2^2) = (1 / sin(theta)) * sqrt(K_1^2 * sigma_1^2 + K_2^2 * sigma_2^2)
+ *        2drms = 2 * drms
+ *   3. Proof of matrix identity:
+ *        For H_norm = [ (u_S1 - u_M)^T ; (u_S2 - u_M)^T ], det(H_norm) = ||h1|| * ||h2|| * sin(theta).
+ *        Since ||h_i|| = 2 * sin(psi_i / 2) and K_i = (c / 2) / sin(psi_i / 2) = c / ||h_i||,
+ *        c^2 * tr((H_norm^T H_norm)^-1) = (K_1^2 + K_2^2) / sin^2(theta),
+ *        so c * sigma_TD * sqrt(tr((H_norm^T H_norm)^-1)) identically equals (sigma_TD / sin(theta)) * sqrt(K_1^2 + K_2^2).
+ *   4. Reference fix denominator 2drms*:
+ *        Represents the theoretical "best possible" fix on the baseline bisector under ideal orthogonal geometry:
+ *          - Optimal crossing angle: theta = 90° (sin(theta) = 1)
+ *          - Maximum baseline subtended angle: psi_1 = psi_2 = 180° (sin(psi/2) = 1 => K_1 = K_2 = c/2 ≈ 492.1 ft/µs)
+ *          - Nominal noise: sigma_TD = 0.1 µs
+ *        Under this reference geometry:
+ *          2drms* = 2 * sqrt(2) * (c / 2) * sigma_TD ≈ 42.397 meters.
+ *        The USCG operational specification limit (0.25 nmi = 463.0 m 2drms) thus evaluates to:
+ *          GDOP_spec = 463.0 / 42.397 ≈ 10.92.
+ *   5. For arbitrary station geometry and receiver positions, 2drms(x, y) evaluates the full local
+ *      geometry-dependent covariance matrix, diluting as crossing angle deviates from 90° and
+ *      gradients expand near baseline extensions.
  *
  * @param {{lat: number, lng: number}} point - Receiver position
  * @param {{lat: number, lng: number}} master - Master station
@@ -409,7 +452,12 @@ export function computeHyperbolicGDOP(point, master, secondaries, tdSigmaUs = 0.
  * @param {number} [halfWidthDeg=10] - Half-angle of hazard cone in degrees
  * @returns {{isExtension: boolean, stationRole: 'MASTER'|'SECONDARY'|null, angleOffExtensionDeg: number}}
  */
-export function isInsideBaselineExtension(point, master, secondary, halfWidthDeg = 10) {
+export function isInsideBaselineExtension(
+  point,
+  master,
+  secondary,
+  halfWidthDeg = DEFAULT_CHAIN_DESIGN_PARAMS.hazardConeHalfAngleDeg
+) {
   // Baseline azimuths
   const bearingMasterToSec = initialBearing(master, secondary);
   const bearingSecToMaster = initialBearing(secondary, master);
@@ -461,7 +509,12 @@ export function isInsideBaselineExtension(point, master, secondary, halfWidthDeg
  * @param {number} [halfWidthDeg=10] - Hazard cone half-angle
  * @returns {object} GeoJSON FeatureCollection
  */
-export function generateBaselineExtensionSectors(master, secondaries, maxRadiusMeters = 800000, halfWidthDeg = 10) {
+export function generateBaselineExtensionSectors(
+  master,
+  secondaries,
+  maxRadiusMeters = 800000,
+  halfWidthDeg = DEFAULT_CHAIN_DESIGN_PARAMS.hazardConeHalfAngleDeg
+) {
   const features = [];
 
   for (const sec of secondaries) {

@@ -28,6 +28,7 @@ import {
 } from '../lib/asf.js';
 import {
   computeEmissionDelay,
+  DEFAULT_CHAIN_DESIGN_PARAMS,
 } from '../lib/chainDesign.js';
 
 export const DEFAULT_DESIGN_CHAIN = {
@@ -45,7 +46,10 @@ export const DEFAULT_DESIGN_CHAIN = {
 
 export const DESIGN_PRESETS = {
   'uscg-400mi': {
-    name: 'USCG 400-mi Golden Baseline Worked Example',
+    name: 'USCG 400-mi Worked Example — Calibrated Textbook Benchmark',
+    labelBadge: 'Textbook Benchmark',
+    provenance: 'USCG Loran-C User Handbook COMDTINST P16562.5 §2.B worked example (400 nmi baseline at 6.18 µs/nmi = 2,472 µs baseline travel time)',
+    isHistorical: false,
     griUs: 79900,
     tdSigmaUs: 0.1,
     coverageRadiusKm: 800,
@@ -56,7 +60,10 @@ export const DESIGN_PRESETS = {
     ],
   },
   'jakarta-proposed': {
-    name: 'Jakarta / Sunda Strait Coastal Chain',
+    name: 'Jakarta Coastal — Proposed Regional Maritime Chain (Hypothetical)',
+    labelBadge: 'Hypothetical / Synthetic',
+    provenance: 'Hypothetical regional planning scenario along the Sunda Strait & Java Sea corridor (Tanjung Priok, Anyer, Cirebon, Lampung)',
+    isHistorical: false,
     griUs: 99600,
     tdSigmaUs: 0.1,
     coverageRadiusKm: 600,
@@ -68,16 +75,19 @@ export const DESIGN_PRESETS = {
     ],
   },
   'us-east-coast': {
-    name: 'US East Coast Loran-C (GRI 9960)',
+    name: 'US East Coast (GRI 9960) — Historical USCG / NGA Pub 117 Data',
+    labelBadge: 'Historical USCG / NGA Pub 117',
+    provenance: 'Historical Northeast U.S. Chain (NEUS GRI 9960) per USCG COMDTINST M16562.4A App A & NGA Pub 117',
+    isHistorical: true,
     griUs: 99600,
     tdSigmaUs: 0.1,
     coverageRadiusKm: 1200,
-    master: { label: 'M', name: 'Seneca NY', lat: 42.714, lng: -76.827 },
+    master: { label: 'M', name: 'Seneca NY (Master)', lat: 42.7141, lng: -76.8259 },
     secondaries: [
-      { label: 'W', name: 'Caribou ME', lat: 46.804, lng: -67.927, codingDelayUs: 11000 },
-      { label: 'X', name: 'Nantucket MA', lat: 41.253, lng: -69.977, codingDelayUs: 25000 },
-      { label: 'Y', name: 'Carolina Beach NC', lat: 34.063, lng: -77.910, codingDelayUs: 40000 },
-      { label: 'Z', name: 'Dana IN', lat: 39.854, lng: -87.487, codingDelayUs: 55000 },
+      { label: 'W', name: 'Caribou ME (Whiskey)', lat: 46.8076, lng: -67.9270, codingDelayUs: 11000 },
+      { label: 'X', name: 'Nantucket MA (Xray)', lat: 41.2533, lng: -69.9774, codingDelayUs: 25000 },
+      { label: 'Y', name: 'Carolina Beach NC (Yankee)', lat: 34.0628, lng: -77.9128, codingDelayUs: 39000 },
+      { label: 'Z', name: 'Dana IN (Zulu)', lat: 39.8521, lng: -87.4866, codingDelayUs: 54000 },
     ],
   },
 };
@@ -94,6 +104,7 @@ export const useSimulationStore = create((set, get) => ({
   showBaselineExtensions: true,
   showCrossingAngles: false,
   designChain: JSON.parse(JSON.stringify(DEFAULT_DESIGN_CHAIN)),
+  designParams: { ...DEFAULT_CHAIN_DESIGN_PARAMS },
 
   // Map & Interaction Mode
   mapMode: 'pan', // 'pan' | 'add-master' | 'add-slave' | 'add-receiver'
@@ -239,6 +250,14 @@ export const useSimulationStore = create((set, get) => ({
       designChain: {
         ...state.designChain,
         tdSigmaUs: Number(tdSigmaUs) || 0.1,
+      },
+    })),
+
+  updateDesignParams: (params) =>
+    set((state) => ({
+      designParams: {
+        ...state.designParams,
+        ...params,
       },
     })),
 

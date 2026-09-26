@@ -146,6 +146,69 @@ describe('Chain Design & Planning Math (USCG Loran-C Specifications)', () => {
       expect(gdopResult.gdop).toBeLessThan(50.0);
       expect(gdopResult.twoDrmsMeters).toBeGreaterThan(0);
     });
+
+    it('demonstrates that GDOP varies inversely with crossing angle and degrades near baseline extension', () => {
+      // 1. Near-orthogonal crossing angle (~80.4°) inside triad: GDOP is low and well-conditioned
+      const rxOptimal = { lat: 36.0, lng: 136.5 };
+      const gdopOpt = computeHyperbolicGDOP(rxOptimal, master, [sec1, sec2]);
+      const angleOpt = computeCrossingAngle(rxOptimal, master, sec1, sec2);
+      expect(angleOpt.angleDeg).toBeGreaterThan(60);
+      expect(gdopOpt.gdop).toBeLessThan(2.0); // GDOP ≈ 1.33
+
+      // 2. Degraded crossing angle (~43°): GDOP increases
+      const rxDegraded = { lat: 34.0, lng: 136.0 };
+      const gdopDeg = computeHyperbolicGDOP(rxDegraded, master, [sec1, sec2]);
+      const angleDeg = computeCrossingAngle(rxDegraded, master, sec1, sec2);
+      expect(angleDeg.angleDeg).toBeLessThan(60);
+      expect(gdopDeg.gdop).toBeGreaterThan(gdopOpt.gdop); // GDOP ≈ 3.77 > 1.33
+
+      // 3. Near baseline extension zone: GDOP expands dramatically (> 10.92 USCG spec limit)
+      const rxExtension = { lat: 34.9, lng: 134.0 };
+      const gdopExt = computeHyperbolicGDOP(rxExtension, master, [sec1, sec2]);
+      expect(gdopExt.gdop).toBeGreaterThan(10.92);
+      expect(gdopExt.twoDrmsMeters).toBeGreaterThan(USCG_SPEC_2DRMS_METERS);
+    });
+  });
+
+  describe('Configurable Planning Thresholds & Heuristics', () => {
+    const master = { lat: 35.0, lng: 135.0 };
+    const secondaries = [
+      { id: 'W', name: 'Sec-W', lat: 35.0, lng: 143.1353, codingDelayUs: 11000 },
+      { id: 'X', name: 'Sec-X', lat: 41.6622, lng: 135.0, codingDelayUs: 25000 },
+    ];
+
+    it('allows custom minCodingDelayUs threshold to flag violations', () => {
+      // With default threshold (10,000 µs), 11,000 µs is feasible
+      const planDefault = evaluateChainFeasibility(master, secondaries, 80000);
+      expect(planDefault.violations.some(v => v.code === 'CODING_DELAY_TOO_LOW')).toBe(false);
+
+      // With strict threshold (15,000 µs), 11,000 µs is flagged as CODING_DELAY_TOO_LOW
+      const planStrict = evaluateChainFeasibility(master, secondaries, 80000, { minCodingDelayUs: 15000 });
+      expect(planStrict.isFeasible).toBe(false);
+      expect(planStrict.violations.some(v => v.code === 'CODING_DELAY_TOO_LOW')).toBe(true);
+    });
+
+    it('allows custom maxBaselineKm threshold to flag excessive baseline length', () => {
+      // Baseline length is ~741 km (400 nmi).
+      // With default limit (1,800 km), no baseline warning
+      const planDefault = evaluateChainFeasibility(master, secondaries, 80000);
+      expect(planDefault.warnings.some(w => w.code === 'BASELINE_EXCESSIVE_LENGTH')).toBe(false);
+
+      // With tight limit (500 km), baseline is flagged as BASELINE_EXCESSIVE_LENGTH
+      const planTight = evaluateChainFeasibility(master, secondaries, 80000, { maxBaselineKm: 500 });
+      expect(planTight.warnings.some(w => w.code === 'BASELINE_EXCESSIVE_LENGTH')).toBe(true);
+    });
+
+    it('adjusts baseline extension hazard detection sensitivity with configurable halfWidthDeg', () => {
+      const sec = secondaries[0];
+      // A point located ~8° off the baseline extension
+      const pt8Deg = { lat: 35.2, lng: 144.5 };
+      const statusTight = isInsideBaselineExtension(pt8Deg, master, sec, 5); // 5° cone
+      const statusWide = isInsideBaselineExtension(pt8Deg, master, sec, 15); // 15° cone
+
+      expect(statusWide.isExtension).toBe(true);
+      expect(statusTight.isExtension).toBe(false);
+    });
   });
 
   describe('Baseline Extension Hazard Zone Detection', () => {
@@ -186,3 +249,4 @@ describe('Chain Design & Planning Math (USCG Loran-C Specifications)', () => {
     });
   });
 });
+

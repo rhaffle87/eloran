@@ -203,7 +203,12 @@ export default function StationEditor({ isELoran = false }) {
                   />
                   <div>
                     <div className="font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                      {st.label}
+                      <span>{st.label}</span>
+                      {st.name && (
+                        <span className="font-normal text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          · {st.name}
+                        </span>
+                      )}
                       <span
                         className="text-[9px] px-1 py-0.5 rounded font-mono"
                         style={{

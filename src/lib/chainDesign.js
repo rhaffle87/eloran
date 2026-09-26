@@ -54,13 +54,10 @@ export const SECONDARY_PULSE_GROUP_SPAN_US = 7000;
 
 /**
  * Configurable engineering planning thresholds for Loran chain design.
- * Note: These are planning heuristics / operational rules-of-thumb rather than rigid statutory limits:
- *   - minCodingDelayUs (10,000 µs): Derived from Master pulse group duration (10,000 µs) and USCG
- *     COMDTINST M16562.4A §2.3 assignment practice (first secondary >= 11,000 µs, increments >= 10,000 µs).
- *   - maxBaselineKm (1,800 km / ~1,000 nmi): Maximum practical Loran groundwave synchronization distance
- *     over seawater before extreme attenuation and skywave dominance degrades reliability.
- *   - hazardConeHalfAngleDeg (10°): Angular half-width of the baseline extension hazard cone (total 20° sector)
- *     where hyperbolic gradient K approaches infinity and lines of position become ambiguous.
+ * Note: These are unverified illustrative heuristics / operational rules of thumb rather than rigid statutory limits:
+ *   - minCodingDelayUs (10,000 µs): Illustrative default heuristic for secondary coding delay spacing.
+ *   - maxBaselineKm (1,800 km / ~1,000 nmi): Illustrative groundwave synchronization threshold heuristic.
+ *   - hazardConeHalfAngleDeg (10°): Illustrative angular half-width heuristic for baseline extension hazard cone.
  */
 export const DEFAULT_CHAIN_DESIGN_PARAMS = {
   minCodingDelayUs: 10000,

@@ -170,12 +170,12 @@ export default function ChainDesignPanel() {
                 background: 'var(--bg-canvas)',
                 borderColor: 'var(--border-subtle)',
               }}
-              title="Historical Northeast U.S. Chain (GRI 9960) per USCG COMDTINST M16562.4A & NGA Pub 117"
+              title="Historical Northeast U.S. Chain (GRI 9960) — illustrative parameters"
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1 py-0.2 rounded text-[8px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
-                  Historical USCG
+                <span className="px-1 py-0.2 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                  Illustrative — unverified this session
                 </span>
               </div>
             </button>

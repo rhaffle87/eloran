@@ -105,7 +105,7 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     await expect(usEastBtn).toBeVisible();
     await usEastBtn.click();
 
-    await expect(page.getByText('Historical USCG')).toBeVisible();
+    await expect(page.getByText('Illustrative — unverified this session')).toBeVisible();
     await expect(page.getByText('Secondary Stations (4)')).toBeVisible(); // W, X, Y, Z
     await expect(page.getByText('Chain Feasible & Conflict-Free')).toBeVisible();
 

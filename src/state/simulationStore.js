@@ -75,9 +75,9 @@ export const DESIGN_PRESETS = {
     ],
   },
   'us-east-coast': {
-    name: 'US East Coast (GRI 9960) — Historical USCG / NGA Pub 117 Data',
-    labelBadge: 'Historical USCG / NGA Pub 117',
-    provenance: 'Historical Northeast U.S. Chain (NEUS GRI 9960) per USCG COMDTINST M16562.4A App A & NGA Pub 117',
+    name: 'US East Coast (GRI 9960) — Historical NEUS Chain (Illustrative)',
+    labelBadge: 'Illustrative — unverified this session',
+    provenance: 'Historical Northeast U.S. Chain (NEUS GRI 9960) configuration — station names and coordinates drawn from local reference data; parameters not independently verified from primary government PDF this session',
     isHistorical: true,
     griUs: 99600,
     tdSigmaUs: 0.1,

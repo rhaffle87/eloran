@@ -46,7 +46,6 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const hasTileLoadedRef = useRef(false);
   const activeTileProviderRef = useRef(activeTileProvider);
   activeTileProviderRef.current = activeTileProvider;
-  const lastFallbackTimeRef = useRef(0);
 
   const triggerNextFallback = useCallback(() => {
     const current = activeTileProviderRef.current;
@@ -177,7 +176,6 @@ export default function MapView({ onMapClick, isELoran = false }) {
         setIsStyleLoaded(true);
       }
 
-      let tileSummaryLogged = false;
       mapInstance.on('error', (e) => {
         const errMsg = e?.error?.message || '';
 

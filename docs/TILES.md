@@ -17,7 +17,7 @@ All map tile providers, styles, and fallback chains are configured in [`src/lib/
 
 ---
 
-## 2. OpenFreeMap Vector Integration & Reliability Framing
+## 2. OpenFreeMap Vector Integration & Style Maintenance
 
 As of September 2026, CARTO began enforcing an API key on its public raster endpoints, rendering keyless requests with diagonal "API KEY REQUIRED" watermarks.
 
@@ -28,6 +28,24 @@ To maintain an unwatermarked, keyless, and production-ready experience by defaul
 - **SLA & Reliability**: OpenFreeMap is operated as a donation-funded community service with **no formal SLA or uptime guarantee**.
 - **Attribution Requirement**: Quoted from OpenFreeMap guidelines:
   > *"Map data © OpenStreetMap contributors, Style & Hosting © OpenFreeMap."* Displayed in MapLibre's attribution control.
+
+### Upstream MapLibre Type Error & Runtime Sanitizer
+Upstream OpenFreeMap vector styles (hosted by MapTiler / OpenFreeMap) contain filter expressions on certain layers (e.g. `boundary_3`, `poi_*`, `highway-shield-*`, `place_*`) that evaluate comparison operators (`<`, `<=`, `>`, `>=`) on optional feature tags without `to-number` or `coalesce` guards:
+```json
+[">=", ["get", "admin_level"], 3]
+```
+When features lack these tags or return `null`, MapLibre GL JS v5 throws:
+```
+Expected value to be of type number, but found null instead.
+```
+To resolve this without permanent divergence:
+1. **Runtime Intercept (`sanitizeMapLibreStyle`)**: In [`src/lib/tiles.js`](../src/lib/tiles.js), a lightweight recursive walker sanitizes comparison operators on load, wrapping naked tag lookups in `['coalesce', ['to-number', ['get', key]], 0]`. This allows dynamic fetching of upstream OpenFreeMap styles while guaranteeing zero MapLibre runtime crashes.
+2. **Bundled Offline Fallbacks**: The repository maintains pre-sanitized local copies in `src/lib/styles/openfreemap-dark.json` and `openfreemap-bright.json` to guarantee instantaneous loading and zero-network availability.
+3. **Staleness Risk & Upstream Refresh Procedure**: To prevent bundled styles from falling behind upstream enhancements, run:
+   ```bash
+   npm run refresh:tiles
+   ```
+   This script ([`scripts/refresh-tiles.cjs`](../scripts/refresh-tiles.cjs)) downloads the latest upstream OpenFreeMap styles, applies the MapLibre sanitizer, and refreshes the local JSON fallbacks in a single deterministic command.
 
 ---
 

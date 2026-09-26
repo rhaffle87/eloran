@@ -72,6 +72,67 @@ export function getNextFallbackProvider(currentProviderKey) {
 }
 
 /**
+ * Recursively sanitizes a MapLibre style JSON to prevent crashes caused by
+ * numerical comparison operators (<, <=, >, >=) evaluating against null/undefined feature attributes.
+ * Upstream OpenFreeMap styles contain expressions like:
+ *   [">=", ["get", "admin_level"], 3]
+ * If admin_level is null, MapLibre throws: "Expected value to be of type number, but found null instead."
+ * Wrapping in ['coalesce', ['to-number', ['get', ...]], 0] ensures safe evaluation without breaking styles.
+ * 
+ * @param {any} val - Style object, layer, or expression
+ * @returns {any} Sanitized style fragment
+ */
+export function sanitizeMapLibreStyle(val) {
+  if (!val) return val;
+  if (Array.isArray(val)) {
+    const op = val[0];
+    const args = val.slice(1).map(sanitizeMapLibreStyle);
+
+    if (['<', '<=', '>', '>='].includes(op)) {
+      const sanitizedArgs = args.map((arg) => {
+        if (Array.isArray(arg) && arg[0] === 'get') {
+          return ['coalesce', ['to-number', arg], 0];
+        }
+        return arg;
+      });
+      return [op, ...sanitizedArgs];
+    }
+
+    return [op, ...args];
+  }
+
+  if (typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) {
+      out[k] = sanitizeMapLibreStyle(v);
+    }
+    return out;
+  }
+
+  return val;
+}
+
+/**
+ * Asynchronously fetches and sanitizes the latest upstream OpenFreeMap style.
+ * Falls back to bundled pre-sanitized styles if network or upstream is unavailable.
+ * 
+ * @param {'dark'|'light'} [theme='dark']
+ * @returns {Promise<object>} Sanitized MapLibre style object
+ */
+export async function fetchAndSanitizeOpenFreeMapStyle(theme = 'dark') {
+  const variant = theme === 'light' ? 'bright' : 'dark';
+  try {
+    const res = await fetch(`https://tiles.openfreemap.org/styles/${variant}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const upstream = await res.json();
+    return sanitizeMapLibreStyle(upstream);
+  } catch (err) {
+    console.warn(`[TILES] Upstream OpenFreeMap ${variant} fetch failed, using bundled fallback:`, err.message);
+    return theme === 'light' ? openfreemapBrightStyle : openfreemapDarkStyle;
+  }
+}
+
+/**
  * Generate a MapLibre style spec for a given tile provider
  * @param {string} providerKey 
  * @param {string} [theme='dark'] - 'light' | 'dark'

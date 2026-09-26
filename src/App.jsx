@@ -2,7 +2,8 @@ import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary.jsx';
-import { EducationalDisclaimerBanner, SystemCapabilityBanner } from './components/ui/SystemBanners.jsx';
+import { EducationalDisclaimerBanner, SystemCapabilityBanner, MultiMasterWarningBanner } from './components/ui/SystemBanners.jsx';
+import { useSimulationStore } from './state/simulationStore.js';
 import { Loader2, Github, BookOpen } from 'lucide-react';
 
 const Home      = lazy(() => import('./pages/Home.jsx'));
@@ -27,6 +28,7 @@ function PageLoader() {
 export default function App() {
   const location = useLocation();
   const isSimulation = location.pathname === '/loran-c' || location.pathname === '/eloran';
+  const masterCount = useSimulationStore((s) => s.masters.length);
 
   return (
     <div
@@ -37,6 +39,7 @@ export default function App() {
     >
       <EducationalDisclaimerBanner />
       <SystemCapabilityBanner />
+      <MultiMasterWarningBanner masterCount={masterCount} />
       <Navbar />
 
       <main className={`flex-1 flex flex-col ${isSimulation ? 'min-h-0 overflow-hidden' : ''}`}>

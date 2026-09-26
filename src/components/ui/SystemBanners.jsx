@@ -130,3 +130,46 @@ export function SystemCapabilityBanner() {
     </div>
   );
 }
+
+export function MultiMasterWarningBanner({ masterCount }) {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && sessionStorage.getItem('loran_multimaster_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('loran_multimaster_dismissed', 'true');
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  if (dismissed || masterCount <= 1) return null;
+
+  return (
+    <div className="bg-amber-950/90 border-b border-amber-500/50 text-amber-200 px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30">
+      <div className="flex items-center gap-2 max-w-7xl mx-auto flex-1">
+        <AlertTriangle size={14} className="text-amber-400 shrink-0" />
+        <span className="font-semibold text-amber-300">MULTI-MASTER LIMITATION:</span>
+        <span className="text-[11px]">
+          Scenario defines {masterCount} masters; only the first is used. Multi-chain scenarios are not yet supported.
+        </span>
+      </div>
+      <button
+        onClick={handleDismiss}
+        className="text-amber-400 hover:text-amber-200 p-0.5 rounded cursor-pointer"
+        title="Dismiss warning"
+        aria-label="Dismiss warning"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+}

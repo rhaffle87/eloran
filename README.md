@@ -111,8 +111,28 @@ npm run dev
 npm run build
 ```
 
+```
+
 ---
 
-## 6. License
+## 6. Known Limitations
+
+### Single-Chain Constraint
+Each scenario currently represents **one Loran-C chain** with **one master** and multiple secondaries. The `masters[]` array in the data model is a structural artifact; multi-master scenarios are not supported.
+
+**Why:** In Loran-C physics, a chain is defined by:
+- One synchronized Group Repetition Interval (GRI)
+- One master transmitter (pulse group leader)
+- Multiple secondary transmitters (time-delayed responders)
+
+Multiple masters with the same GRI would create timing conflicts. Multiple masters with different GRIs represent independent chains and should not share baselines or TDOA pairs.
+
+**Current behavior:** Only `masters[0]` is used for baseline rendering and position solving. Additional masters in a scenario are ignored with a console warning.
+
+**Future support:** Proper multi-chain visualization would require restructuring to `chains: [{ master, secondaries, gri }]` with per-chain grouping. This is not currently implemented.
+
+---
+
+## 7. License
 
 Distributed under the [MIT License](LICENSE). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for third-party acknowledgments.

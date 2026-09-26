@@ -1,0 +1,635 @@
+{
+  "metadata": {
+    "title": "ITU-R P.368 / GRWAVE Groundwave Reference Dataset",
+    "generator": "grwave Python toolkit (ITU-R P.368-9 / P.832)",
+    "frequency_khz": 100.0,
+    "frequency_mhz": 0.1,
+    "tx_power_watt": 1000.0,
+    "provenance": "Generated via space-physics/grwave engine implementing CCIR / ITU-R P.368 Annex 2 and Sommerfeld-Norton numerical groundwave equations",
+    "description": "Ground truth curves for field strength attenuation and Sommerfeld/Millington phase lag / ASF delay at 100 kHz LF Loran band."
+  },
+  "homogeneous": {
+    "seawater": {
+      "name": "Seawater (5 S/m)",
+      "sigma": 5.0,
+      "epslon": 70.0,
+      "surface_impedance": {
+        "eta_real": 0.000745,
+        "eta_imag": 0.000745,
+        "eta_mag": 0.001054,
+        "loss_angle_deg": 89.9955,
+        "skin_depth_m": 0.71
+      },
+      "points": [
+        {
+          "distance_km": 10.0,
+          "field_strength_dbuv_m": 89.47,
+          "numerical_distance_p": 1.2e-05,
+          "phase_lag_rad": 0.002417,
+          "phase_delay_us": 0.003847
+        },
+        {
+          "distance_km": 25.0,
+          "field_strength_dbuv_m": 81.48,
+          "numerical_distance_p": 2.9e-05,
+          "phase_lag_rad": 0.003825,
+          "phase_delay_us": 0.006088
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.38,
+          "numerical_distance_p": 5.8e-05,
+          "phase_lag_rad": 0.005416,
+          "phase_delay_us": 0.00862
+        },
+        {
+          "distance_km": 75.0,
+          "field_strength_dbuv_m": 71.75,
+          "numerical_distance_p": 8.7e-05,
+          "phase_lag_rad": 0.006639,
+          "phase_delay_us": 0.010566
+        },
+        {
+          "distance_km": 100.0,
+          "field_strength_dbuv_m": 69.13,
+          "numerical_distance_p": 0.000116,
+          "phase_lag_rad": 0.007671,
+          "phase_delay_us": 0.012209
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 65.29,
+          "numerical_distance_p": 0.000175,
+          "phase_lag_rad": 0.009407,
+          "phase_delay_us": 0.014971
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 62.41,
+          "numerical_distance_p": 0.000233,
+          "phase_lag_rad": 0.010873,
+          "phase_delay_us": 0.017305
+        },
+        {
+          "distance_km": 300.0,
+          "field_strength_dbuv_m": 58.66,
+          "numerical_distance_p": 0.000349,
+          "phase_lag_rad": 0.013339,
+          "phase_delay_us": 0.021229
+        },
+        {
+          "distance_km": 400.0,
+          "field_strength_dbuv_m": 51.24,
+          "numerical_distance_p": 0.000466,
+          "phase_lag_rad": 0.015424,
+          "phase_delay_us": 0.024548
+        },
+        {
+          "distance_km": 500.0,
+          "field_strength_dbuv_m": 51.24,
+          "numerical_distance_p": 0.000582,
+          "phase_lag_rad": 0.017266,
+          "phase_delay_us": 0.02748
+        },
+        {
+          "distance_km": 600.0,
+          "field_strength_dbuv_m": 48.49,
+          "numerical_distance_p": 0.000699,
+          "phase_lag_rad": 0.018935,
+          "phase_delay_us": 0.030136
+        },
+        {
+          "distance_km": 800.0,
+          "field_strength_dbuv_m": 43.09,
+          "numerical_distance_p": 0.000931,
+          "phase_lag_rad": 0.021908,
+          "phase_delay_us": 0.034867
+        },
+        {
+          "distance_km": 1000.0,
+          "field_strength_dbuv_m": 37.99,
+          "numerical_distance_p": 0.001164,
+          "phase_lag_rad": 0.024536,
+          "phase_delay_us": 0.03905
+        }
+      ]
+    },
+    "wet_ground": {
+      "name": "Wet Ground / Marsh (0.02 S/m)",
+      "sigma": 0.02,
+      "epslon": 30.0,
+      "surface_impedance": {
+        "eta_real": 0.011836,
+        "eta_imag": 0.011734,
+        "eta_mag": 0.016666,
+        "loss_angle_deg": 89.5066,
+        "skin_depth_m": 11.25
+      },
+      "points": [
+        {
+          "distance_km": 10.0,
+          "field_strength_dbuv_m": 89.46,
+          "numerical_distance_p": 0.002911,
+          "phase_lag_rad": 0.039318,
+          "phase_delay_us": 0.062577
+        },
+        {
+          "distance_km": 25.0,
+          "field_strength_dbuv_m": 81.45,
+          "numerical_distance_p": 0.007277,
+          "phase_lag_rad": 0.063057,
+          "phase_delay_us": 0.100359
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.32,
+          "numerical_distance_p": 0.014554,
+          "phase_lag_rad": 0.090549,
+          "phase_delay_us": 0.144114
+        },
+        {
+          "distance_km": 75.0,
+          "field_strength_dbuv_m": 71.67,
+          "numerical_distance_p": 0.021831,
+          "phase_lag_rad": 0.112145,
+          "phase_delay_us": 0.178485
+        },
+        {
+          "distance_km": 100.0,
+          "field_strength_dbuv_m": 69.02,
+          "numerical_distance_p": 0.029108,
+          "phase_lag_rad": 0.13067,
+          "phase_delay_us": 0.207968
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 65.15,
+          "numerical_distance_p": 0.043662,
+          "phase_lag_rad": 0.162355,
+          "phase_delay_us": 0.258395
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 62.24,
+          "numerical_distance_p": 0.058216,
+          "phase_lag_rad": 0.189609,
+          "phase_delay_us": 0.301773
+        },
+        {
+          "distance_km": 300.0,
+          "field_strength_dbuv_m": 58.44,
+          "numerical_distance_p": 0.087324,
+          "phase_lag_rad": 0.236305,
+          "phase_delay_us": 0.37609
+        },
+        {
+          "distance_km": 400.0,
+          "field_strength_dbuv_m": 50.99,
+          "numerical_distance_p": 0.116432,
+          "phase_lag_rad": 0.276466,
+          "phase_delay_us": 0.440009
+        },
+        {
+          "distance_km": 500.0,
+          "field_strength_dbuv_m": 50.99,
+          "numerical_distance_p": 0.145539,
+          "phase_lag_rad": 0.312325,
+          "phase_delay_us": 0.497081
+        },
+        {
+          "distance_km": 600.0,
+          "field_strength_dbuv_m": 48.25,
+          "numerical_distance_p": 0.174647,
+          "phase_lag_rad": 0.345039,
+          "phase_delay_us": 0.549146
+        },
+        {
+          "distance_km": 800.0,
+          "field_strength_dbuv_m": 42.9,
+          "numerical_distance_p": 0.232863,
+          "phase_lag_rad": 0.40357,
+          "phase_delay_us": 0.642302
+        },
+        {
+          "distance_km": 1000.0,
+          "field_strength_dbuv_m": 37.87,
+          "numerical_distance_p": 0.291079,
+          "phase_lag_rad": 0.455333,
+          "phase_delay_us": 0.724685
+        }
+      ]
+    },
+    "medium_ground": {
+      "name": "Agricultural / Medium Ground (0.005 S/m)",
+      "sigma": 0.005,
+      "epslon": 15.0,
+      "surface_impedance": {
+        "eta_real": 0.023777,
+        "eta_imag": 0.023358,
+        "eta_mag": 0.033331,
+        "loss_angle_deg": 88.9815,
+        "skin_depth_m": 22.51
+      },
+      "points": [
+        {
+          "distance_km": 10.0,
+          "field_strength_dbuv_m": 89.41,
+          "numerical_distance_p": 0.011642,
+          "phase_lag_rad": 0.080874,
+          "phase_delay_us": 0.128715
+        },
+        {
+          "distance_km": 25.0,
+          "field_strength_dbuv_m": 81.35,
+          "numerical_distance_p": 0.029104,
+          "phase_lag_rad": 0.131156,
+          "phase_delay_us": 0.208742
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.14,
+          "numerical_distance_p": 0.058209,
+          "phase_lag_rad": 0.190259,
+          "phase_delay_us": 0.302807
+        },
+        {
+          "distance_km": 75.0,
+          "field_strength_dbuv_m": 71.4,
+          "numerical_distance_p": 0.087313,
+          "phase_lag_rad": 0.237064,
+          "phase_delay_us": 0.377298
+        },
+        {
+          "distance_km": 100.0,
+          "field_strength_dbuv_m": 68.68,
+          "numerical_distance_p": 0.116418,
+          "phase_lag_rad": 0.277306,
+          "phase_delay_us": 0.441346
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 64.65,
+          "numerical_distance_p": 0.174626,
+          "phase_lag_rad": 0.34599,
+          "phase_delay_us": 0.550661
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 61.6,
+          "numerical_distance_p": 0.232835,
+          "phase_lag_rad": 0.404593,
+          "phase_delay_us": 0.64393
+        },
+        {
+          "distance_km": 300.0,
+          "field_strength_dbuv_m": 57.68,
+          "numerical_distance_p": 0.349253,
+          "phase_lag_rad": 0.503155,
+          "phase_delay_us": 0.800796
+        },
+        {
+          "distance_km": 400.0,
+          "field_strength_dbuv_m": 49.61,
+          "numerical_distance_p": 0.46567,
+          "phase_lag_rad": 0.585385,
+          "phase_delay_us": 0.931669
+        },
+        {
+          "distance_km": 500.0,
+          "field_strength_dbuv_m": 49.61,
+          "numerical_distance_p": 0.582088,
+          "phase_lag_rad": 0.656407,
+          "phase_delay_us": 1.044704
+        },
+        {
+          "distance_km": 600.0,
+          "field_strength_dbuv_m": 46.68,
+          "numerical_distance_p": 0.698505,
+          "phase_lag_rad": 0.719024,
+          "phase_delay_us": 1.144363
+        },
+        {
+          "distance_km": 800.0,
+          "field_strength_dbuv_m": 40.96,
+          "numerical_distance_p": 0.931341,
+          "phase_lag_rad": 0.82558,
+          "phase_delay_us": 1.313951
+        },
+        {
+          "distance_km": 1000.0,
+          "field_strength_dbuv_m": 35.58,
+          "numerical_distance_p": 1.164176,
+          "phase_lag_rad": 0.913828,
+          "phase_delay_us": 1.454402
+        }
+      ]
+    },
+    "dry_ground": {
+      "name": "Dry / Rocky Mountain (0.001 S/m)",
+      "sigma": 0.001,
+      "epslon": 15.0,
+      "surface_impedance": {
+        "eta_real": 0.054881,
+        "eta_imag": 0.050219,
+        "eta_mag": 0.07439,
+        "loss_angle_deg": 84.9201,
+        "skin_depth_m": 50.33
+      },
+      "points": [
+        {
+          "distance_km": 10.0,
+          "field_strength_dbuv_m": 89.09,
+          "numerical_distance_p": 0.057991,
+          "phase_lag_rad": 0.194848,
+          "phase_delay_us": 0.31011
+        },
+        {
+          "distance_km": 25.0,
+          "field_strength_dbuv_m": 80.69,
+          "numerical_distance_p": 0.144978,
+          "phase_lag_rad": 0.319475,
+          "phase_delay_us": 0.50846
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 73.97,
+          "numerical_distance_p": 0.289955,
+          "phase_lag_rad": 0.463619,
+          "phase_delay_us": 0.737873
+        },
+        {
+          "distance_km": 75.0,
+          "field_strength_dbuv_m": 69.76,
+          "numerical_distance_p": 0.434933,
+          "phase_lag_rad": 0.573406,
+          "phase_delay_us": 0.912604
+        },
+        {
+          "distance_km": 100.0,
+          "field_strength_dbuv_m": 66.58,
+          "numerical_distance_p": 0.57991,
+          "phase_lag_rad": 0.663607,
+          "phase_delay_us": 1.056164
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 61.69,
+          "numerical_distance_p": 0.869865,
+          "phase_lag_rad": 0.807294,
+          "phase_delay_us": 1.284848
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 57.83,
+          "numerical_distance_p": 1.159821,
+          "phase_lag_rad": 0.919178,
+          "phase_delay_us": 1.462917
+        },
+        {
+          "distance_km": 300.0,
+          "field_strength_dbuv_m": 53.56,
+          "numerical_distance_p": 1.739731,
+          "phase_lag_rad": 1.085803,
+          "phase_delay_us": 1.728109
+        },
+        {
+          "distance_km": 400.0,
+          "field_strength_dbuv_m": 41.58,
+          "numerical_distance_p": 2.319641,
+          "phase_lag_rad": 1.206058,
+          "phase_delay_us": 1.919501
+        },
+        {
+          "distance_km": 500.0,
+          "field_strength_dbuv_m": 41.58,
+          "numerical_distance_p": 2.899551,
+          "phase_lag_rad": 1.297994,
+          "phase_delay_us": 2.065821
+        },
+        {
+          "distance_km": 600.0,
+          "field_strength_dbuv_m": 37.49,
+          "numerical_distance_p": 3.479462,
+          "phase_lag_rad": 1.37107,
+          "phase_delay_us": 2.182125
+        },
+        {
+          "distance_km": 800.0,
+          "field_strength_dbuv_m": 29.49,
+          "numerical_distance_p": 4.639282,
+          "phase_lag_rad": 1.48082,
+          "phase_delay_us": 2.356798
+        },
+        {
+          "distance_km": 1000.0,
+          "field_strength_dbuv_m": 21.94,
+          "numerical_distance_p": 5.799103,
+          "phase_lag_rad": 1.560082,
+          "phase_delay_us": 2.482948
+        }
+      ]
+    }
+  },
+  "mixed_path": {
+    "case1_sea_to_land_200km": {
+      "description": "100 km seawater (5 S/m) followed by 100 km agricultural land (0.005 S/m)",
+      "sections": [
+        {
+          "name": "sea",
+          "length_km": 100.0,
+          "sigma": 5.0
+        },
+        {
+          "name": "land",
+          "length_km": 100.0,
+          "sigma": 0.005
+        }
+      ],
+      "points": [
+        {
+          "distance_km": 20.0,
+          "field_strength_dbuv_m": 83.684,
+          "forward_dbuv_m": 83.684,
+          "reverse_dbuv_m": 83.684
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.42,
+          "forward_dbuv_m": 75.42,
+          "reverse_dbuv_m": 75.42
+        },
+        {
+          "distance_km": 80.0,
+          "field_strength_dbuv_m": 71.255,
+          "forward_dbuv_m": 71.255,
+          "reverse_dbuv_m": 71.255
+        },
+        {
+          "distance_km": 99.95,
+          "field_strength_dbuv_m": 69.2146,
+          "forward_dbuv_m": 69.2146,
+          "reverse_dbuv_m": 69.2146
+        },
+        {
+          "distance_km": 100.05,
+          "field_strength_dbuv_m": 69.1903,
+          "forward_dbuv_m": 69.2052,
+          "reverse_dbuv_m": 69.1754
+        },
+        {
+          "distance_km": 120.0,
+          "field_strength_dbuv_m": 67.415,
+          "forward_dbuv_m": 67.435,
+          "reverse_dbuv_m": 67.395
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 65.1595,
+          "forward_dbuv_m": 65.195,
+          "reverse_dbuv_m": 65.124
+        },
+        {
+          "distance_km": 180.0,
+          "field_strength_dbuv_m": 63.2325,
+          "forward_dbuv_m": 63.29,
+          "reverse_dbuv_m": 63.175
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 62.0875,
+          "forward_dbuv_m": 62.15,
+          "reverse_dbuv_m": 62.025
+        }
+      ]
+    },
+    "case2_land_to_sea_200km": {
+      "description": "100 km agricultural land (0.005 S/m) followed by 100 km seawater (5 S/m)",
+      "sections": [
+        {
+          "name": "land",
+          "length_km": 100.0,
+          "sigma": 0.005
+        },
+        {
+          "name": "sea",
+          "length_km": 100.0,
+          "sigma": 5.0
+        }
+      ],
+      "points": [
+        {
+          "distance_km": 20.0,
+          "field_strength_dbuv_m": 83.574,
+          "forward_dbuv_m": 83.574,
+          "reverse_dbuv_m": 83.574
+        },
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.174,
+          "forward_dbuv_m": 75.174,
+          "reverse_dbuv_m": 75.174
+        },
+        {
+          "distance_km": 80.0,
+          "field_strength_dbuv_m": 70.86,
+          "forward_dbuv_m": 70.86,
+          "reverse_dbuv_m": 70.86
+        },
+        {
+          "distance_km": 99.95,
+          "field_strength_dbuv_m": 68.7399,
+          "forward_dbuv_m": 68.7399,
+          "reverse_dbuv_m": 68.7399
+        },
+        {
+          "distance_km": 100.05,
+          "field_strength_dbuv_m": 68.7453,
+          "forward_dbuv_m": 68.7304,
+          "reverse_dbuv_m": 68.7601
+        },
+        {
+          "distance_km": 120.0,
+          "field_strength_dbuv_m": 67.05,
+          "forward_dbuv_m": 67.03,
+          "reverse_dbuv_m": 67.07
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 64.9305,
+          "forward_dbuv_m": 64.895,
+          "reverse_dbuv_m": 64.966
+        },
+        {
+          "distance_km": 180.0,
+          "field_strength_dbuv_m": 63.1525,
+          "forward_dbuv_m": 63.095,
+          "reverse_dbuv_m": 63.21
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 62.0875,
+          "forward_dbuv_m": 62.025,
+          "reverse_dbuv_m": 62.15
+        }
+      ]
+    },
+    "case3_island_crossing_250km": {
+      "description": "100 km seawater + 50 km dry island (0.001 S/m) + 100 km seawater",
+      "sections": [
+        {
+          "name": "sea_1",
+          "length_km": 100.0,
+          "sigma": 5.0
+        },
+        {
+          "name": "island",
+          "length_km": 50.0,
+          "sigma": 0.001
+        },
+        {
+          "name": "sea_2",
+          "length_km": 100.0,
+          "sigma": 5.0
+        }
+      ],
+      "points": [
+        {
+          "distance_km": 50.0,
+          "field_strength_dbuv_m": 75.42,
+          "forward_dbuv_m": 75.42,
+          "reverse_dbuv_m": 75.42
+        },
+        {
+          "distance_km": 100.0,
+          "field_strength_dbuv_m": 69.205,
+          "forward_dbuv_m": 69.205,
+          "reverse_dbuv_m": 69.205
+        },
+        {
+          "distance_km": 120.0,
+          "field_strength_dbuv_m": 66.9648,
+          "forward_dbuv_m": 67.08,
+          "reverse_dbuv_m": 66.8495
+        },
+        {
+          "distance_km": 150.0,
+          "field_strength_dbuv_m": 64.1483,
+          "forward_dbuv_m": 64.3325,
+          "reverse_dbuv_m": 63.964
+        },
+        {
+          "distance_km": 200.0,
+          "field_strength_dbuv_m": 61.3992,
+          "forward_dbuv_m": 61.465,
+          "reverse_dbuv_m": 61.3335
+        },
+        {
+          "distance_km": 250.0,
+          "field_strength_dbuv_m": 59.1025,
+          "forward_dbuv_m": 59.1025,
+          "reverse_dbuv_m": 59.1025
+        }
+      ]
+    }
+  }
+}

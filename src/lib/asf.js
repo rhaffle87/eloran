@@ -6,6 +6,23 @@
  */
 
 import { SPEED_OF_LIGHT, haversineDistance } from './geodesy.js';
+import {
+  computeMixedPathAsfMeters as computeGrwaveMixedPathAsfMeters,
+  computeHomogeneousAsfMicroseconds as computeGrwaveHomogeneousAsfMicroseconds,
+  computeMillingtonAsfMicroseconds as computeGrwaveMillingtonAsfMicroseconds,
+  computeSurfaceImpedance,
+  computeGroundwavePhaseProfile,
+  ITU_GROUND_TYPES,
+} from './grwave.js';
+
+export {
+  computeGrwaveMixedPathAsfMeters,
+  computeGrwaveHomogeneousAsfMicroseconds,
+  computeGrwaveMillingtonAsfMicroseconds,
+  computeSurfaceImpedance,
+  computeGroundwavePhaseProfile,
+  ITU_GROUND_TYPES,
+};
 
 // Supported math functions created with null prototype to avoid prototype pollution
 const ALLOWED_FUNCS = Object.create(null);
@@ -423,19 +440,39 @@ export function computeMillingtonAsfMicroseconds(segments, scale = DEFAULT_MILLI
 /**
  * Computes mixed-path ASF in meters for a propagation path with a specified land fraction.
  * 
+ * Supports:
+ * - 'grwave': Rigorous ITU-R P.368 / Sommerfeld numerical distance & Millington solver (SOURCED).
+ * - 'empirical': Legacy square-root conductivity deficit model (UNVERIFIED).
+ * 
  * @param {object} params
  * @param {number} params.totalDistMeters - Total great circle distance in meters
  * @param {number} [params.landFraction=0.5] - Fraction of path over land [0.0 = all sea, 1.0 = all land]
  * @param {number} [params.landSigma=0.003] - Land conductivity in S/m (ITU-R P.832)
+ * @param {number} [params.landEpslon=15.0] - Land relative permittivity
  * @param {number} [params.scale=DEFAULT_MILLINGTON_SCALE] - Empirical scale constant (UNVERIFIED)
+ * @param {'empirical'|'grwave'} [params.method='empirical'] - Propagation calculation engine
+ * @param {number} [params.freqMhz=0.1] - Frequency in MHz (100 kHz)
  * @returns {number} Additional Secondary Factor in meters
  */
 export function computeMixedPathAsfMeters({
   totalDistMeters,
   landFraction = 0.5,
   landSigma = 0.003,
+  landEpslon = 15.0,
   scale = DEFAULT_MILLINGTON_SCALE,
+  method = 'empirical',
+  freqMhz = 0.1,
 }) {
+  if (method === 'grwave') {
+    return computeGrwaveMixedPathAsfMeters({
+      totalDistMeters,
+      landFraction,
+      landSigma,
+      landEpslon,
+      freqMhz,
+    });
+  }
+
   if (totalDistMeters <= 0 || landFraction <= 0 || landSigma >= 5.0) {
     return 0;
   }
@@ -464,14 +501,20 @@ export function computeMixedPathAsfMeters({
  * @param {object} params.station - Station with { lat, lng }
  * @param {number} [params.landFraction=0.5] - Path land fraction [0.0 to 1.0]
  * @param {number} [params.landSigma=0.003] - Land conductivity in S/m
+ * @param {number} [params.landEpslon=15.0] - Land relative permittivity
  * @param {number} [params.scale=DEFAULT_MILLINGTON_SCALE] - Scale factor
+ * @param {'empirical'|'grwave'} [params.method='empirical'] - Propagation calculation engine
+ * @param {number} [params.freqMhz=0.1] - Frequency in MHz (100 kHz)
  * @returns {(lat: number, lng: number) => number} Evaluator function
  */
 export function createMillingtonAsfEvaluator({
   station,
   landFraction = 0.5,
   landSigma = 0.003,
+  landEpslon = 15.0,
   scale = DEFAULT_MILLINGTON_SCALE,
+  method = 'empirical',
+  freqMhz = 0.1,
 }) {
   return function millingtonEvaluator(lat, lng) {
     const distMeters = haversineDistance(station, { lat, lng });
@@ -479,7 +522,11 @@ export function createMillingtonAsfEvaluator({
       totalDistMeters: distMeters,
       landFraction,
       landSigma,
+      landEpslon,
       scale,
+      method,
+      freqMhz,
     });
   };
 }
+

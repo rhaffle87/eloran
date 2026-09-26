@@ -46,6 +46,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const hasTileLoadedRef = useRef(false);
   const activeTileProviderRef = useRef(activeTileProvider);
   activeTileProviderRef.current = activeTileProvider;
+  const lastFallbackTimeRef = useRef(0);
 
   const triggerNextFallback = useCallback(() => {
     const current = activeTileProviderRef.current;
@@ -82,15 +83,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       hasTileLoadedRef.current = false;
       tileErrorsRef.current = [];
       setFallbackMessage('Basemap tiles unavailable. Switched to offline Radar Canvas.');
-      try {
-        if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_notice_dismissed') === 'true') {
-          // Keep dismissed per user preference
-        } else {
-          setShowFallbackNotice(true);
-        }
-      } catch {
-        setShowFallbackNotice(true);
-      }
+      setShowFallbackNotice(true);
       const map = mapRef.current;
       if (map) {
         setIsStyleLoaded(false);
@@ -186,47 +179,49 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       let tileSummaryLogged = false;
       mapInstance.on('error', (e) => {
-        // Normal viewport / resize cancellation or aborted tile requests are not errors
         const errMsg = e?.error?.message || '';
-        if (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError') {
+
+        // If tiles have already successfully loaded, ignore normal panning/zooming aborts
+        if (hasTileLoadedRef.current && (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError')) {
           return;
         }
 
-        const isTileError = Boolean(
-          e && (
-            (e.error && (e.error.status || (errMsg && /tile|fetch|failed|blocked|csp|network/i.test(errMsg)))) ||
-            e.tile ||
-            e.sourceId === 'basemap-tiles' ||
-            e.sourceId === 'openmaptiles' ||
-            e.sourceId === 'ne2_shaded'
-          )
-        );
+        const currentProvider = activeTileProviderRef.current;
+        if (currentProvider === 'offline-radar') return;
 
-        if (isTileError && activeTileProviderRef.current !== 'offline-radar') {
-          const now = Date.now();
-          tileErrorsRef.current.push(now);
-          tileErrorsRef.current = tileErrorsRef.current.filter((t) => now - t <= 5000);
-
-          if (!tileSummaryLogged) {
-            tileSummaryLogged = true;
-            console.warn('LORAN LAB: Basemap tile loading issues detected. Monitoring for offline fallback.');
-          }
-
-          const isFatalStyleFailure = Boolean(
-            e?.error && (e.error.status === 404 || e.error.status === 500 || /net::ERR|blocked by client|csp/i.test(errMsg))
+        // On openfreemap-dark: trigger fallback on OFM tile/source errors
+        if (currentProvider === 'openfreemap-dark') {
+          const isOfmError = Boolean(
+            e?.sourceId === 'openmaptiles' ||
+            e?.sourceId === 'ne2_shaded' ||
+            (errMsg && /openfreemap|planet|ne2/i.test(errMsg)) ||
+            (e?.error && (e.error.status || /failed|fetch|network|net::ERR|blocked|csp/i.test(errMsg)))
           );
-
-          if ((tileErrorsRef.current.length >= 4 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
+          if (isOfmError && !hasTileLoadedRef.current) {
             triggerNextFallback();
           }
+          return;
+        }
+
+        // On osm-standard: ignore lingering errors from openfreemap; trigger on OSM errors
+        if (currentProvider === 'osm-standard') {
+          if (/openfreemap|planet|ne2/i.test(errMsg || e?.sourceId || '')) {
+            return;
+          }
+          const isOsmError = Boolean(
+            e?.sourceId === 'basemap-tiles' ||
+            (errMsg && /openstreetmap|tile\.open/i.test(errMsg)) ||
+            (e?.error && (e.error.status || /failed|fetch|network|net::ERR|blocked|csp/i.test(errMsg)))
+          );
+          if (isOsmError && !hasTileLoadedRef.current) {
+            triggerNextFallback();
+          }
+          return;
         }
       });
 
       const handleTileLoaded = (e) => {
-        if (
-          (e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) ||
-          (e.isSourceLoaded && e.sourceId && !e.sourceId.startsWith('loran-'))
-        ) {
+        if (e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) {
           hasTileLoadedRef.current = true;
         }
       };

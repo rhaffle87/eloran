@@ -9,6 +9,7 @@ import {
 } from '../../lib/asf.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
+import InfoTooltip from '../ui/Tooltip.jsx';
 
 const ASF_TEMPLATES = [
   {
@@ -99,51 +100,50 @@ export default function AsfPanel() {
           ASF Propagation Model Mode
         </label>
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-          <button
-            onClick={() => updateSettings({ asfModelMode: 'millington' })}
-            className={`p-2 rounded border text-left transition flex flex-col gap-0.5 ${
-              asfMode === 'millington'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-            }`}
-          >
-            <span className="font-bold flex items-center gap-1.5">
-              <Waves size={13} className="text-[var(--accent-eloran)]" /> Mixed-Path (Millington)
-            </span>
-            <span className="text-[10px] text-[var(--text-muted)]">
-              ITU-R P.832 physical ground conductivity
-            </span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => updateSettings({ asfModelMode: 'millington' })}
+              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
+                asfMode === 'millington'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+              }`}
+            >
+              <Waves size={13} className="text-[var(--accent-eloran)] shrink-0" />
+              <span className="font-bold text-[11px] truncate">Millington Mixed</span>
+            </button>
+            <InfoTooltip text="Physical mixed-path delay model based on ITU-R P.832 ground conductivity mapping." />
+          </div>
 
-          <button
-            onClick={() => updateSettings({ asfModelMode: 'formula' })}
-            className={`p-2 rounded border text-left transition flex flex-col gap-0.5 ${
-              asfMode === 'formula'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-            }`}
-          >
-            <span className="font-bold flex items-center gap-1.5">
-              <Sparkles size={13} className="text-[var(--accent-loran-c)]" /> Formula Override (AST)
-            </span>
-            <span className="text-[10px] text-[var(--text-muted)]">
-              Manual sandboxed mathematical formula
-            </span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => updateSettings({ asfModelMode: 'formula' })}
+              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
+                asfMode === 'formula'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+              }`}
+            >
+              <Sparkles size={13} className="text-[var(--accent-loran-c)] shrink-0" />
+              <span className="font-bold text-[11px] truncate">Formula AST</span>
+            </button>
+            <InfoTooltip text="Manual sandboxed mathematical formula evaluation for synthetic delay profiles." />
+          </div>
         </div>
       </div>
 
       {/* Mode 1: Physical Mixed-Path Millington Model */}
       {asfMode === 'millington' && (
         <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-4 font-mono text-xs">
-          {/* Status Badge */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
-            <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] font-semibold uppercase tracking-wider flex items-center gap-1">
-              <CheckCircle2 size={11} /> Model: Millington Mixed-Path (SOURCED / UNVERIFIED)
+          {/* Status Header */}
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+            <span className="text-[11px] font-semibold text-[var(--text-primary)]">
+              Millington Mixed-Path Terrain Model
             </span>
-            <span className="text-[10px] text-[var(--text-muted)]">
-              Conductivity: ITU-R P.832 (SOURCED) • Scale k: UNVERIFIED
-            </span>
+            <InfoTooltip
+              align="right"
+              text="Physical mixed-path delay calculation utilizing ITU-R P.832 ground conductivity mapping."
+            />
           </div>
 
           {/* Land Conductivity Selector */}
@@ -252,20 +252,16 @@ export default function AsfPanel() {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-                Manual ASF Formula (Safe AST Override)
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+                  Manual ASF Formula (AST)
+                </label>
+                <InfoTooltip text="Models arbitrary spatial land path delays in meters. Whitelisted variables: lat, lng, pi, e." />
+              </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
-                Model: AST Formula (UNVERIFIED)
+                UNVERIFIED
               </span>
             </div>
-            <p className="text-[11px] text-[var(--text-dim)]">
-              Models arbitrary spatial land path delays in meters. Whitelisted variables:{' '}
-              <code className="text-[var(--accent-eloran)] font-mono">lat</code>,{' '}
-              <code className="text-[var(--accent-eloran)] font-mono">lng</code>,{' '}
-              <code className="text-[var(--accent-eloran)] font-mono">pi</code>,{' '}
-              <code className="text-[var(--accent-eloran)] font-mono">e</code>.
-            </p>
 
             <textarea
               rows={3}

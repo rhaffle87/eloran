@@ -1,15 +1,15 @@
 import React from 'react';
+import { InfoTooltip } from './Tooltip.jsx';
 
-export default function Toggle({ label, checked, onChange, disabled = false, description }) {
+export default function Toggle({ label, checked, onChange, disabled = false, description, tooltip }) {
+  const tipContent = description || tooltip;
   return (
     <label
-      className={`flex items-start justify-between gap-3 cursor-pointer select-none ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+      className={`flex items-center justify-between gap-3 cursor-pointer select-none py-1 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
     >
-      <div>
-        <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{label}</div>
-        {description && (
-          <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{description}</div>
-        )}
+      <div className="flex items-center gap-1.5 flex-1 pr-2">
+        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{label}</span>
+        {tipContent && <InfoTooltip content={tipContent} align="left" size={13} />}
       </div>
       <div className="relative inline-flex items-center shrink-0 mt-0.5">
         <input

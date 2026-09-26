@@ -3,6 +3,7 @@ import { Play, Pause, RotateCcw, Clock } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { OSCILLATOR_PRESETS } from '../../lib/clocks.js';
 import Slider from '../ui/Slider.jsx';
+import InfoTooltip from '../ui/Tooltip.jsx';
 
 export default function ClockPanel() {
   const {
@@ -91,14 +92,16 @@ export default function ClockPanel() {
                     ? { background: 'var(--accent-eloran-subtle)', border: '1px solid var(--accent-eloran-border)', color: 'var(--accent-eloran)' }
                     : { background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
                 >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold" style={{ color: isSelected ? 'var(--accent-eloran)' : 'var(--text-primary)' }}>{osc.name}</span>
-                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-dim)' }}>
-                      Drift: {osc.typicalDriftSecPerSec.toExponential(0)} s/s
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-semibold truncate" style={{ color: isSelected ? 'var(--accent-eloran)' : 'var(--text-primary)' }}>
+                        {osc.name}
+                      </span>
+                      <InfoTooltip text={osc.description} />
+                    </div>
+                    <span className="text-[10px] font-mono shrink-0 ml-2" style={{ color: 'var(--text-dim)' }}>
+                      {osc.typicalDriftSecPerSec.toExponential(0)} s/s
                     </span>
-                  </div>
-                  <div className="text-[11px] leading-tight" style={{ color: 'var(--text-muted)' }}>
-                    {osc.description}
                   </div>
                 </div>
               );

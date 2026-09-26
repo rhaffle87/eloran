@@ -4,6 +4,7 @@ import { useSimulationStore } from '../../state/simulationStore.js';
 import { PRESET_SCENARIOS } from '../../state/presets.js';
 import { parseStationsCsv, exportStationsCsv, exportScenarioGeoJson } from '../../lib/stations.js';
 import Modal from '../ui/Modal.jsx';
+import { InfoTooltip } from '../ui/Tooltip.jsx';
 
 const ROLE_COLOR_VAR = {
   master:   '--accent-eloran',
@@ -111,13 +112,24 @@ export default function StationEditor({ isELoran = false }) {
     <div className="space-y-4">
       {/* Preset selector */}
       <div>
-        <label
-          htmlFor="scenario-preset-select"
-          className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
-          style={{ color: 'var(--text-dim)' }}
-        >
-          Scenario Presets
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <label
+              htmlFor="scenario-preset-select"
+              className="text-xs font-semibold uppercase tracking-wider block"
+              style={{ color: 'var(--text-dim)' }}
+            >
+              Scenario Presets
+            </label>
+            {PRESET_SCENARIOS[activePresetId]?.description && (
+              <InfoTooltip
+                title={PRESET_SCENARIOS[activePresetId]?.name}
+                content={PRESET_SCENARIOS[activePresetId]?.description}
+                align="left"
+              />
+            )}
+          </div>
+        </div>
         <select
           id="scenario-preset-select"
           value={activePresetId}
@@ -128,9 +140,6 @@ export default function StationEditor({ isELoran = false }) {
             <option key={id} value={id}>{p.name}</option>
           ))}
         </select>
-        <p className="text-[11px] mt-1 leading-normal" style={{ color: 'var(--text-dim)' }}>
-          {PRESET_SCENARIOS[activePresetId]?.description}
-        </p>
       </div>
 
       {/* Action buttons */}
@@ -203,7 +212,12 @@ export default function StationEditor({ isELoran = false }) {
                   />
                   <div>
                     <div className="font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                      {st.label}
+                      <span>{st.label}</span>
+                      {st.name && (
+                        <span className="font-normal text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          · {st.name}
+                        </span>
+                      )}
                       <span
                         className="text-[9px] px-1 py-0.5 rounded font-mono"
                         style={{

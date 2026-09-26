@@ -1,4 +1,5 @@
 import React from 'react';
+import { InfoTooltip } from './Tooltip.jsx';
 
 export default function Slider({
   label,
@@ -14,9 +15,12 @@ export default function Slider({
   return (
     <div className={`space-y-1.5 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="flex justify-between items-center text-xs">
-        <span className="font-medium" style={{ color: 'var(--text-secondary)' }} title={tooltip}>
-          {label}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+            {label}
+          </span>
+          {tooltip && <InfoTooltip content={tooltip} align="left" size={12} />}
+        </div>
         <span
           className="font-mono px-1.5 py-0.5 rounded text-[11px]"
           style={{ color: 'var(--accent-eloran)', background: 'var(--accent-eloran-subtle)' }}

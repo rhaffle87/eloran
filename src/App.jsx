@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import ErrorBoundary from './components/ui/ErrorBoundary.jsx';
 import { EducationalDisclaimerBanner, SystemCapabilityBanner } from './components/ui/SystemBanners.jsx';
@@ -25,16 +25,21 @@ function PageLoader() {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isSimulation = location.pathname === '/loran-c' || location.pathname === '/eloran';
+
   return (
     <div
-      className="min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200"
+      className={`min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200 ${
+        isSimulation ? 'h-screen overflow-hidden' : ''
+      }`}
       style={{ background: 'var(--surface-base)', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
     >
       <EducationalDisclaimerBanner />
       <SystemCapabilityBanner />
       <Navbar />
 
-      <main className="flex-1 flex flex-col">
+      <main className={`flex-1 flex flex-col ${isSimulation ? 'min-h-0 overflow-hidden' : ''}`}>
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -50,9 +55,10 @@ export default function App() {
         </ErrorBoundary>
       </main>
 
-      {/* Footer */}
-      <footer
-        className="border-t py-4 px-4 text-xs font-mono"
+      {/* Footer — hidden on simulation routes to lock viewport to 100vh with zero scrolling */}
+      {!isSimulation && (
+        <footer
+          className="border-t py-4 px-4 text-xs font-mono"
         style={{ background: 'var(--surface-layer)', borderColor: 'var(--surface-border)', color: 'var(--text-dim)' }}
       >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -89,6 +95,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      )}
     </div>
   );
 }

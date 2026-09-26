@@ -4,7 +4,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { useThemeStore } from '../../state/themeStore.js';
 import { haversineDistance, destinationPoint, initialBearing, isValidLngLat } from '../../lib/geodesy.js';
-import { computeGDOPAtPoint } from '../../lib/gdop.js';
+import {
+  computeHyperbolicGDOP,
+  isInsideBaselineExtension,
+  generateBaselineExtensionSectors,
+} from '../../lib/chainDesign.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 
 function isMapStyleReady(map) {
@@ -78,7 +82,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
       hasTileLoadedRef.current = false;
       tileErrorsRef.current = [];
       setFallbackMessage('Basemap tiles unavailable. Switched to offline Radar Canvas.');
-      setShowFallbackNotice(true);
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_notice_dismissed') === 'true') {
+          // Keep dismissed per user preference
+        } else {
+          setShowFallbackNotice(true);
+        }
+      } catch {
+        setShowFallbackNotice(true);
+      }
       const map = mapRef.current;
       if (map) {
         setIsStyleLoaded(false);
@@ -90,6 +102,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
     }
   }, []);
+
+  const handleDismissFallbackNotice = () => {
+    setShowFallbackNotice(false);
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('loran_notice_dismissed', 'true');
+        if (fallbackMessage.includes('CARTO')) {
+          sessionStorage.setItem('loran_carto_notice_dismissed', 'true');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const {
     masters,
@@ -104,13 +130,25 @@ export default function MapView({ onMapClick, isELoran = false }) {
     receiverFixes,
     updateStation,
     evaluateReceivers,
+    isDesignMode,
+    designChain,
+    designParams,
+    showBaselineExtensions,
+    showCrossingAngles,
+    updateDesignMaster,
+    updateDesignSecondary,
   } = useSimulationStore();
 
   const stationsRef = useRef({ masters, slaves });
   stationsRef.current = { masters, slaves };
 
+  const designRef = useRef({ isDesignMode, designChain, designParams, showCrossingAngles });
+  designRef.current = { isDesignMode, designChain, designParams, showCrossingAngles };
+
   const [cursorPos, setCursorPos] = useState(null);
   const [cursorGdop, setCursorGdop] = useState(null);
+  const [cursorCrossing, setCursorCrossing] = useState(null);
+  const [isInBaselineExtension, setIsInBaselineExtension] = useState(false);
 
   const initialCenterRef = useRef(mapCenter);
   const initialZoomRef = useRef(mapZoom);
@@ -148,9 +186,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       let tileSummaryLogged = false;
       mapInstance.on('error', (e) => {
+        // Normal viewport / resize cancellation or aborted tile requests are not errors
+        const errMsg = e?.error?.message || '';
+        if (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError') {
+          return;
+        }
+
         const isTileError = Boolean(
           e && (
-            (e.error && (e.error.status || (e.error.message && /tile|fetch|failed|blocked|csp|network/i.test(e.error.message)))) ||
+            (e.error && (e.error.status || (errMsg && /tile|fetch|failed|blocked|csp|network/i.test(errMsg)))) ||
             e.tile ||
             e.sourceId === 'basemap-tiles' ||
             e.sourceId === 'openmaptiles' ||
@@ -169,10 +213,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
           }
 
           const isFatalStyleFailure = Boolean(
-            e?.error && /failed|abort|fetch|network|404|500/i.test(e.error.message || '')
+            e?.error && (e.error.status === 404 || e.error.status === 500 || /net::ERR|blocked by client|csp/i.test(errMsg))
           );
 
-          if ((tileErrorsRef.current.length >= 3 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
+          if ((tileErrorsRef.current.length >= 4 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
             triggerNextFallback();
           }
         }
@@ -206,13 +250,29 @@ export default function MapView({ onMapClick, isELoran = false }) {
         const { lat, lng } = e.lngLat;
         setCursorPos({ lat, lng });
 
-        const { masters: currentMasters, slaves: currentSlaves } = stationsRef.current;
-        const master = currentMasters[0];
-        if (master && currentSlaves.length >= 2) {
-          const { gdop, valid } = computeGDOPAtPoint({ lat, lng }, master, currentSlaves);
-          setCursorGdop(valid ? gdop : null);
+        const { isDesignMode: inDesign, designChain: dc } = designRef.current;
+        const activeMaster = inDesign ? dc.master : stationsRef.current.masters[0];
+        const activeSecondaries = inDesign ? dc.secondaries : stationsRef.current.slaves;
+
+        if (activeMaster && activeSecondaries && activeSecondaries.length >= 2) {
+          const sigmaUs = inDesign ? (dc.tdSigmaUs || 0.1) : 0.1;
+          const gdopRes = computeHyperbolicGDOP({ lat, lng }, activeMaster, activeSecondaries, sigmaUs);
+          setCursorGdop(gdopRes.valid ? gdopRes.gdop : null);
+          setCursorCrossing(gdopRes.minCrossingAngleDeg ?? null);
+
+          let inExt = false;
+          const halfWidth = designRef.current.designParams?.hazardConeHalfAngleDeg || 10;
+          for (const sec of activeSecondaries) {
+            if (isInsideBaselineExtension({ lat, lng }, activeMaster, sec, halfWidth).isExtension) {
+              inExt = true;
+              break;
+            }
+          }
+          setIsInBaselineExtension(inExt);
         } else {
           setCursorGdop(null);
+          setCursorCrossing(null);
+          setIsInBaselineExtension(false);
         }
       });
 
@@ -228,7 +288,27 @@ export default function MapView({ onMapClick, isELoran = false }) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
+    let resizeObserver = null;
+    let rAFId = null;
+    if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
+      resizeObserver = new ResizeObserver(() => {
+        if (rAFId) cancelAnimationFrame(rAFId);
+        rAFId = requestAnimationFrame(() => {
+          if (mapRef.current) {
+            mapRef.current.resize();
+          }
+        });
+      });
+      resizeObserver.observe(mapContainer.current);
+    }
+
     return () => {
+      if (rAFId) {
+        cancelAnimationFrame(rAFId);
+      }
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       setIsStyleLoaded(false);
       if (typeof window !== 'undefined') {
         delete window.__maplibreInstance;
@@ -289,11 +369,16 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (!map) return;
 
     const currentLabels = new Set();
-    const allStations = [
-      ...masters.map((m) => ({ ...m, type: 'master' })),
-      ...slaves.map((s) => ({ ...s, type: 'slave' })),
-      ...receivers.map((r) => ({ ...r, type: 'receiver' })),
-    ];
+    const allStations = isDesignMode
+      ? [
+          { ...designChain.master, type: 'master', isDesign: true },
+          ...designChain.secondaries.map((s, idx) => ({ ...s, type: 'slave', isDesign: true, designIndex: idx })),
+        ]
+      : [
+          ...masters.map((m) => ({ ...m, type: 'master' })),
+          ...slaves.map((s) => ({ ...s, type: 'slave' })),
+          ...receivers.map((r) => ({ ...r, type: 'receiver' })),
+        ];
 
     allStations.forEach((station) => {
       currentLabels.add(station.label);
@@ -365,14 +450,30 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
         marker.on('dragend', () => {
           const lngLat = marker.getLngLat();
-          updateStation(station.label, { lat: lngLat.lat, lng: lngLat.lng });
-          setTimeout(() => evaluateReceivers(), 50);
+          if (station.isDesign) {
+            if (station.type === 'master') {
+              updateDesignMaster({ lat: parseFloat(lngLat.lat.toFixed(4)), lng: parseFloat(lngLat.lng.toFixed(4)) });
+            } else {
+              updateDesignSecondary(station.designIndex, { lat: parseFloat(lngLat.lat.toFixed(4)), lng: parseFloat(lngLat.lng.toFixed(4)) });
+            }
+          } else {
+            updateStation(station.label, { lat: lngLat.lat, lng: lngLat.lng });
+            setTimeout(() => evaluateReceivers(), 50);
+          }
         });
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           if (mapMode === 'pan' && isValidLngLat(station.lng, station.lat)) {
-            const popupContent = `
+            const popupContent = station.isDesign ? `
+              <div class="space-y-1">
+                <div style="font-family:monospace;font-weight:700;font-size:12px;color:var(--accent-loran-c)">PROPOSED ${station.label} (${station.type.toUpperCase()})</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lat: ${station.lat.toFixed(5)}°</div>
+                <div style="font-size:11px;color:var(--text-secondary)">Lng: ${station.lng.toFixed(5)}°</div>
+                ${station.codingDelayUs ? `<div style="font-size:11px;color:var(--text-muted)">Coding Delay: ${station.codingDelayUs} µs</div>` : ''}
+                <div style="font-size:10px;color:var(--accent-loran-c);margin-top:4px;">Drag marker on map to reposition</div>
+              </div>
+            ` : `
               <div class="space-y-1">
                 <div style="font-family:monospace;font-weight:700;font-size:12px;color:var(--accent-eloran)">${station.label} (${station.type.toUpperCase()})</div>
                 <div style="font-size:11px;color:var(--text-secondary)">Lat: ${station.lat.toFixed(5)}°</div>
@@ -403,12 +504,32 @@ export default function MapView({ onMapClick, isELoran = false }) {
         delete markersRef.current[label];
       }
     });
-  }, [masters, slaves, receivers, mapMode, isStyleLoaded, updateStation, evaluateReceivers]);
+  }, [
+    masters,
+    slaves,
+    receivers,
+    designChain,
+    isDesignMode,
+    mapMode,
+    isStyleLoaded,
+    updateStation,
+    updateDesignMaster,
+    updateDesignSecondary,
+    evaluateReceivers,
+  ]);
 
   // Synchronize Estimated Position Fix Markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
+    if (isDesignMode) {
+      Object.values(estMarkerRef.current).forEach((m) => {
+        try { m.remove(); } catch { /* ignore */ }
+      });
+      estMarkerRef.current = {};
+      return;
+    }
 
     receivers.forEach((rx) => {
       const fix = receiverFixes[rx.label];
@@ -447,7 +568,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         }
       }
     });
-  }, [receivers, receiverFixes, isStyleLoaded]);
+  }, [receivers, receiverFixes, isStyleLoaded, isDesignMode]);
 
 
   // Safe removal helper for MapLibre layers and sources
@@ -473,18 +594,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const sourceId = 'loran-baselines-source';
     const layerId = 'loran-baselines-layer';
 
-    if (!baselinesVisible || !masters.length || !slaves.length) {
+    const activeMaster = isDesignMode ? designChain.master : masters[0];
+    const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
+
+    if (!baselinesVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
       safeRemoveLayerAndSource(map, layerId, sourceId);
       return;
     }
 
     try {
       const features = [];
-      const master = masters[0];
 
-      slaves.forEach((slave, sidx) => {
-        const d = haversineDistance(master, slave);
-        const b = initialBearing(master, slave);
+      activeSecondaries.forEach((slave, sidx) => {
+        const d = haversineDistance(activeMaster, slave);
+        const b = initialBearing(activeMaster, slave);
         const ext = destinationPoint(slave, d * 0.5, b);
 
         features.push({
@@ -492,14 +615,14 @@ export default function MapView({ onMapClick, isELoran = false }) {
           geometry: {
             type: 'LineString',
             coordinates: [
-              [master.lng, master.lat],
+              [activeMaster.lng, activeMaster.lat],
               [slave.lng, slave.lat],
               [ext.lng, ext.lat],
             ],
           },
           properties: {
             id: `baseline-${sidx}`,
-            label: `${master.label}-${slave.label}`,
+            label: `${activeMaster.label}-${slave.label}`,
             lengthKm: (d / 1000).toFixed(1),
           },
         });
@@ -518,8 +641,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
         type: 'line',
         source: sourceId,
         paint: {
-          'line-color': '#06b6d4',
-          'line-width': 1.8,
+          'line-color': isDesignMode ? '#f59e0b' : '#06b6d4',
+          'line-width': isDesignMode ? 2.2 : 1.8,
           'line-opacity': 0.85,
           'line-dasharray': [4, 3],
         },
@@ -534,7 +657,89 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
       safeRemoveLayerAndSource(map, layerId, sourceId);
     };
-  }, [masters, slaves, baselinesVisible, isStyleLoaded, safeRemoveLayerAndSource]);
+  }, [masters, slaves, designChain, isDesignMode, baselinesVisible, isStyleLoaded, safeRemoveLayerAndSource]);
+
+  // Render Baseline Extension Hazard Sectors (±7.5° wedges)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
+
+    const fillSourceId = 'loran-baseline-ext-source';
+    const fillLayerId = 'loran-baseline-ext-fill';
+    const lineLayerId = 'loran-baseline-ext-line';
+
+    const shouldShow = showBaselineExtensions || isDesignMode;
+    const activeMaster = isDesignMode ? designChain.master : masters[0];
+    const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
+
+    if (!shouldShow || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
+      safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
+      safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
+      return;
+    }
+
+    try {
+      const halfWidth = designParams?.hazardConeHalfAngleDeg || 10;
+      const geojson = generateBaselineExtensionSectors(activeMaster, activeSecondaries, 800000, halfWidth);
+      safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
+      safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
+
+      map.addSource(fillSourceId, { type: 'geojson', data: geojson });
+      map.addLayer({
+        id: fillLayerId,
+        type: 'fill',
+        source: fillSourceId,
+        paint: {
+          'fill-color': '#f59e0b',
+          'fill-opacity': 0.14,
+        },
+      });
+      map.addLayer({
+        id: lineLayerId,
+        type: 'line',
+        source: fillSourceId,
+        paint: {
+          'line-color': '#ef4444',
+          'line-width': 1.5,
+          'line-opacity': 0.75,
+          'line-dasharray': [3, 2],
+        },
+      });
+
+      const clickHandler = (e) => {
+        const feat = e.features?.[0];
+        if (!feat) return;
+        const p = feat.properties;
+        const content = `
+          <div class="font-mono text-xs">
+            <div class="font-bold text-amber-500 mb-1">Baseline Extension Hazard Zone</div>
+            <div class="text-[11px] text-zinc-300">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
+            <div class="text-[10px] text-zinc-400 mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
+          </div>
+        `;
+        new maplibregl.Popup({ offset: 10 }).setLngLat(e.lngLat).setHTML(content).addTo(map);
+      };
+
+      map.on('click', fillLayerId, clickHandler);
+
+      return () => {
+        try { map.off('click', fillLayerId, clickHandler); } catch { /* ignore */ }
+        safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
+        safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
+      };
+    } catch (err) {
+      console.warn('Failed to render baseline extensions layer:', err);
+    }
+  }, [
+    masters,
+    slaves,
+    designChain,
+    isDesignMode,
+    showBaselineExtensions,
+    designParams,
+    isStyleLoaded,
+    safeRemoveLayerAndSource,
+  ]);
 
   // Render Hyperbolic LOP Contours Layer safely once style is fully loaded
   useEffect(() => {
@@ -813,6 +1018,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
   // Switch basemap provider safely
   const handleSwitchProvider = (providerKey) => {
     if (providerKey === 'carto-dark' && !CARTO_API_KEY) {
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_carto_notice_dismissed') === 'true') {
+          return;
+        }
+      } catch {
+        // ignore
+      }
       setFallbackMessage('CARTO is an optional commercial basemap requiring a VITE_CARTO_API_KEY environment variable. OpenFreeMap and OpenStreetMap are currently active and operational.');
       setShowFallbackNotice(true);
       return;
@@ -868,7 +1080,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
           <div className="w-2 h-2 rounded-full shrink-0 animate-ping" style={{ background: 'var(--accent-eloran)' }} />
           <span className="leading-snug max-w-md">{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
           <button
-            onClick={() => setShowFallbackNotice(false)}
+            onClick={handleDismissFallbackNotice}
             className="p-1 rounded-md transition text-xs font-bold shrink-0 cursor-pointer hover:bg-[var(--bg-subtle)]"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Dismiss notice"
@@ -886,10 +1098,14 @@ export default function MapView({ onMapClick, isELoran = false }) {
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'animate-pulse' : ''}`}
-              style={{ background: isStyleLoaded ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
+              style={{ background: isDesignMode ? 'var(--accent-loran-c)' : isStyleLoaded ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
             />
-            <span className="uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-dim)' }}>MODE:</span>
-            <span className="font-bold uppercase" style={{ color: 'var(--accent-eloran)' }}>{mapMode}</span>
+            <span className="uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-dim)' }}>
+              {isDesignMode ? 'CHAIN DESIGN:' : 'MODE:'}
+            </span>
+            <span className="font-bold uppercase" style={{ color: isDesignMode ? 'var(--accent-loran-c)' : 'var(--accent-eloran)' }}>
+              {isDesignMode ? 'PLANNING' : mapMode}
+            </span>
           </div>
           {cursorPos && (
             <div className="hidden sm:inline text-[11px]" style={{ color: 'var(--text-secondary)' }}>
@@ -902,10 +1118,36 @@ export default function MapView({ onMapClick, isELoran = false }) {
               <span className="mr-1" style={{ color: 'var(--text-dim)' }}>GDOP:</span>
               <span
                 className="font-bold"
-                style={{ color: cursorGdop < 3 ? 'var(--status-ok)' : cursorGdop < 8 ? 'var(--status-warn)' : 'var(--status-danger)' }}
+                style={{ color: cursorGdop < 3 ? 'var(--status-ok)' : cursorGdop < 10.92 ? 'var(--status-warn)' : 'var(--status-danger)' }}
+                title="Hyperbolic GDOP = 2drms / 2drms* (USCG Spec Limit = 10.92)"
               >
                 {cursorGdop}
               </span>
+            </div>
+          )}
+          {cursorCrossing !== null && (
+            <div className="hidden md:inline text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+              <span className="mr-1" style={{ color: 'var(--text-dim)' }}>θ:</span>
+              <span
+                className="font-bold"
+                style={{ color: cursorCrossing >= 30 ? 'var(--status-ok)' : 'var(--status-danger)' }}
+                title="LOP Crossing Angle θ (90° optimal, <30° degraded)"
+              >
+                {cursorCrossing.toFixed(0)}°
+              </span>
+            </div>
+          )}
+          {isInBaselineExtension && (
+            <div
+              className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider animate-pulse"
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: 'var(--status-danger)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+              }}
+              title="Within ±7.5° baseline extension: hyperbolic gradient is degenerate"
+            >
+              ⚠ Baseline Extension
             </div>
           )}
         </div>
@@ -947,12 +1189,16 @@ export default function MapView({ onMapClick, isELoran = false }) {
         })}
       </div>
 
-      {/* Collapsible Station Symbols Legend */}
-      <div className="absolute bottom-12 sm:bottom-8 left-4 z-10 font-mono text-xs">
+      {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
+      <div className="absolute bottom-20 left-4 z-10 font-mono text-xs">
         {showLegend ? (
           <div
-            className="backdrop-blur-md rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+            className="backdrop-blur-md rounded-lg p-2.5 shadow-md space-y-1.5 text-[11px] animate-fade-in"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }}
           >
             <div className="flex items-center justify-between gap-3 text-[10px] uppercase font-bold tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>
               <span>Station Symbols</span>
@@ -971,12 +1217,21 @@ export default function MapView({ onMapClick, isELoran = false }) {
             <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--accent-loran-c)' }} /> Secondary (S)
             </div>
-            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--status-ok)' }} /> True Receiver (R)
-            </div>
-            <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: 'var(--status-danger)' }} /> Estimated PNT Fix
-            </div>
+            {!isDesignMode && (
+              <>
+                <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <span className="w-2.5 h-2.5 rounded-full border border-white shrink-0" style={{ background: 'var(--status-ok)' }} /> True Receiver (R)
+                </div>
+                <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: 'var(--status-danger)' }} /> Estimated PNT Fix
+                </div>
+              </>
+            )}
+            {(showBaselineExtensions || isDesignMode) && (
+              <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                <span className="w-2.5 h-2.5 rounded-sm border border-rose-500 bg-amber-500/30 shrink-0" /> Baseline Extension (Hazard)
+              </div>
+            )}
           </div>
         ) : (
           <button

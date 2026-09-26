@@ -137,33 +137,15 @@ export default function FusionPanel() {
           </div>
         )}
 
-        {/* Active Models Provenance Indicators */}
-        <div className="pt-2 border-t border-[var(--border-subtle)] flex flex-wrap gap-1.5 text-[9px]">
-          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
-            Model: PF Refraction (SOURCED)
+        {/* Active Models Provenance Indicator */}
+        <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+          <span className="text-[var(--text-secondary)] font-medium">
+            Multi-Sensor Fusion Layers
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
-            Model: TOA Noise (SOURCED)
-          </span>
-          {settings.asfModelMode === 'millington' ? (
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
-              Model: Millington ASF (SOURCED/UNVERIFIED)
-            </span>
-          ) : (
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-amber-500/20">
-              Model: AST ASF (UNVERIFIED)
-            </span>
-          )}
-          {settings.enableSecondaryFactor && (
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-amber-500/20">
-              Model: SF Seawater (UNVERIFIED)
-            </span>
-          )}
-          {settings.enableCycleSlips && (
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-emerald-500/20">
-              Model: Boyce Cycle Slip (SOURCED)
-            </span>
-          )}
+          <InfoTooltip
+            align="right"
+            text="Active physics layers: PF atmospheric refraction (RTCM), TOA noise injection (Rhee), Millington mixed-path ASF (ITU-R P.832), and Boyce cycle slip monitoring."
+          />
         </div>
       </div>
 

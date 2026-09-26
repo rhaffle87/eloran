@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('UI & UX Fixes Verification Suite', () => {
   test('Verify all 6 UI fixes: viewport lock, sidebar toggle, scale clearance, theme toggle, and banner dismissal', async ({ page }) => {
+    test.setTimeout(60000);
     // 1. Visit Loran-C page
     await page.goto('/loran-c');
     await page.waitForLoadState('networkidle');

@@ -124,30 +124,37 @@ export default function LoranC() {
           )}
         </div>
 
-        {/* Permanent Sidebar Expand/Collapse Toggle — always visible, never clipped */}
-        <button
-          onClick={() => setSidebarOpen((open) => !open)}
-          className="absolute top-4 right-3 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
-          style={{
-            background: 'var(--bg-surface)',
-            borderColor: 'var(--border-subtle)',
-            color: 'var(--text-secondary)',
-          }}
-          title={sidebarOpen ? 'Collapse console drawer' : 'Expand console drawer'}
-          aria-label={sidebarOpen ? 'Collapse console drawer' : 'Expand console drawer'}
-        >
-          {sidebarOpen ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
-        </button>
+        {/* Sidebar Expand Toggle — only rendered when drawer is collapsed */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="absolute top-4 right-3 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
+            style={{
+              background: 'var(--bg-surface)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
+            }}
+            title="Expand console drawer"
+            aria-label="Expand console drawer"
+          >
+            <ChevronLeft size={17} />
+          </button>
+        )}
       </div>
 
       {/* Collapsible right console drawer */}
       <div
-        className={`relative z-30 transition-all duration-300 ease-in-out flex flex-col ${
+        className={`relative z-30 transition-[width] duration-300 ease-in-out flex flex-col ${
           sidebarOpen ? 'w-full max-w-[380px] lg:w-96' : 'w-0 overflow-hidden'
         }`}
         style={{
           borderLeft: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
           background: 'var(--bg-surface)',
+        }}
+        onTransitionEnd={() => {
+          if (typeof window !== 'undefined' && window.__maplibreInstance) {
+            window.__maplibreInstance.resize();
+          }
         }}
       >
         {sidebarOpen && (
@@ -165,14 +172,14 @@ export default function LoranC() {
                   <Radio size={14} aria-hidden="true" /> Loran-C Console
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono" style={{ color: 'var(--text-dim)' }}>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)]" style={{ color: 'var(--text-dim)' }}>
                     100 kHz LOP Engine
                   </span>
                   <button
                     onClick={() => setSidebarOpen(false)}
-                    className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-dim)] hover:text-[var(--text-primary)] transition cursor-pointer"
-                    title="Close console"
-                    aria-label="Close console"
+                    className="p-1.5 rounded-md hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer border border-[var(--border-subtle)]"
+                    title="Collapse console drawer"
+                    aria-label="Collapse console drawer"
                   >
                     <ChevronRight size={15} />
                   </button>

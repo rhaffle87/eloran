@@ -186,9 +186,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       let tileSummaryLogged = false;
       mapInstance.on('error', (e) => {
+        // Normal viewport / resize cancellation or aborted tile requests are not errors
+        const errMsg = e?.error?.message || '';
+        if (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError') {
+          return;
+        }
+
         const isTileError = Boolean(
           e && (
-            (e.error && (e.error.status || (e.error.message && /tile|fetch|failed|blocked|csp|network/i.test(e.error.message)))) ||
+            (e.error && (e.error.status || (errMsg && /tile|fetch|failed|blocked|csp|network/i.test(errMsg)))) ||
             e.tile ||
             e.sourceId === 'basemap-tiles' ||
             e.sourceId === 'openmaptiles' ||
@@ -207,10 +213,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
           }
 
           const isFatalStyleFailure = Boolean(
-            e?.error && /failed|abort|fetch|network|404|500/i.test(e.error.message || '')
+            e?.error && (e.error.status === 404 || e.error.status === 500 || /net::ERR|blocked by client|csp/i.test(errMsg))
           );
 
-          if ((tileErrorsRef.current.length >= 3 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
+          if ((tileErrorsRef.current.length >= 4 || isFatalStyleFailure) && !hasTileLoadedRef.current) {
             triggerNextFallback();
           }
         }
@@ -283,16 +289,23 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
 
     let resizeObserver = null;
+    let rAFId = null;
     if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
       resizeObserver = new ResizeObserver(() => {
-        if (mapRef.current) {
-          mapRef.current.resize();
-        }
+        if (rAFId) cancelAnimationFrame(rAFId);
+        rAFId = requestAnimationFrame(() => {
+          if (mapRef.current) {
+            mapRef.current.resize();
+          }
+        });
       });
       resizeObserver.observe(mapContainer.current);
     }
 
     return () => {
+      if (rAFId) {
+        cancelAnimationFrame(rAFId);
+      }
       if (resizeObserver) {
         resizeObserver.disconnect();
       }

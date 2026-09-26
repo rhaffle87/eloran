@@ -135,14 +135,15 @@ export default function AsfPanel() {
       {/* Mode 1: Physical Mixed-Path Millington Model */}
       {asfMode === 'millington' && (
         <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-4 font-mono text-xs">
-          {/* Status Badge */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
-            <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] font-semibold uppercase tracking-wider flex items-center gap-1">
-              <CheckCircle2 size={11} /> Model: Millington Mixed-Path (SOURCED / UNVERIFIED)
+          {/* Status Header */}
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+            <span className="text-[11px] font-semibold text-[var(--text-primary)]">
+              Millington Mixed-Path Terrain Model
             </span>
-            <span className="text-[10px] text-[var(--text-muted)]">
-              Conductivity: ITU-R P.832 (SOURCED) • Scale k: UNVERIFIED
-            </span>
+            <InfoTooltip
+              align="right"
+              text="Physical mixed-path delay calculation utilizing ITU-R P.832 ground conductivity mapping."
+            />
           </div>
 
           {/* Land Conductivity Selector */}

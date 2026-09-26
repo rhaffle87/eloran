@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2, Sun, Moon, Monitor } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2, Sun, Moon, Monitor, BookOpen } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { useThemeStore } from '../../state/themeStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
@@ -592,85 +593,31 @@ export default function DisplayPanel({ isELoran = false }) {
         </div>
       </div>
 
-      {/* Model Fidelity & Provenance Registry */}
-      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)] font-mono text-xs">
-        <div className="flex items-center justify-between">
-          <label className="font-semibold text-[var(--text-dim)] uppercase tracking-wider block flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-[var(--accent-eloran)]" /> Model Fidelity & Provenance
-          </label>
-          <span className="text-[10px] text-[var(--text-muted)]">docs/PROVENANCE.md</span>
+      {/* Model Fidelity & Documentation Link */}
+      <div
+        className="p-3 rounded-xl border flex items-center justify-between gap-2 font-mono text-xs"
+        style={{
+          background: 'var(--bg-subtle)',
+          borderColor: 'var(--border-subtle)',
+        }}
+      >
+        <div className="flex items-center gap-1.5 min-w-0">
+          <CheckCircle2 size={13} className="text-[var(--accent-eloran)] shrink-0" />
+          <span className="font-semibold uppercase tracking-wider text-[11px] text-[var(--text-secondary)]">
+            Model Provenance
+          </span>
+          <InfoTooltip
+            align="left"
+            text="Physics models (PF refraction, Brunavs SF, Millington ASF, Boyce cycle slips, and Rhee TOA noise) are cross-referenced against USCG, RTCM, and ITU-R specifications. All theoretical derivations and formulas are documented in Theory."
+          />
         </div>
-
-        <div className="bg-[var(--bg-canvas)] rounded-xl border border-[var(--border-subtle)] p-3 space-y-2.5 text-[11px]">
-          {/* Primary Factor */}
-          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
-            <div>
-              <div className="font-bold text-[var(--text-primary)]">Primary Factor (PF)</div>
-              <div className="text-[10px] text-[var(--text-muted)]">v = c / η (Atmospheric refraction)</div>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
-              SOURCED (RTCM / USCG)
-            </span>
-          </div>
-
-          {/* Secondary Factor */}
-          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
-            <div>
-              <div className="font-bold text-[var(--text-primary)]">Secondary Factor (SF)</div>
-              <div className="text-[10px] text-[var(--text-muted)]">Brunavs seawater delay (5 S/m)</div>
-            </div>
-            <span
-              className={`px-1.5 py-0.5 rounded text-[10px] border ${
-                settings.enableSecondaryFactor
-                  ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border-[var(--status-warn-border)]'
-                  : 'bg-[var(--bg-subtle)] text-[var(--text-dim)] border-[var(--border-default)]'
-              }`}
-            >
-              {settings.enableSecondaryFactor ? 'ON (UNVERIFIED)' : 'OFF (UNVERIFIED)'}
-            </span>
-          </div>
-
-          {/* Mixed-Path ASF */}
-          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
-            <div>
-              <div className="font-bold text-[var(--text-primary)]">Mixed-Path ASF (Millington)</div>
-              <div className="text-[10px] text-[var(--text-muted)]">
-                {settings.asfModelMode === 'millington'
-                  ? `Terrain σ = ${settings.asfLandSigma ?? 0.003} S/m, f = ${((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%`
-                  : 'Safe AST Formula Override'}
-              </div>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
-              SOURCED (ITU-R P.832) / UNVERIFIED (k)
-            </span>
-          </div>
-
-          {/* Cycle Selection */}
-          <div className="flex items-center justify-between border-b border-[var(--bg-subtle)] pb-1.5">
-            <div>
-              <div className="font-bold text-[var(--text-primary)]">Cycle Selection Ratio Test</div>
-              <div className="text-[10px] text-[var(--text-muted)]">
-                Envelope ratio excursion [R(25), R(35)] (±5 µs)
-              </div>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
-              SOURCED (Boyce ILA 2006)
-            </span>
-          </div>
-
-          {/* TOA Noise Model */}
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-bold text-[var(--text-primary)]">TOA Measurement Noise</div>
-              <div className="text-[10px] text-[var(--text-muted)] font-mono">
-                σ_i² = J_i² + K² / (N · SNR_i)
-              </div>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] text-[10px]">
-              SOURCED (Rhee et al. 2021)
-            </span>
-          </div>
-        </div>
+        <Link
+          to="/theory"
+          className="text-[11px] text-[var(--accent-eloran)] hover:underline flex items-center gap-1 font-semibold shrink-0"
+        >
+          <BookOpen size={12} />
+          <span>Theory & Docs</span>
+        </Link>
       </div>
     </div>
   );

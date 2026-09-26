@@ -8,6 +8,9 @@
  * 4. Offline High-Contrast Radar Canvas (zero-network vector/background fallback)
  */
 
+import openfreemapDarkStyle from './styles/openfreemap-dark.json';
+import openfreemapBrightStyle from './styles/openfreemap-bright.json';
+
 // CARTO API key must be supplied via user environment (e.g. VITE_CARTO_API_KEY in Vercel settings).
 // It is NEVER hardcoded in source control.
 export const CARTO_API_KEY = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_CARTO_API_KEY) || '';
@@ -34,7 +37,7 @@ export const TILE_PROVIDERS = {
     id: 'carto-dark',
     name: CARTO_API_KEY ? 'CARTO Dark (API Key Authenticated)' : 'CARTO Dark (API Key Required - Unconfigured)',
     type: 'raster',
-    url: CARTO_API_KEY ? `https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?api_key=${CARTO_API_KEY}` : null,
+    url: CARTO_API_KEY ? `https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${CARTO_API_KEY}&api_key=${CARTO_API_KEY}` : null,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
     maxZoom: 19,
     tileSize: 256,
@@ -81,9 +84,39 @@ export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER, theme = 'd
 
   // Dynamic OpenFreeMap theme switching: bright for light mode, dark for dark mode
   if (normalizedKey === 'openfreemap-dark') {
-    return theme === 'light'
-      ? 'https://tiles.openfreemap.org/styles/bright'
-      : 'https://tiles.openfreemap.org/styles/dark';
+    return theme === 'light' ? openfreemapBrightStyle : openfreemapDarkStyle;
+  }
+
+  // Dynamic CARTO theme switching: light_all for light mode, dark_all for dark mode
+  if (normalizedKey === 'carto-dark') {
+    const variant = theme === 'light' ? 'light_all' : 'dark_all';
+    const tileUrl = CARTO_API_KEY
+      ? `https://basemaps.cartocdn.com/rastertiles/${variant}/{z}/{x}/{y}.png?key=${CARTO_API_KEY}&api_key=${CARTO_API_KEY}`
+      : null;
+    if (!tileUrl) {
+      return getMapLibreStyle('offline-radar', theme);
+    }
+    return {
+      version: 8,
+      sources: {
+        'basemap-tiles': {
+          type: 'raster',
+          tiles: [tileUrl],
+          tileSize: 256,
+          attribution: provider.attribution,
+          maxzoom: 19,
+        },
+      },
+      layers: [
+        {
+          id: 'basemap-layer',
+          type: 'raster',
+          source: 'basemap-tiles',
+          minzoom: 0,
+          maxzoom: 19,
+        },
+      ],
+    };
   }
 
   // Vector styles hosted directly as MapLibre Style JSON

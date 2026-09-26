@@ -17,6 +17,9 @@ import {
   N_STANDARD,
   STANDARD_ATMOSPHERE,
   SEASONAL_AMPLITUDE_US_PER_100KM,
+  TEMP_DRIFT_COEFF_US_PER_100KM_C,
+  HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT,
+  PRESSURE_DRIFT_COEFF_US_PER_100KM_HPA,
 } from '../temporalAsf.js';
 
 const C = 299792458; // m/s
@@ -250,6 +253,57 @@ describe('computeTemporalAsfMicroseconds', () => {
     });
     const sum = result.refractivityUs + result.seasonalUs + result.weatherUs;
     expect(result.totalMicroseconds).toBeCloseTo(sum, 10);
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+describe('Song & Son (2025) Table I: correlation sign verification', () => {
+  // Pearson r values from Song & Son (2025) Table I,
+  // fetched directly from arXiv:2509.26020v1 HTML.
+  //   Temperature: +0.776  → positive coeff (warmer = more delay)
+  //   Humidity:    -0.452  → NEGATIVE coeff (higher RH = less delay)
+  //   Pressure:    -0.430  → NEGATIVE coeff (higher P = less delay)
+
+  it('TEMP_DRIFT_COEFF is positive (r=+0.776 from Table I)', () => {
+    expect(TEMP_DRIFT_COEFF_US_PER_100KM_C).toBeGreaterThan(0);
+  });
+
+  it('HUMIDITY_DRIFT_COEFF is NEGATIVE (r=-0.452 from Table I)', () => {
+    // This was wrong (positive) in the initial Track C implementation.
+    expect(HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT).toBeLessThan(0);
+  });
+
+  it('PRESSURE_DRIFT_COEFF is NEGATIVE (r=-0.430 from Table I)', () => {
+    expect(PRESSURE_DRIFT_COEFF_US_PER_100KM_HPA).toBeLessThan(0);
+  });
+
+  it('higher humidity produces less weatherUs (negative sign)', () => {
+    const base = computeTemporalAsfMicroseconds({
+      distKm: 500, ...STANDARD_ATMOSPHERE, dayOfYear: 172, // sin=0 eliminates seasonal
+      includeSeasonalDrift: true,
+    });
+    const humid = computeTemporalAsfMicroseconds({
+      distKm: 500, pressureHpa: STANDARD_ATMOSPHERE.pressureHpa,
+      tempC: STANDARD_ATMOSPHERE.tempC,
+      humidityPct: 90.0, // 20% above reference of 70%
+      dayOfYear: 172, includeSeasonalDrift: true,
+    });
+    // Higher humidity → negative weatherUs contribution (r=-0.452)
+    expect(humid.weatherUs).toBeLessThan(base.weatherUs);
+  });
+
+  it('higher temperature produces more weatherUs (positive sign)', () => {
+    const base = computeTemporalAsfMicroseconds({
+      distKm: 500, ...STANDARD_ATMOSPHERE, dayOfYear: 172, includeSeasonalDrift: true,
+    });
+    const warm = computeTemporalAsfMicroseconds({
+      distKm: 500, pressureHpa: STANDARD_ATMOSPHERE.pressureHpa,
+      tempC: 25.0, // 10°C above reference
+      humidityPct: STANDARD_ATMOSPHERE.humidityPct,
+      dayOfYear: 172, includeSeasonalDrift: true,
+    });
+    // Higher temperature → positive weatherUs contribution (r=+0.776)
+    expect(warm.weatherUs).toBeGreaterThan(base.weatherUs);
   });
 });
 

@@ -34,8 +34,11 @@ import {
 // 1. Constants
 // ──────────────────────────────────────────────────────────────────────────────
 describe('Eurofix constants', () => {
-  it('9th pulse nominal offset is 1000 µs', () => {
-    expect(NINTH_PULSE_NOMINAL_OFFSET_SEC).toBeCloseTo(1000e-6, 10);
+  it('9th pulse nominal offset is 100 µs (not 1000 µs)', () => {
+    // 100 µs = 9th-pulse zero-symbol offset after the 8th navigation pulse.
+    // Source: US11300647 §0051 and US10778362, US11041932, US11209554.
+    // Note: 1000 µs is the Loran-C inter-pulse spacing — a DIFFERENT measurement.
+    expect(NINTH_PULSE_NOMINAL_OFFSET_SEC).toBeCloseTo(100e-6, 10);
   });
 
   it('PPM offset is ±1 µs', () => {

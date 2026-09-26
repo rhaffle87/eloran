@@ -31,14 +31,19 @@
  *
  * ─── 9TH PULSE (eLoran LDC) ─────────────────────────────────────────────────
  *
- *  The 9th pulse is transmitted 1000 µs after the 8th pulse (zero-symbol position).
- *  Source: SAE9990/2 "Transmitted Enhanced Loran (eLoran) Signal Standard for
- *  9th Pulse Modulation" (2018) / ILA eLoran Definition Document (2007).
- *  The 9th pulse uses 32-state PPM (5 bits/GRI), distinct from Eurofix.
+ *  The 9th pulse zero-symbol position is 100 µs after the 8th navigation pulse.
  *
- *  Previous LORAN LAB versions (pre-Track C) contained an error: the zero-symbol
- *  offset was stated as "1000 µs after 8th pulse" in comments but the constant
- *  EUROFIX_PPM_OFFSET_SEC was used for ±1 µs state offset, which is correct.
+ *  Source: US patents describing the 9th-pulse modulation system (all four of
+ *  US10778362, US11041932, US11209554, US11300647) use the same specification:
+ *  "the pulse is inserted 100 microseconds after the 8th pulse and may use
+ *  32-state pulse-position modulation to encode the data at a data rate of
+ *  about 5 bits per GRI" (US11300647 §0051, paragraph 0051-0052).
+ *
+ *  Caution: 1000 µs is the standard Loran-C inter-pulse spacing (spacing
+ *  between each of the 8 navigation pulses). It is NOT the 9th-pulse offset.
+ *  These are different measurements; do not conflate.
+ *
+ *  The 9th pulse uses 32-state PPM (5 bits/GRI), distinct from Eurofix.
  *  The frame structure has been reworked to match the 6-pulse Eurofix specification.
  */
 
@@ -46,8 +51,12 @@
 // Eurofix constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Nominal 9th-pulse position: 1000 µs after the 8th navigation pulse. */
-export const NINTH_PULSE_NOMINAL_OFFSET_SEC = 1000e-6; // 1000 µs
+/**
+ * Nominal 9th-pulse position: 100 µs after the 8th navigation pulse.
+ * Source: US11300647 §0051 (and US10778362, US11041932, US11209554 — consistent).
+ * Note: 1000 µs is the Loran-C inter-pulse spacing, NOT the 9th-pulse offset.
+ */
+export const NINTH_PULSE_NOMINAL_OFFSET_SEC = 100e-6; // 100 µs — 9th-pulse zero-symbol
 
 /** PPM displacement magnitude for Eurofix modulated pulses: ±1 µs */
 export const EUROFIX_PPM_OFFSET_SEC = 1e-6; // ±1 µs
@@ -103,8 +112,17 @@ function _allTernaryPatterns() {
 
 /**
  * Selects balanced ternary patterns where #EARLY === #LATE.
- * There are 141 such patterns for length-6 (3^6 space).
- * We take the first 128 to represent 7-bit symbols (2^7 = 128).
+ * There are exactly 141 such patterns for length-6 (3^6 = 729 total).
+ * We take the first 128 to represent 7-bit symbols (2^7 = 128 ≤ 141).
+ *
+ * TRINOMIAL CORROBORATION: The count 141 is independently verified as the
+ * central trinomial coefficient T(6). T(n) counts length-n sequences over
+ * {-1, 0, +1} with zero sum; equivalently, the coefficient of x^n in
+ * (1 + x + x^-1)^n or the coefficient of x^(2n) in (1 + x + x^2)^n.
+ * T(1)=1, T(2)=3, T(3)=7, T(4)=19, T(5)=51, T(6)=141 (OEIS A002426).
+ * This gives a purely combinatorial proof that the spec's 141 count is correct
+ * for the #Early == #Late balance definition, independent of any primary-source
+ * access to the ILA eLoran Definition Document.
  *
  * This provides the bijection: 7-bit value (0–127) → 6-symbol balanced pattern.
  */
@@ -113,7 +131,8 @@ function _buildBalancedPatternTable() {
   const balanced = all.filter(
     (p) => p.filter((s) => s === 0).length === p.filter((s) => s === 2).length
   );
-  // balanced.length === 141; take first 128 (deterministic, reproducible)
+  // balanced.length === 141 (= central trinomial coefficient T(6), OEIS A002426)
+  // take first 128 (deterministic, reproducible)
   return balanced.slice(0, 128);
 }
 

@@ -22,12 +22,18 @@
  *     The study uses a 12-day Korean eLoran measurement dataset.
  *
  *   *** IMPORTANT PROVENANCE CAVEAT ***
- *   The seasonal amplitude, temperature correlation coefficient (r ≈ +0.60),
- *   and humidity correlation coefficient (r ≈ +0.40) used here are
- *   ILLUSTRATIVE — calibrated from a single 12-day Korean measurement
- *   campaign (Song & Son, 2025). They may not be representative of
- *   other geographic regions, seasons, or propagation paths. This module
- *   is NOT validated against independent experimental data.
+ *   The seasonal amplitude, temperature coefficient, humidity coefficient, and
+ *   pressure coefficient used here are derived from Song & Son (2025) Table I
+ *   Pearson correlation coefficients, directly fetched from arXiv:2509.26020 HTML:
+ *
+ *     Temperature:  r = +0.776 (std 0.013)
+ *     Humidity:     r = -0.452 (std 0.023)  ← NEGATIVE
+ *     Pressure:     r = -0.430 (std 0.020)  ← NEGATIVE
+ *
+ *   These r values are from a SINGLE 12-day Korean eLoran measurement campaign.
+ *   They are NOT regression slopes and may NOT generalise to other regions,
+ *   seasons, or paths. The per-km scaling factors applied in code are ILLUSTRATIVE.
+ *   This module is NOT validated against independent experimental data.
  */
 
 /** Speed of light in m/s */
@@ -107,21 +113,33 @@ export const SEASONAL_AMPLITUDE_US_PER_100KM = 0.025; // µs / 100 km (illustrat
 
 /**
  * Temperature-driven drift coefficient (µs / 100km / °C deviation from 15°C).
- * Derived from Song & Son Pearson r ≈ +0.60 (temperature vs TOA).
- * The specific µs/°C/km scaling is ILLUSTRATIVE (not a direct numeric
- * result from the paper — the paper reports correlation coefficients only,
- * not explicit regression slopes).
+ * Derived from Song & Son (2025) Table I: Pearson r = +0.776 for temperature vs TOA.
+ * (Fetched directly from arXiv:2509.26020 HTML, Table I, Mean row.)
+ * Higher temperature → longer propagation delay (positive sign confirmed).
+ * The µs/°C/km SCALING is illustrative — the paper gives r only, not regression slopes.
  * Marked UNVERIFIED.
  */
-export const TEMP_DRIFT_COEFF_US_PER_100KM_C = 0.002; // µs / 100 km / °C  (UNVERIFIED)
+export const TEMP_DRIFT_COEFF_US_PER_100KM_C = 0.002; // µs / 100 km / °C  (UNVERIFIED — sign confirmed from r=+0.776)
 
 /**
  * Humidity-driven drift coefficient (µs / 100km / % deviation from 70%).
- * Derived from Song & Son Pearson r ≈ +0.40 (humidity vs TOA).
- * ILLUSTRATIVE only — paper gives correlation sign/magnitude, not regression slope.
+ * Derived from Song & Son (2025) Table I: Pearson r = -0.452 for humidity vs TOA.
+ * (Fetched directly from arXiv:2509.26020 HTML, Table I, Mean row.)
+ * Higher humidity → SHORTER propagation delay (NEGATIVE sign — corrected from prior error).
+ * The µs/%RH/km SCALING is illustrative — the paper gives r only, not regression slopes.
  * Marked UNVERIFIED.
  */
-export const HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT = 0.0003; // µs / 100 km / % RH  (UNVERIFIED)
+export const HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT = -0.0003; // µs / 100 km / % RH  (UNVERIFIED — sign corrected; was wrongly positive)
+
+/**
+ * Pressure-driven drift coefficient (µs / 100km / hPa deviation from 1013.25 hPa).
+ * Derived from Song & Son (2025) Table I: Pearson r = -0.430 for pressure vs TOA.
+ * (Fetched directly from arXiv:2509.26020 HTML, Table I, Mean row.)
+ * Higher pressure → shorter delay (negative sign).
+ * The µs/hPa/km SCALING is illustrative — the paper gives r only, not regression slopes.
+ * Marked UNVERIFIED.
+ */
+export const PRESSURE_DRIFT_COEFF_US_PER_100KM_HPA = -0.0001; // µs / 100 km / hPa  (UNVERIFIED)
 
 /**
  * Computes the atmospheric refractivity-driven temporal ASF in microseconds.
@@ -185,12 +203,16 @@ export function computeTemporalAsfMicroseconds({
     const seasonPhase = (2 * Math.PI * (dayOfYear - 172)) / 365;
     seasonalUs = SEASONAL_AMPLITUDE_US_PER_100KM * (distKm / 100) * Math.sin(seasonPhase);
 
-    // Temperature deviation from 15°C reference
+    // Temperature deviation from 15°C reference (positive r=+0.776 → positive coefficient)
     const deltaTempC = tempC - 15.0;
+    // Humidity deviation from 70% reference (negative r=-0.452 → negative coefficient)
     const deltaHumidPct = humidityPct - 70.0;
+    // Pressure deviation from 1013.25 hPa reference (negative r=-0.430 → negative coefficient)
+    const deltaPressHpa = pressureHpa - 1013.25;
     weatherUs =
       TEMP_DRIFT_COEFF_US_PER_100KM_C * (distKm / 100) * deltaTempC +
-      HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT * (distKm / 100) * deltaHumidPct;
+      HUMIDITY_DRIFT_COEFF_US_PER_100KM_PCT * (distKm / 100) * deltaHumidPct +
+      PRESSURE_DRIFT_COEFF_US_PER_100KM_HPA * (distKm / 100) * deltaPressHpa;
   }
 
   const totalMicroseconds = refractivityUs + seasonalUs + weatherUs;

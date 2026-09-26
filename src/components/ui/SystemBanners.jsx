@@ -59,7 +59,28 @@ export function EducationalDisclaimerBanner() {
 
 export function SystemCapabilityBanner() {
   const [issues, setIssues] = useState([]);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && (
+        localStorage.getItem('loran_capability_notice_dismissed') === 'true' ||
+        sessionStorage.getItem('loran_capability_notice_dismissed') === 'true'
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('loran_capability_notice_dismissed', 'true');
+        sessionStorage.setItem('loran_capability_notice_dismissed', 'true');
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     const detected = [];
@@ -99,8 +120,8 @@ export function SystemCapabilityBanner() {
         </div>
       </div>
       <button
-        onClick={() => setDismissed(true)}
-        className="text-red-400 hover:text-red-200 p-1 rounded"
+        onClick={handleDismiss}
+        className="text-red-400 hover:text-red-200 p-1 rounded cursor-pointer"
         title="Dismiss warning"
         aria-label="Dismiss warning"
       >

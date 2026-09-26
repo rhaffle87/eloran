@@ -154,6 +154,17 @@ export default function Navbar() {
               {label}
             </NavLink>
           ))}
+          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs font-mono px-1">
+            <span className="text-[var(--text-dim)]">Appearance</span>
+            <button
+              onClick={toggleTheme}
+              className="px-2.5 py-1 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition cursor-pointer"
+              aria-label={effectiveTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              {effectiveTheme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+              <span>{effectiveTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+          </div>
         </div>
       )}
     </nav>

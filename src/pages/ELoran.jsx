@@ -78,16 +78,16 @@ export default function ELoran() {
 
   return (
     <div
-      className="relative w-full h-[calc(100vh-4rem)] flex overflow-hidden"
+      className="relative w-full h-full flex overflow-hidden"
       style={{ background: 'var(--bg-canvas)' }}
     >
       {/* Map hero */}
-      <div className="flex-1 relative h-full">
+      <div className="flex-1 relative h-full min-w-0">
         <MapView onMapClick={handleMapClick} isELoran={true} />
 
-        {/* Tactical mode toolbar overlay */}
+        {/* Tactical mode toolbar overlay — theme-aware, positioned with clearance from sidebar toggle */}
         <div
-          className="absolute top-4 right-4 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 shadow-xl"
+          className="absolute top-4 right-14 sm:right-16 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 shadow-xl"
           style={{
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)',
@@ -140,6 +140,21 @@ export default function ELoran() {
             </>
           )}
         </div>
+
+        {/* Permanent Sidebar Expand/Collapse Toggle — always visible, never clipped */}
+        <button
+          onClick={() => setSidebarOpen((open) => !open)}
+          className="absolute top-4 right-3 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
+          style={{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border-subtle)',
+            color: 'var(--text-secondary)',
+          }}
+          title={sidebarOpen ? 'Collapse console drawer' : 'Expand console drawer'}
+          aria-label={sidebarOpen ? 'Collapse console drawer' : 'Expand console drawer'}
+        >
+          {sidebarOpen ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
+        </button>
       </div>
 
       {/* Collapsible right console drawer */}
@@ -152,21 +167,6 @@ export default function ELoran() {
           background: 'var(--bg-surface)',
         }}
       >
-        {/* Collapse toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -left-7 top-4 z-40 p-1.5 rounded-l-md shadow-xl transition"
-          style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRight: 'none',
-            color: 'var(--text-secondary)',
-          }}
-          title={sidebarOpen ? 'Collapse console' : 'Expand console'}
-        >
-          {sidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-
         {sidebarOpen && (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Console header */}
@@ -181,9 +181,19 @@ export default function ELoran() {
                 >
                   <Compass size={15} aria-hidden="true" /> eLoran Precision Suite
                 </div>
-                <span className="text-[10px] font-mono" style={{ color: 'var(--text-dim)' }}>
-                  DDS · ASF · PNT Fusion
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--text-dim)' }}>
+                    DDS · ASF · PNT Fusion
+                  </span>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-dim)] hover:text-[var(--text-primary)] transition cursor-pointer"
+                    title="Close console"
+                    aria-label="Close console"
+                  >
+                    <ChevronRight size={15} />
+                  </button>
+                </div>
               </div>
 
               {/* Primary Mode Switcher: Simulation vs Chain Design */}

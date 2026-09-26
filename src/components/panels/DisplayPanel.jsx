@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2 } from 'lucide-react';
+import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2, Sun, Moon, Monitor } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
+import { useThemeStore } from '../../state/themeStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
 import { wgs84ToMercator, mercatorToWgs84, REFRACTIVE_INDEX_PRESETS } from '../../lib/geodesy.js';
 import { simplifyRDP } from '../../lib/contours.js';
@@ -31,6 +32,8 @@ export default function DisplayPanel({ isELoran = false }) {
     setContours,
     simTimeSec,
   } = useSimulationStore();
+
+  const { theme, effectiveTheme, setTheme } = useThemeStore();
 
   const [isComputing, setIsComputing] = useState(false);
 
@@ -478,6 +481,50 @@ export default function DisplayPanel({ isELoran = false }) {
           checked={gdopLayerVisible}
           onChange={toggleGdopLayer}
         />
+      </div>
+
+      {/* Interface & Map Theme */}
+      <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+            Interface Theme
+          </label>
+          <span className="text-[10px] text-[var(--text-muted)] font-mono">
+            {theme === 'system' ? `Auto (${effectiveTheme})` : theme.toUpperCase()}
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
+          <button
+            onClick={() => setTheme('dark')}
+            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              theme === 'dark'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+          >
+            <Moon size={12} /> Dark
+          </button>
+          <button
+            onClick={() => setTheme('light')}
+            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              theme === 'light'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+          >
+            <Sun size={12} /> Light
+          </button>
+          <button
+            onClick={() => setTheme('system')}
+            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              theme === 'system'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+          >
+            <Monitor size={12} /> Auto
+          </button>
+        </div>
       </div>
 
       {/* Numerical Grid Settings */}

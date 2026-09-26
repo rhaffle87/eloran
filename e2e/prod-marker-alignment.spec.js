@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test.describe('Production Build Marker Alignment Verification', () => {
-  test.use({ baseURL: 'http://localhost:4173' });
+  test.use({ baseURL: process.env.PROD_URL || process.env.BASE_URL || 'http://localhost:5173' });
 
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {

@@ -82,7 +82,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
       hasTileLoadedRef.current = false;
       tileErrorsRef.current = [];
       setFallbackMessage('Basemap tiles unavailable. Switched to offline Radar Canvas.');
-      setShowFallbackNotice(true);
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_notice_dismissed') === 'true') {
+          // Keep dismissed per user preference
+        } else {
+          setShowFallbackNotice(true);
+        }
+      } catch {
+        setShowFallbackNotice(true);
+      }
       const map = mapRef.current;
       if (map) {
         setIsStyleLoaded(false);
@@ -94,6 +102,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
     }
   }, []);
+
+  const handleDismissFallbackNotice = () => {
+    setShowFallbackNotice(false);
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('loran_notice_dismissed', 'true');
+        if (fallbackMessage.includes('CARTO')) {
+          sessionStorage.setItem('loran_carto_notice_dismissed', 'true');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const {
     masters,
@@ -260,7 +282,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
+      resizeObserver = new ResizeObserver(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      });
+      resizeObserver.observe(mapContainer.current);
+    }
+
     return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       setIsStyleLoaded(false);
       if (typeof window !== 'undefined') {
         delete window.__maplibreInstance;
@@ -970,6 +1005,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
   // Switch basemap provider safely
   const handleSwitchProvider = (providerKey) => {
     if (providerKey === 'carto-dark' && !CARTO_API_KEY) {
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_carto_notice_dismissed') === 'true') {
+          return;
+        }
+      } catch {
+        // ignore
+      }
       setFallbackMessage('CARTO is an optional commercial basemap requiring a VITE_CARTO_API_KEY environment variable. OpenFreeMap and OpenStreetMap are currently active and operational.');
       setShowFallbackNotice(true);
       return;
@@ -1025,7 +1067,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
           <div className="w-2 h-2 rounded-full shrink-0 animate-ping" style={{ background: 'var(--accent-eloran)' }} />
           <span className="leading-snug max-w-md">{fallbackMessage || 'Basemap tiles unavailable. Switched to offline Radar Canvas.'}</span>
           <button
-            onClick={() => setShowFallbackNotice(false)}
+            onClick={handleDismissFallbackNotice}
             className="p-1 rounded-md transition text-xs font-bold shrink-0 cursor-pointer hover:bg-[var(--bg-subtle)]"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Dismiss notice"
@@ -1134,12 +1176,16 @@ export default function MapView({ onMapClick, isELoran = false }) {
         })}
       </div>
 
-      {/* Collapsible Station Symbols Legend */}
-      <div className="absolute bottom-12 sm:bottom-8 left-4 z-10 font-mono text-xs">
+      {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
+      <div className="absolute bottom-20 left-4 z-10 font-mono text-xs">
         {showLegend ? (
           <div
-            className="backdrop-blur-md rounded-lg p-2.5 shadow-2xl space-y-1.5 text-[11px] animate-fade-in"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+            className="backdrop-blur-md rounded-lg p-2.5 shadow-md space-y-1.5 text-[11px] animate-fade-in"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }}
           >
             <div className="flex items-center justify-between gap-3 text-[10px] uppercase font-bold tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>
               <span>Station Symbols</span>

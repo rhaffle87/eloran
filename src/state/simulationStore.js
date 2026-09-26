@@ -26,6 +26,61 @@ import {
   compileAsfExpression,
   DEFAULT_MILLINGTON_SCALE,
 } from '../lib/asf.js';
+import {
+  computeEmissionDelay,
+} from '../lib/chainDesign.js';
+
+export const DEFAULT_DESIGN_CHAIN = {
+  name: 'Proposed Chain',
+  griUs: 99600,
+  tdSigmaUs: 0.1, // SOURCED: USCG Loran-C User Handbook (1992) §4-1
+  coverageRadiusKm: 600,
+  master: { label: 'M', name: 'Master-Proposed', lat: -6.200, lng: 106.816 },
+  secondaries: [
+    { label: 'W', name: 'Secondary-W', lat: -6.850, lng: 105.750, codingDelayUs: 11000 },
+    { label: 'X', name: 'Secondary-X', lat: -5.450, lng: 106.350, codingDelayUs: 25000 },
+    { label: 'Y', name: 'Secondary-Y', lat: -6.150, lng: 107.950, codingDelayUs: 40000 },
+  ],
+};
+
+export const DESIGN_PRESETS = {
+  'uscg-400mi': {
+    name: 'USCG 400-mi Golden Baseline Worked Example',
+    griUs: 79900,
+    tdSigmaUs: 0.1,
+    coverageRadiusKm: 800,
+    master: { label: 'M', name: 'Master-USCG', lat: 35.0, lng: 135.0 },
+    secondaries: [
+      { label: 'W', name: 'Secondary-W (400 nmi)', lat: 35.0, lng: 143.1353, codingDelayUs: 11000 },
+      { label: 'X', name: 'Secondary-X (400 nmi)', lat: 41.6622, lng: 135.0, codingDelayUs: 25000 },
+    ],
+  },
+  'jakarta-proposed': {
+    name: 'Jakarta / Sunda Strait Coastal Chain',
+    griUs: 99600,
+    tdSigmaUs: 0.1,
+    coverageRadiusKm: 600,
+    master: { label: 'M', name: 'Tanjung Priok Master', lat: -6.102, lng: 106.883 },
+    secondaries: [
+      { label: 'W', name: 'Anyer Secondary', lat: -6.050, lng: 105.920, codingDelayUs: 11000 },
+      { label: 'X', name: 'Cirebon Secondary', lat: -6.720, lng: 108.560, codingDelayUs: 25000 },
+      { label: 'Y', name: 'Lampung Secondary', lat: -5.450, lng: 105.260, codingDelayUs: 40000 },
+    ],
+  },
+  'us-east-coast': {
+    name: 'US East Coast Loran-C (GRI 9960)',
+    griUs: 99600,
+    tdSigmaUs: 0.1,
+    coverageRadiusKm: 1200,
+    master: { label: 'M', name: 'Seneca NY', lat: 42.714, lng: -76.827 },
+    secondaries: [
+      { label: 'W', name: 'Caribou ME', lat: 46.804, lng: -67.927, codingDelayUs: 11000 },
+      { label: 'X', name: 'Nantucket MA', lat: 41.253, lng: -69.977, codingDelayUs: 25000 },
+      { label: 'Y', name: 'Carolina Beach NC', lat: 34.063, lng: -77.910, codingDelayUs: 40000 },
+      { label: 'Z', name: 'Dana IN', lat: 39.854, lng: -87.487, codingDelayUs: 55000 },
+    ],
+  },
+};
 
 export const useSimulationStore = create((set, get) => ({
   // Active Scenario & Stations
@@ -33,6 +88,12 @@ export const useSimulationStore = create((set, get) => ({
   masters: PRESET_SCENARIOS.jakarta_baseline.masters,
   slaves: PRESET_SCENARIOS.jakarta_baseline.slaves,
   receivers: PRESET_SCENARIOS.jakarta_baseline.receivers,
+
+  // Chain Design Mode State
+  isDesignMode: false,
+  showBaselineExtensions: true,
+  showCrossingAngles: false,
+  designChain: JSON.parse(JSON.stringify(DEFAULT_DESIGN_CHAIN)),
 
   // Map & Interaction Mode
   mapMode: 'pan', // 'pan' | 'add-master' | 'add-slave' | 'add-receiver'
@@ -104,6 +165,158 @@ export const useSimulationStore = create((set, get) => ({
   toggleGdopLayer: () => set((state) => ({ gdopLayerVisible: !state.gdopLayerVisible })),
   toggleBaselines: () => set((state) => ({ baselinesVisible: !state.baselinesVisible })),
   toggleLops: () => set((state) => ({ lopsVisible: !state.lopsVisible })),
+
+  // Chain Design Actions
+  toggleDesignMode: (forced) =>
+    set((state) => ({ isDesignMode: typeof forced === 'boolean' ? forced : !state.isDesignMode })),
+  toggleBaselineExtensions: () =>
+    set((state) => ({ showBaselineExtensions: !state.showBaselineExtensions })),
+  toggleCrossingAngles: () =>
+    set((state) => ({ showCrossingAngles: !state.showCrossingAngles })),
+
+  updateDesignMaster: (updates) =>
+    set((state) => ({
+      designChain: {
+        ...state.designChain,
+        master: { ...state.designChain.master, ...updates },
+      },
+    })),
+
+  updateDesignSecondary: (index, updates) =>
+    set((state) => {
+      const nextSecs = [...state.designChain.secondaries];
+      if (nextSecs[index]) {
+        nextSecs[index] = { ...nextSecs[index], ...updates };
+      }
+      return {
+        designChain: {
+          ...state.designChain,
+          secondaries: nextSecs,
+        },
+      };
+    }),
+
+  addDesignSecondary: (secondary) =>
+    set((state) => {
+      const currentSecs = state.designChain.secondaries;
+      const lastSec = currentSecs[currentSecs.length - 1];
+      const nextCodingDelay = lastSec ? (lastSec.codingDelayUs || 11000) + 14000 : 11000;
+      const letters = ['W', 'X', 'Y', 'Z', 'A', 'B'];
+      const nextLabel = letters[currentSecs.length] || `S${currentSecs.length + 1}`;
+      const newSec = secondary || {
+        label: nextLabel,
+        name: `Secondary-${nextLabel}`,
+        lat: Number((state.designChain.master.lat + (Math.random() - 0.5) * 1.5).toFixed(4)),
+        lng: Number((state.designChain.master.lng + (Math.random() - 0.5) * 1.5).toFixed(4)),
+        codingDelayUs: nextCodingDelay,
+      };
+      return {
+        designChain: {
+          ...state.designChain,
+          secondaries: [...currentSecs, newSec],
+        },
+      };
+    }),
+
+  removeDesignSecondary: (index) =>
+    set((state) => ({
+      designChain: {
+        ...state.designChain,
+        secondaries: state.designChain.secondaries.filter((_, idx) => idx !== index),
+      },
+    })),
+
+  setDesignGRI: (griUs) =>
+    set((state) => ({
+      designChain: {
+        ...state.designChain,
+        griUs: Number(griUs) || state.designChain.griUs,
+      },
+    })),
+
+  setDesignTDSigma: (tdSigmaUs) =>
+    set((state) => ({
+      designChain: {
+        ...state.designChain,
+        tdSigmaUs: Number(tdSigmaUs) || 0.1,
+      },
+    })),
+
+  loadDesignPreset: (presetKey) => {
+    const preset = DESIGN_PRESETS[presetKey];
+    if (!preset) return;
+    set({
+      designChain: JSON.parse(JSON.stringify(preset)),
+      mapCenter: [preset.master.lng, preset.master.lat],
+      mapZoom: 7,
+    });
+  },
+
+  syncDesignFromActiveStations: () => {
+    const { masters, slaves } = get();
+    if (!masters.length) return;
+    const m = masters[0];
+    const newDesign = {
+      name: 'Imported Active Chain',
+      griUs: (m.griMs || 100) * 1000,
+      tdSigmaUs: 0.1,
+      coverageRadiusKm: 600,
+      master: { label: m.label, name: m.name || m.label, lat: m.lat, lng: m.lng },
+      secondaries: slaves.map((s, idx) => ({
+        label: s.label || `S${idx + 1}`,
+        name: s.name || s.label,
+        lat: s.lat,
+        lng: s.lng,
+        codingDelayUs: s.codingDelayUs || Math.round((s.offsetSec || 0.015) * 1e6 - 2000),
+      })),
+    };
+    set({ designChain: newDesign });
+  },
+
+  commitDesignToSimulation: () => {
+    const { designChain } = get();
+    const { master, secondaries, griUs } = designChain;
+    if (!master || !secondaries.length) return;
+
+    const newMaster = {
+      role: 'master',
+      label: master.label || 'M',
+      name: master.name || 'Master',
+      lat: master.lat,
+      lng: master.lng,
+      txDbm: 20,
+      griMs: griUs / 1000,
+      offsetSec: 0,
+      ddsEnabled: true,
+      clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
+    };
+
+    const newSlaves = secondaries.map((sec, idx) => {
+      const distM = haversineDistance(master, sec);
+      const edResult = computeEmissionDelay(distM, sec.codingDelayUs || (11000 + idx * 14000));
+      return {
+        role: 'slave',
+        label: sec.label || `S${idx + 1}`,
+        name: sec.name || `Secondary ${sec.label || idx + 1}`,
+        lat: sec.lat,
+        lng: sec.lng,
+        txDbm: 18,
+        griMs: griUs / 1000,
+        offsetSec: edResult.emissionDelayUs * 1e-6,
+        codingDelayUs: edResult.codingDelayUs,
+        emissionDelayUs: edResult.emissionDelayUs,
+        clock: { type: 'gps-disciplined', biasSec: 0, driftPerSec: 0 },
+      };
+    });
+
+    set({
+      masters: [newMaster],
+      slaves: newSlaves,
+      isDesignMode: false,
+      mapCenter: [master.lng, master.lat],
+    });
+    setTimeout(() => get().evaluateReceivers(), 50);
+  },
 
   updateSettings: (newSettings) => {
     set((state) => ({ settings: { ...state.settings, ...newSettings } }));

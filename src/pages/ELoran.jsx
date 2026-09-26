@@ -6,6 +6,7 @@ import ClockPanel from '../components/panels/ClockPanel.jsx';
 import AsfPanel from '../components/panels/AsfPanel.jsx';
 import FusionPanel from '../components/panels/FusionPanel.jsx';
 import DisplayPanel from '../components/panels/DisplayPanel.jsx';
+import ChainDesignPanel from '../components/panels/ChainDesignPanel.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 
 /** Map-mode toolbar button — theme-aware */
@@ -32,9 +33,17 @@ export default function ELoran() {
     () => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
   );
 
-  const { mapMode, setMapMode, addStation, evaluateReceivers } = useSimulationStore();
+  const {
+    mapMode,
+    setMapMode,
+    addStation,
+    evaluateReceivers,
+    isDesignMode,
+    toggleDesignMode,
+  } = useSimulationStore();
 
   const handleMapClick = (lngLat) => {
+    if (isDesignMode) return;
     if (mapMode === 'add-master') {
       addStation({
         role: 'master', label: `M${Date.now().toString().slice(-3)}`,
@@ -78,29 +87,58 @@ export default function ELoran() {
 
         {/* Tactical mode toolbar overlay */}
         <div
-          className="absolute top-4 right-4 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-0.5 shadow-xl"
+          className="absolute top-4 right-4 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 shadow-xl"
           style={{
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)',
             boxShadow: 'var(--shadow-card)',
           }}
         >
-          <ModeButton active={mapMode === 'pan'} onClick={() => setMapMode('pan')} title="Pan & Inspect (P)" accentVar="--accent-eloran">
-            <span className="hidden sm:inline">Pan <span className="kbd-chip ml-1">P</span></span>
-            <span className="sm:hidden">Pan</span>
-          </ModeButton>
-          <ModeButton active={mapMode === 'add-master'} onClick={() => setMapMode('add-master')} title="Place Master (M)" accentVar="--accent-eloran">
-            <span className="hidden sm:inline">+Master <span className="kbd-chip ml-1">M</span></span>
-            <span className="sm:hidden">+M</span>
-          </ModeButton>
-          <ModeButton active={mapMode === 'add-slave'} onClick={() => setMapMode('add-slave')} title="Place Secondary (S)" accentVar="--accent-loran-c">
-            <span className="hidden sm:inline">+Secondary <span className="kbd-chip ml-1">S</span></span>
-            <span className="sm:hidden">+S</span>
-          </ModeButton>
-          <ModeButton active={mapMode === 'add-receiver'} onClick={() => setMapMode('add-receiver')} title="Place Receiver (R)" accentVar="--status-ok">
-            <span className="hidden sm:inline">+Receiver <span className="kbd-chip ml-1">R</span></span>
-            <span className="sm:hidden">+R</span>
-          </ModeButton>
+          {isDesignMode ? (
+            <div className="flex items-center gap-1 px-1">
+              <span
+                className="px-2 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider border flex items-center gap-1.5"
+                style={{
+                  background: 'var(--accent-eloran-subtle)',
+                  color: 'var(--accent-eloran)',
+                  borderColor: 'var(--accent-eloran-border)',
+                }}
+              >
+                <Compass size={13} aria-hidden="true" />
+                <span>Chain Design Active</span>
+              </span>
+              <button
+                onClick={() => toggleDesignMode(false)}
+                className="px-2.5 py-1 rounded-md transition text-xs font-mono border hover:bg-[var(--bg-muted)] cursor-pointer"
+                style={{
+                  background: 'var(--bg-subtle)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-subtle)',
+                }}
+              >
+                Back to Simulation
+              </button>
+            </div>
+          ) : (
+            <>
+              <ModeButton active={mapMode === 'pan'} onClick={() => setMapMode('pan')} title="Pan & Inspect (P)" accentVar="--accent-eloran">
+                <span className="hidden sm:inline">Pan <span className="kbd-chip ml-1">P</span></span>
+                <span className="sm:hidden">Pan</span>
+              </ModeButton>
+              <ModeButton active={mapMode === 'add-master'} onClick={() => setMapMode('add-master')} title="Place Master (M)" accentVar="--accent-eloran">
+                <span className="hidden sm:inline">+Master <span className="kbd-chip ml-1">M</span></span>
+                <span className="sm:hidden">+M</span>
+              </ModeButton>
+              <ModeButton active={mapMode === 'add-slave'} onClick={() => setMapMode('add-slave')} title="Place Secondary (S)" accentVar="--accent-loran-c">
+                <span className="hidden sm:inline">+Secondary <span className="kbd-chip ml-1">S</span></span>
+                <span className="sm:hidden">+S</span>
+              </ModeButton>
+              <ModeButton active={mapMode === 'add-receiver'} onClick={() => setMapMode('add-receiver')} title="Place Receiver (R)" accentVar="--status-ok">
+                <span className="hidden sm:inline">+Receiver <span className="kbd-chip ml-1">R</span></span>
+                <span className="sm:hidden">+R</span>
+              </ModeButton>
+            </>
+          )}
         </div>
       </div>
 
@@ -148,34 +186,69 @@ export default function ELoran() {
                 </span>
               </div>
 
-              {/* Subsystem tab bar */}
+              {/* Primary Mode Switcher: Simulation vs Chain Design */}
               <div
-                className="grid grid-cols-5 rounded-lg p-0.5 font-mono text-[10px]"
+                className="flex rounded-lg p-0.5 font-mono text-xs mb-3"
                 style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
               >
-                {tabs.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveTab(id)}
-                    className="py-1.5 rounded text-center transition flex flex-col items-center gap-0.5"
-                    style={activeTab === id
-                      ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
-                      : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-                  >
-                    <Icon size={11} aria-hidden="true" />
-                    <span className="text-[9px] leading-none">{label}</span>
-                  </button>
-                ))}
+                <button
+                  onClick={() => toggleDesignMode(false)}
+                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  style={!isDesignMode
+                    ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                >
+                  <Radio size={12} aria-hidden="true" />
+                  <span>Simulation</span>
+                </button>
+                <button
+                  onClick={() => toggleDesignMode(true)}
+                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  style={isDesignMode
+                    ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                >
+                  <Compass size={12} aria-hidden="true" />
+                  <span>Chain Design</span>
+                </button>
               </div>
+
+              {!isDesignMode && (
+                /* Subsystem tab bar */
+                <div
+                  className="grid grid-cols-5 rounded-lg p-0.5 font-mono text-[10px]"
+                  style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
+                >
+                  {tabs.map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => setActiveTab(id)}
+                      className="py-1.5 rounded text-center transition flex flex-col items-center gap-0.5 cursor-pointer"
+                      style={activeTab === id
+                        ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
+                        : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                    >
+                      <Icon size={11} aria-hidden="true" />
+                      <span className="text-[9px] leading-none">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Active subsystem panel */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {activeTab === 'stations' && <StationEditor isELoran={true} />}
-              {activeTab === 'clocks'   && <ClockPanel />}
-              {activeTab === 'asf'      && <AsfPanel />}
-              {activeTab === 'fusion'   && <FusionPanel />}
-              {activeTab === 'display'  && <DisplayPanel isELoran={true} />}
+              {isDesignMode ? (
+                <ChainDesignPanel />
+              ) : (
+                <>
+                  {activeTab === 'stations' && <StationEditor isELoran={true} />}
+                  {activeTab === 'clocks'   && <ClockPanel />}
+                  {activeTab === 'asf'      && <AsfPanel />}
+                  {activeTab === 'fusion'   && <FusionPanel />}
+                  {activeTab === 'display'  && <DisplayPanel isELoran={true} />}
+                </>
+              )}
             </div>
           </div>
         )}

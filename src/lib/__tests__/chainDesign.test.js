@@ -1,0 +1,188 @@
+import { describe, it, expect } from 'vitest';
+import {
+  SPEED_OF_LIGHT,
+  USCG_TD_SIGMA_SEC,
+  USCG_SPEC_2DRMS_METERS,
+  USCG_SPEC_GDOP,
+  PROPAGATION_RATE_US_PER_NM,
+  computeBaselineTravelTime,
+  computeEmissionDelay,
+  computeMinimumFeasibleGRI,
+  evaluateChainFeasibility,
+  computeLOPGradient,
+  computeCrossingAngle,
+  computeHyperbolicGDOP,
+  isInsideBaselineExtension,
+  generateBaselineExtensionSectors,
+} from '../chainDesign.js';
+
+describe('Chain Design & Planning Math (USCG Loran-C Specifications)', () => {
+  describe('USCG Handbook Golden Worked Example (400-mile baseline)', () => {
+    it('reproduces 400 nautical mile baseline travel time of ~2472 µs at 6.18 µs/nm', () => {
+      const baselineNm = 400;
+      const baselineMeters = baselineNm * 1852; // 740,800 m
+
+      // Using standard Loran atmospheric rate (approx 6.18 µs per nautical mile)
+      const travelTimeUs = computeBaselineTravelTime(baselineMeters);
+
+      // Sourced USCG Handbook value: 400 mi * 6.18 µs/mi = 2472 µs
+      expect(travelTimeUs).toBeCloseTo(2472, 0); // Within ~1 µs of 2472
+      expect(travelTimeUs / baselineNm).toBeCloseTo(PROPAGATION_RATE_US_PER_NM, 1);
+    });
+
+    it('calculates Emission Delay = Baseline Travel Time + Coding Delay', () => {
+      const baselineMeters = 400 * 1852; // 740,800 m -> Tb ≈ 2472 µs
+      const codingDelayUs = 11000; // Standard Secondary 1 coding delay (e.g. 11,000 µs)
+
+      const result = computeEmissionDelay(baselineMeters, codingDelayUs);
+      expect(result.travelTimeUs).toBeCloseTo(2472, 0);
+      expect(result.codingDelayUs).toBe(11000);
+      expect(result.emissionDelayUs).toBeCloseTo(2472 + 11000, 0); // ~13,472 µs
+    });
+  });
+
+  describe('Coding Delay & GRI Feasibility Calculator', () => {
+    const master = { id: 'M', name: 'Master', lat: 35.0, lng: 135.0 };
+    const secondaries = [
+      { id: 'W', name: 'Secondary W', lat: 36.5, lng: 133.5, codingDelayUs: 11000 },
+      { id: 'X', name: 'Secondary X', lat: 33.5, lng: 137.0, codingDelayUs: 25000 },
+      { id: 'Y', name: 'Secondary Y', lat: 37.0, lng: 138.5, codingDelayUs: 40000 },
+    ];
+
+    it('computes feasible emission delays and recommended minimum GRI for a 3-secondary chain', () => {
+      const plan = evaluateChainFeasibility(master, secondaries, 50000);
+
+      expect(plan.secondaries).toHaveLength(3);
+      expect(plan.secondaries[0].emissionDelayUs).toBeGreaterThan(plan.secondaries[0].travelTimeUs);
+      expect(plan.secondaries[1].emissionDelayUs).toBeGreaterThan(plan.secondaries[0].emissionDelayUs);
+      expect(plan.secondaries[2].emissionDelayUs).toBeGreaterThan(plan.secondaries[1].emissionDelayUs);
+
+      // Minimum GRI should account for last secondary emission delay + pulse group + coverage transit + guard
+      expect(plan.minFeasibleGRI).toBeGreaterThan(plan.secondaries[2].emissionDelayUs);
+      expect(plan.minFeasibleGRI % 10).toBe(0); // Loran GRI is in multiples of 10 µs
+    });
+
+    it('computes minimum feasible GRI directly given secondary timings', () => {
+      const minGRI = computeMinimumFeasibleGRI(
+        [{ emissionDelayUs: 13472 }, { emissionDelayUs: 27472 }],
+        800000,
+        2000
+      );
+      expect(minGRI).toBeGreaterThan(27472 + 7000);
+      expect(minGRI % 10).toBe(0);
+    });
+
+    it('flags infeasible GRI when user sets GRI shorter than minimum feasible interval', () => {
+      // GRI 4000 (40,000 µs) is too short for a chain whose last emission is at ~42,500 µs
+      const plan = evaluateChainFeasibility(master, secondaries, 40000);
+      expect(plan.isFeasible).toBe(false);
+      expect(plan.violations.some(v => v.code === 'GRI_TOO_SHORT')).toBe(true);
+    });
+
+    it('flags coding delay collision when secondary coding delays are spaced too close', () => {
+      const collidingSecondaries = [
+        { id: 'W', name: 'Secondary W', lat: 36.5, lng: 133.5, codingDelayUs: 11000 },
+        { id: 'X', name: 'Secondary X', lat: 33.5, lng: 137.0, codingDelayUs: 12000 }, // Only 1,000 µs later! Group is 7,000 µs
+      ];
+      const plan = evaluateChainFeasibility(master, collidingSecondaries, 79900);
+      expect(plan.isFeasible).toBe(false);
+      expect(plan.violations.some(v => v.code === 'SECONDARY_COLLISION')).toBe(true);
+    });
+
+    it('flags coding delay below USCG minimum (10,000 µs)', () => {
+      const invalidSecondaries = [
+        { id: 'W', name: 'Secondary W', lat: 36.5, lng: 133.5, codingDelayUs: 5000 }, // < 10,000 µs
+      ];
+      const plan = evaluateChainFeasibility(master, invalidSecondaries, 79900);
+      expect(plan.violations.some(v => v.code === 'CODING_DELAY_TOO_LOW')).toBe(true);
+    });
+  });
+
+  describe('Hyperbolic LOP Gradient K & GDOP', () => {
+    const master = { lat: 35.0, lng: 135.0 };
+    const sec1 = { lat: 35.0, lng: 138.0 }; // East
+    const sec2 = { lat: 38.0, lng: 135.0 }; // North
+
+    it('derives baseline gradient K from physical propagation speed, matching ~150 m/µs (492 ft/µs)', () => {
+      // At the midpoint on the baseline between Master and Sec1:
+      const midpoint = { lat: 35.0, lng: 136.5 };
+      const grad = computeLOPGradient(midpoint, master, sec1);
+
+      // On baseline, psi = 180°, so lane width Gamma = c / 2 ≈ 149.896 m/µs
+      // Gradient magnitude ||g|| = 2 / c ≈ 6.671e-9 s/m = 1 / 149.896 µs/m
+      const laneWidthMetersPerUs = grad.laneWidthMetersPerUs;
+      expect(laneWidthMetersPerUs).toBeCloseTo(149.9, 0); // ~150 m/µs
+
+      // Convert to feet/µs: 149.896 m * 3.28084 ft/m ≈ 491.8 ft/µs ≈ 492.1 ft/µs
+      const feetPerUs = laneWidthMetersPerUs * 3.28084;
+      expect(feetPerUs).toBeCloseTo(492.1, 0);
+    });
+
+    it('computes 90-degree optimal crossing angle between orthogonal baseline pairs', () => {
+      // Receiver at (lat 37.0, lng 137.0)
+      const rx = { lat: 37.0, lng: 137.0 };
+      const angle = computeCrossingAngle(rx, master, sec1, sec2);
+
+      // For stations East and North, crossing angle should be well within favorable bounds [45°, 135°]
+      expect(angle.angleDeg).toBeGreaterThan(45);
+      expect(angle.angleDeg).toBeLessThan(135);
+      expect(angle.isFavorable).toBe(true);
+    });
+
+    it('reproduces USCG operational spec accuracy GDOP = 10.92 corresponding to 0.25 nmi 2drms at 0.1 µs sigma', () => {
+      // Ideal fix 2drms* at sigma = 0.1 µs is 2 * sqrt(2) * 0.1 µs * (c/2) ≈ 42.4 m
+      // Spec 2drms = 0.25 nmi = 463 m
+      // Spec GDOP = 463 m / 42.4 m = 10.92
+      const specGdop = USCG_SPEC_2DRMS_METERS / (2 * Math.SQRT2 * USCG_TD_SIGMA_SEC * (SPEED_OF_LIGHT / 2));
+      expect(specGdop).toBeCloseTo(USCG_SPEC_GDOP, 2); // 10.92
+    });
+
+    it('calculates realistic GDOP using dynamically derived gradient K and configurable sigma', () => {
+      const rx = { lat: 36.0, lng: 136.0 };
+      const gdopResult = computeHyperbolicGDOP(rx, master, [sec1, sec2], 0.1);
+
+      expect(gdopResult.valid).toBe(true);
+      expect(gdopResult.gdop).toBeGreaterThan(1.0);
+      expect(gdopResult.gdop).toBeLessThan(50.0);
+      expect(gdopResult.twoDrmsMeters).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Baseline Extension Hazard Zone Detection', () => {
+    const master = { lat: 35.0, lng: 135.0 };
+    const sec = { lat: 35.0, lng: 137.0 }; // Due East baseline
+
+    it('detects points situated directly behind the secondary on the baseline extension', () => {
+      // Point further East at lat 35.0, lng 139.0 is on the secondary baseline extension
+      const rxBehindSec = { lat: 35.0, lng: 139.0 };
+      const statusSec = isInsideBaselineExtension(rxBehindSec, master, sec, 10); // 10° half-width
+
+      expect(statusSec.isExtension).toBe(true);
+      expect(statusSec.stationRole).toBe('SECONDARY');
+    });
+
+    it('detects points situated directly behind the master on the baseline extension', () => {
+      // Point further West at lat 35.0, lng 133.0 is on the master baseline extension
+      const rxBehindMaster = { lat: 35.0, lng: 133.0 };
+      const statusMaster = isInsideBaselineExtension(rxBehindMaster, master, sec, 10);
+
+      expect(statusMaster.isExtension).toBe(true);
+      expect(statusMaster.stationRole).toBe('MASTER');
+    });
+
+    it('returns false for points safely broadside to the baseline', () => {
+      // Point North at lat 37.0, lng 136.0 is broadside (near bisector)
+      const rxBroadside = { lat: 37.0, lng: 136.0 };
+      const status = isInsideBaselineExtension(rxBroadside, master, sec, 10);
+
+      expect(status.isExtension).toBe(false);
+    });
+
+    it('generates GeoJSON hazard sectors for baseline extensions', () => {
+      const geojson = generateBaselineExtensionSectors(master, [sec], 500000, 10);
+      expect(geojson.type).toBe('FeatureCollection');
+      expect(geojson.features.length).toBe(2); // 1 for Master extension, 1 for Secondary extension
+      expect(geojson.features[0].geometry.type).toBe('Polygon');
+    });
+  });
+});

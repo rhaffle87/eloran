@@ -16,8 +16,8 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 const PROVENANCE_PATH = path.join(ROOT_DIR, 'docs', 'PROVENANCE.md');
 
-const httpsAgent = new https.Agent({ family: 4, keepAlive: true });
-const httpAgent = new http.Agent({ family: 4, keepAlive: true });
+const httpsAgent = new https.Agent({ family: 4, keepAlive: false });
+const httpAgent = new http.Agent({ family: 4, keepAlive: false });
 
 function normalizeWhitespace(str) {
   return str.toLowerCase().replace(/\s+/g, ' ').trim();

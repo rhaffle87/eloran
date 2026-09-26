@@ -20,6 +20,7 @@ import {
   PROPAGATION_RATE_US_PER_NM,
 } from '../../lib/chainDesign.js';
 import Toggle from '../ui/Toggle.jsx';
+import InfoTooltip from '../ui/Tooltip.jsx';
 
 export default function ChainDesignPanel() {
   const {
@@ -63,21 +64,22 @@ export default function ChainDesignPanel() {
     <div className="space-y-4 font-mono text-xs pb-6">
       {/* Educational Simulator Disclaimer Banner */}
       <div
-        className="p-2.5 rounded-lg border flex items-start gap-2.5"
+        className="px-2.5 py-1.5 rounded-lg border flex items-center justify-between gap-2"
         style={{
           background: 'rgba(245, 158, 11, 0.08)',
           borderColor: 'rgba(245, 158, 11, 0.35)',
         }}
       >
-        <AlertTriangle size={15} className="text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
-        <div className="text-[11px] leading-relaxed">
-          <span className="font-bold uppercase tracking-wider block text-amber-500 mb-0.5 text-[10px]">
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle size={13} className="text-amber-500 shrink-0" aria-hidden="true" />
+          <span className="font-bold uppercase tracking-wider text-amber-500 text-[10px]">
             Educational Simulator Disclaimer
           </span>
-          <span style={{ color: 'var(--text-secondary)' }}>
-            Educational chain-design simulator — not validated for real regulatory chain planning, station licensing, or operational deployment.
-          </span>
         </div>
+        <InfoTooltip
+          align="right"
+          text="Educational chain-design simulator — not validated for real regulatory chain planning, station licensing, or operational deployment."
+        />
       </div>
 
       {/* Header Banner & Mode State */}
@@ -92,6 +94,10 @@ export default function ChainDesignPanel() {
           <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px]" style={{ color: 'var(--accent-loran-c)' }}>
             <Compass size={14} aria-hidden="true" />
             <span>Chain Design & Planning</span>
+            <InfoTooltip
+              align="left"
+              text="Design station layouts, compute baseline travel times (Tb), emission delays (ED = Tb + CD), and verify minimum feasible GRI against USCG COMDTINST M16562.4A standards before activating."
+            />
           </div>
           <span
             className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border"
@@ -104,10 +110,6 @@ export default function ChainDesignPanel() {
             Engineering Tool
           </span>
         </div>
-
-        <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Design station layouts, compute baseline travel times ($T_b$), emission delays ($ED = T_b + CD$), and verify minimum feasible GRI against USCG COMDTINST M16562.4A standards before activating.
-        </p>
 
         {/* Quick Presets with Provenance Badges */}
         <div className="space-y-1.5 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -460,17 +462,16 @@ export default function ChainDesignPanel() {
         style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
       >
         <div className="flex items-center justify-between">
-          <div className="font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-            Planning Thresholds & Heuristics
+          <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+            <span>Planning Thresholds & Heuristics</span>
+            <InfoTooltip
+              text="Tunable geometric and timing rules of thumb used in chain feasibility validation."
+            />
           </div>
           <span className="px-1.5 py-0.2 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
             Illustrative default, not a regulatory limit
           </span>
         </div>
-
-        <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          Tunable geometric and timing rules of thumb used in chain feasibility validation.
-        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>

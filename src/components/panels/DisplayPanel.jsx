@@ -12,6 +12,7 @@ import {
 } from '../../lib/pulse.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
+import { InfoTooltip } from '../ui/Tooltip.jsx';
 
 export default function DisplayPanel({ isELoran = false }) {
   const {
@@ -251,45 +252,53 @@ export default function DisplayPanel({ isELoran = false }) {
 
       {/* PNT Solver Algorithm Selection */}
       <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
-        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          PNT Solver Architecture
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+            PNT Solver Architecture
+          </label>
+          <InfoTooltip
+            title="Solver Algorithm"
+            content="Pseudorange estimates 2D position (x, y) and receiver clock bias b_rx, supporting multi-chain TOA. Hyperbolic TDOA computes master-differenced hyperbolas assuming ideal station synchronization."
+            align="right"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
           <button
             onClick={() => updateSettings({ solverMode: 'pseudorange' })}
-            className={`p-2 rounded border text-left transition flex flex-col gap-1 ${
+            className={`py-2 px-2.5 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
               settings.solverMode === 'pseudorange'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                 : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
           >
-            <span className="font-bold">Pseudorange (2D + Clock Bias)</span>
-            <span className="text-[10px] text-[var(--text-muted)] leading-tight">
-              Estimates 2D position (x, y) and receiver clock bias b_rx. Supports multi-chain.
-            </span>
+            <span>Pseudorange (2D + b_rx)</span>
           </button>
 
           <button
             onClick={() => updateSettings({ solverMode: 'tdoa' })}
-            className={`p-2 rounded border text-left transition flex flex-col gap-1 ${
+            className={`py-2 px-2.5 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
               settings.solverMode === 'tdoa'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                 : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
           >
-            <span className="font-bold">Hyperbolic TDOA</span>
-            <span className="text-[10px] text-[var(--text-muted)] leading-tight">
-              Classic master-differenced pairs. Assumes ideal sync.
-            </span>
+            <span>Hyperbolic TDOA</span>
           </button>
         </div>
       </div>
 
       {/* Standards & Atmospheric Refraction (Primary Factor η) */}
       <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
-        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          Primary Factor Refractive Index (η)
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+            Primary Factor Refractive Index (η)
+          </label>
+          <InfoTooltip
+            title="Atmospheric Refraction"
+            content="Propagation speed v = c / η. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 µs delay over 1000 km."
+            align="right"
+          />
+        </div>
         <select
           value={settings.refractiveIndex}
           onChange={(e) => updateSettings({ refractiveIndex: parseFloat(e.target.value) })}
@@ -301,9 +310,6 @@ export default function DisplayPanel({ isELoran = false }) {
             </option>
           ))}
         </select>
-        <p className="text-[10px] text-[var(--text-muted)]">
-          Propagation speed v = c / η. Differences between RTCM (1.000338) and Handbook (1.000284) yield ~0.18 µs delay over 1000 km.
-        </p>
 
         <Toggle
           label="Secondary Factor (SF) Seawater Delay"
@@ -313,10 +319,14 @@ export default function DisplayPanel({ isELoran = false }) {
         />
         <div className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between">
           <span className="text-[var(--text-muted)]">Status:</span>
-          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold' : 'text-[var(--text-dim)]'}>
-            {settings.enableSecondaryFactor
-              ? 'Secondary Factor: ON (UNVERIFIED model — discontinuous at 100 sm)'
-              : 'Secondary Factor: off (UNVERIFIED model)'}
+          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold flex items-center gap-1' : 'text-[var(--text-dim)]'}>
+            {settings.enableSecondaryFactor ? 'SF Active (Brunavs 5 S/m)' : 'SF Disabled'}
+            <InfoTooltip
+              content={settings.enableSecondaryFactor
+                ? 'Secondary Factor is ON (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook).'
+                : 'Secondary Factor is OFF. Only Primary Factor (PF) atmospheric refraction is modeled.'}
+              align="right"
+            />
           </span>
         </div>
       </div>

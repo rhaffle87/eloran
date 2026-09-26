@@ -1,8 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { ShieldCheck, AlertTriangle, Radio, Navigation, Compass } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import Slider from '../ui/Slider.jsx';
 import Toggle from '../ui/Toggle.jsx';
+import InfoTooltip from '../ui/Tooltip.jsx';
 
 export default function FusionPanel() {
   const {
@@ -47,7 +48,7 @@ export default function FusionPanel() {
           >
             {receivers.map((r) => (
               <option key={r.label} value={r.label}>
-                {r.label} ({r.lat.toFixed(4)}Â°, {r.lng.toFixed(4)}Â°)
+                {r.label} ({r.lat.toFixed(4)}°, {r.lng.toFixed(4)}°)
               </option>
             ))}
           </select>
@@ -56,15 +57,18 @@ export default function FusionPanel() {
 
       {/* PNT Mode Switcher */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--text-dim)' }}>
-          PNT Navigation Architecture
-        </label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--text-dim)' }}>
+            PNT Navigation Architecture
+          </label>
+          <InfoTooltip text="Switch between multi-sensor Kalman fusion, terrestrial eLoran only, and GNSS satellite only." />
+        </div>
         <div className="grid grid-cols-3 gap-1.5 font-mono text-xs">
           {modes.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => handleModeChange(id)}
-              className="py-2 px-2 rounded-lg text-center transition flex flex-col items-center gap-1"
+              className="py-2 px-2 rounded-lg text-center transition flex flex-col items-center gap-1 cursor-pointer"
               style={currentMode === id
                 ? { background: 'var(--accent-eloran-subtle)', border: '1px solid var(--accent-eloran-border)', color: 'var(--accent-eloran)', fontWeight: 700 }
                 : { background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
@@ -115,16 +119,16 @@ export default function FusionPanel() {
         {fix?.lat !== undefined && (
           <div className="text-[11px] space-y-0.5 pt-1" style={{ color: 'var(--text-muted)' }}>
             <div>
-              Estimated Coords: <span style={{ color: 'var(--text-primary)' }}>{fix.lat.toFixed(5)}Â°, {fix.lng.toFixed(5)}Â°</span>
+              Estimated Coords: <span style={{ color: 'var(--text-primary)' }}>{fix.lat.toFixed(5)}°, {fix.lng.toFixed(5)}°</span>
             </div>
             {rx && (
               <div>
-                Ground Truth: <span style={{ color: 'var(--text-secondary)' }}>{rx.lat.toFixed(5)}Â°, {rx.lng.toFixed(5)}Â°</span>
+                Ground Truth: <span style={{ color: 'var(--text-secondary)' }}>{rx.lat.toFixed(5)}°, {rx.lng.toFixed(5)}°</span>
               </div>
             )}
             {fix.toaNoiseStdDevMeters !== undefined && (
               <div className="flex justify-between items-center pt-1 text-[10px]">
-                <span className="text-[var(--text-muted)]">TOA Measurement Noise Ïƒ_i:</span>
+                <span className="text-[var(--text-muted)]">TOA Measurement Noise σ_i:</span>
                 <span className="text-[var(--accent-eloran)] font-bold">
                   {fix.toaNoiseStdDevMeters.toFixed(2)} m ({(fix.toaNoiseStdDevMeters / 0.299792).toFixed(1)} ns)
                 </span>

@@ -100,7 +100,7 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     await expect(page.getByText('Secondary Stations (3)')).toBeVisible();
     await expect(page.getByText('Chain Feasible & Conflict-Free')).toBeVisible();
 
-    // 2. US East Coast 9960 Preset (Historical USCG / NGA Pub 117)
+    // 2. US East Coast 9960 Preset (Illustrative — unverified this session)
     const usEastBtn = page.getByRole('button', { name: /US East \(9960\)/i });
     await expect(usEastBtn).toBeVisible();
     await usEastBtn.click();

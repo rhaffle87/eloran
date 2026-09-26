@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify Secret Hygiene Guard
+        run: npm run check:secrets
+
       - name: ESLint (zero warnings gate)
         run: npm run lint -- --max-warnings 0
 

@@ -152,18 +152,11 @@ export default function AsfPanel() {
           </div>
 
           {/* Groundwave Calculation Engine Selector */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[var(--text-secondary)] text-xs font-semibold block">
                 Propagation Calculation Engine
               </label>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                engineMethod === 'grwave'
-                  ? 'bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]'
-                  : 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]'
-              }`}>
-                {engineMethod === 'grwave' ? 'SOURCED (ITU-R P.368 / GRWAVE)' : 'UNVERIFIED (Empirical k_asf)'}
-              </span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
               <button
@@ -189,6 +182,36 @@ export default function AsfPanel() {
                 Empirical Model (k_asf)
               </button>
             </div>
+
+            {/* Split Provenance Status Card */}
+            {engineMethod === 'grwave' ? (
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
+                <div className="flex items-start justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
+                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
+                    SOURCED (ITU-R P.368 GRWAVE Fortran output)
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)]">Phase delay / timing (ASF):</span>
+                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
+                    Analytical Sommerfeld-Norton approximation
+                  </span>
+                </div>
+                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight pt-0.5 border-t border-[var(--border-subtle)]">
+                  *Note: Phase delay directly feeds the simulator&apos;s TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] space-y-1">
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-block">
+                  UNVERIFIED (Empirical k_asf)
+                </span>
+                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight">
+                  Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Land Conductivity Selector */}

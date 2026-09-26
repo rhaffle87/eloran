@@ -15,6 +15,7 @@
     "test:utf8": "node scripts/verify-utf8.cjs",
     "check:provenance": "node scripts/check-provenance.mjs",
     "refresh:tiles": "node scripts/refresh-tiles.cjs",
+    "prepare": "node scripts/setup-hooks.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

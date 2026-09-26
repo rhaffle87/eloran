@@ -54,7 +54,7 @@ To resolve this without permanent divergence:
 Because OpenFreeMap operates without an SLA, LORAN LAB implements an automated multi-tier fallback chain (`FALLBACK_CHAIN = ['openfreemap-dark', 'osm-standard', 'offline-radar']`):
 
 ```mermaid
-graph TD
+flowchart TD
     A[OpenFreeMap Dark Vector] -->|Network Error or Timeout| B[OpenStreetMap Standard Raster]
     B -->|Network Error or Timeout| C[Offline Radar Canvas]
     C -->|Session Storage Persistence| D[Local Mathematical Plotter Only]

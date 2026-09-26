@@ -72,24 +72,29 @@ export default function AsfPanel() {
     setTimeout(() => evaluateReceivers(), 50);
   };
 
+  const engineMethod = settings.asfEngineMethod || 'grwave';
+
   // Sample delays for monotonicity verification
   const sample100km = computeMixedPathAsfMeters({
     totalDistMeters: 100000,
     landFraction: settings.asfLandFraction ?? 0.5,
     landSigma: settings.asfLandSigma ?? 0.003,
     scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
+    method: engineMethod,
   });
   const sample300km = computeMixedPathAsfMeters({
     totalDistMeters: 300000,
     landFraction: settings.asfLandFraction ?? 0.5,
     landSigma: settings.asfLandSigma ?? 0.003,
     scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
+    method: engineMethod,
   });
   const sample500km = computeMixedPathAsfMeters({
     totalDistMeters: 500000,
     landFraction: settings.asfLandFraction ?? 0.5,
     landSigma: settings.asfLandSigma ?? 0.003,
     scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
+    method: engineMethod,
   });
 
   return (
@@ -146,6 +151,69 @@ export default function AsfPanel() {
             />
           </div>
 
+          {/* Groundwave Calculation Engine Selector */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[var(--text-secondary)] text-xs font-semibold block">
+                Propagation Calculation Engine
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => updateSettings({ asfEngineMethod: 'grwave' })}
+                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                  engineMethod === 'grwave'
+                    ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                    : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                }`}
+              >
+                ITU-R P.368 (GRWAVE)
+              </button>
+              <button
+                type="button"
+                onClick={() => updateSettings({ asfEngineMethod: 'empirical' })}
+                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                  engineMethod === 'empirical'
+                    ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                    : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                }`}
+              >
+                Empirical Model (k_asf)
+              </button>
+            </div>
+
+            {/* Split Provenance Status Card */}
+            {engineMethod === 'grwave' ? (
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
+                <div className="flex items-start justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
+                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
+                    SOURCED (ITU-R P.368 GRWAVE Fortran output)
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)]">Phase delay / timing (ASF):</span>
+                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
+                    Analytical Sommerfeld-Norton approximation
+                  </span>
+                </div>
+                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight pt-0.5 border-t border-[var(--border-subtle)]">
+                  *Note: Phase delay directly feeds the simulator&apos;s TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] space-y-1">
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-block">
+                  UNVERIFIED (Empirical k_asf)
+                </span>
+                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight">
+                  Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Land Conductivity Selector */}
           <div className="space-y-1.5">
             <label className="text-[var(--text-secondary)] text-xs font-semibold block">
@@ -191,23 +259,36 @@ export default function AsfPanel() {
             onChange={(val) => updateSettings({ asfLandFraction: val })}
           />
 
-          {/* Empirical Scale Constant Slider */}
-          <div className="space-y-1">
-            <Slider
-              label="Empirical Scale Constant (k_asf)"
-              value={settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE}
-              min={0.0001}
-              max={0.0030}
-              step={0.0001}
-              unit=""
-              tooltip="UNVERIFIED empirical phase lag scaling factor"
-              onChange={(val) => updateSettings({ asfMillingtonScale: val })}
-            />
-            <div className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] flex items-center justify-between">
-              <span>Status: UNVERIFIED parameter</span>
-              <span>Default: 0.0008</span>
+          {/* Engine Parameters / Empirical Scale Slider */}
+          {engineMethod === 'grwave' ? (
+            <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-1">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] font-semibold">
+                <span>Constitutive Formulation:</span>
+                <span className="text-[var(--status-ok)] font-mono">100 kHz Groundwave</span>
+              </div>
+              <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
+                Sommerfeld surface impedance & numerical distance $p = (\pi d / \lambda)|\eta|^2$ with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2. Verified against compiled Fortran GRWAVE reference output.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1">
+              <Slider
+                label="Empirical Scale Constant (k_asf)"
+                value={settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE}
+                min={0.0001}
+                max={0.0030}
+                step={0.0001}
+                unit=""
+                tooltip="UNVERIFIED empirical phase lag scaling factor"
+                onChange={(val) => updateSettings({ asfMillingtonScale: val })}
+              />
+              <div className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] flex items-center justify-between">
+                <span>Status: UNVERIFIED parameter</span>
+                <span>Default: 0.0008</span>
+              </div>
+            </div>
+          )}
+
 
           {/* Monotonicity & Physics Sanity Card */}
           <div className="bg-[var(--bg-subtle)] rounded-lg p-3 border border-[var(--border-subtle)] space-y-2">

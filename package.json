@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "test": "vitest run",
+    "check:secrets": "node scripts/verify-secrets.cjs",
+    "lint": "node scripts/verify-secrets.cjs && eslint .",
+    "test": "node scripts/verify-secrets.cjs && vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:a11y": "node scripts/audit-a11y.cjs",
     "test:utf8": "node scripts/verify-utf8.cjs",
     "check:provenance": "node scripts/check-provenance.mjs",
+    "refresh:tiles": "node scripts/refresh-tiles.cjs",
+    "prepare": "node scripts/setup-hooks.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

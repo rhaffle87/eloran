@@ -137,6 +137,43 @@ describe('Chain Design & Planning Math (USCG Loran-C Specifications)', () => {
       expect(specGdop).toBeCloseTo(USCG_SPEC_GDOP, 2); // 10.92
     });
 
+    it('reproduces Sitterly (1948, MIT Rad Lab Vol. 4 p. 429) golden formula verbatim: D = csc(theta) * sqrt(s1^2 + s2^2)', () => {
+      // Test cases with master at origin, sec1 on East axis, and sec2 positioned to yield distinct crossing angles
+      const originMaster = { lat: 0, lng: 0 };
+      const secEast = { lat: 0, lng: 2 };
+      const rxPoint = { lat: 1, lng: 1 };
+      const sigmaTdUs = 0.1;
+
+      const cases = [
+        { name: 'Orthogonal (theta = 90°)', sec: { lat: 2, lng: 0 } },
+        { name: 'Oblique (theta ≈ 67.5°)', sec: { lat: 1.732, lng: 1.0 } },
+        { name: 'Acute (theta ≈ 22.5°)', sec: { lat: 1.0, lng: 1.732 } },
+      ];
+
+      for (const { sec } of cases) {
+        const g1 = computeLOPGradient(rxPoint, originMaster, secEast);
+        const g2 = computeLOPGradient(rxPoint, originMaster, sec);
+        const angleResult = computeCrossingAngle(rxPoint, originMaster, secEast, sec);
+        const thetaRad = (angleResult.angleDeg * Math.PI) / 180;
+
+        // Per-LOP distance standard deviations: s_i = K_i * sigma_TD = laneWidth * sigma_TD
+        const s1 = g1.laneWidthMetersPerUs * sigmaTdUs;
+        const s2 = g2.laneWidthMetersPerUs * sigmaTdUs;
+
+        // Literal Sitterly formula: D = csc(theta) * sqrt(s1^2 + s2^2)
+        const expectedD = (1 / Math.sin(thetaRad)) * Math.sqrt(s1 * s1 + s2 * s2);
+        const expected2drms = 2 * expectedD;
+
+        // Actual code execution via normal matrix covariance
+        const actualResult = computeHyperbolicGDOP(rxPoint, originMaster, [secEast, sec], sigmaTdUs);
+
+        expect(actualResult.valid).toBe(true);
+        // Code rounds twoDrmsMeters to 1 decimal place; assert exact agreement within 0.1 m
+        expect(actualResult.twoDrmsMeters).toBeCloseTo(expected2drms, 0);
+        expect(Math.abs(actualResult.twoDrmsMeters - expected2drms)).toBeLessThan(0.1);
+      }
+    });
+
     it('calculates realistic GDOP using dynamically derived gradient K and configurable sigma', () => {
       const rx = { lat: 36.0, lng: 136.0 };
       const gdopResult = computeHyperbolicGDOP(rx, master, [sec1, sec2], 0.1);

@@ -139,6 +139,7 @@ export const useSimulationStore = create((set, get) => ({
     jitterMeters: DEFAULT_TOA_NOISE_PARAMS.jitterMeters, // SOURCED: 6.0 m (Rhee et al. 2021)
     kConstantMeters: DEFAULT_TOA_NOISE_PARAMS.kConstantMeters, // SOURCED: 337.5 m (Rhee et al. 2021)
     asfModelMode: 'millington', // 'millington' (Physical Mixed-Path) | 'formula' (AST Override)
+    asfEngineMethod: 'grwave', // 'grwave' (SOURCED ITU-R P.368 / GRWAVE) | 'empirical' (UNVERIFIED k_asf)
     asfLandFraction: 0.5,
     asfLandSigma: 0.003, // ITU-R P.832 Agricultural/Forest
     asfMillingtonScale: DEFAULT_MILLINGTON_SCALE, // UNVERIFIED: 0.0008
@@ -421,6 +422,7 @@ export const useSimulationStore = create((set, get) => ({
             landFraction: settings.asfLandFraction ?? 0.5,
             landSigma: settings.asfLandSigma ?? 0.003,
             scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
+            method: settings.asfEngineMethod ?? 'grwave',
           }),
         };
       }

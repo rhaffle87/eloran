@@ -14,6 +14,16 @@ if (fs.existsSync(gitHooksDir)) {
   const preCommitHook = path.join(gitHooksDir, 'pre-commit');
   const hookContent = '#!/bin/sh\nnode scripts/verify-secrets.cjs\n';
   try {
+    if (fs.existsSync(preCommitHook)) {
+      const existing = fs.readFileSync(preCommitHook, 'utf8');
+      if (existing.includes('verify-secrets.cjs')) {
+        console.log('[HOOKS] Secret guard pre-commit hook is already installed.');
+        process.exit(0);
+      }
+      console.warn('[HOOKS] Notice: Existing custom .git/hooks/pre-commit detected.');
+      console.warn('[HOOKS] Preserving existing hook without overwriting. To enable secret guard, add "node scripts/verify-secrets.cjs" to your hook.');
+      process.exit(0);
+    }
     fs.writeFileSync(preCommitHook, hookContent, { mode: 0o755 });
     // Attempt to set executable permissions on POSIX systems
     try {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
   validateAsfExpression,
@@ -7,6 +7,11 @@ import {
   DEFAULT_MILLINGTON_SCALE,
   computeMixedPathAsfMeters,
 } from '../../lib/asf.js';
+import {
+  computeTemporalAsfMicroseconds,
+  temporalAsfUsToMeters,
+  STANDARD_ATMOSPHERE,
+} from '../../lib/temporalAsf.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
 import InfoTooltip from '../ui/Tooltip.jsx';
@@ -30,7 +35,25 @@ export default function AsfPanel() {
   const { masters, updateStation, receiverFixes, evaluateReceivers, settings, updateSettings } = useSimulationStore();
   const master = masters[0];
 
-  const asfMode = settings.asfModelMode || 'millington'; // 'millington' | 'formula'
+  const asfMode = settings.asfModelMode || 'millington'; // 'millington' | 'formula' | 'temporal'
+
+  // Temporal ASF state
+  const [tempC, setTempC] = useState(STANDARD_ATMOSPHERE.tempC);
+  const [humidityPct, setHumidityPct] = useState(STANDARD_ATMOSPHERE.humidityPct);
+  const [pressureHpa, setPressureHpa] = useState(STANDARD_ATMOSPHERE.pressureHpa);
+  const [dayOfYear, setDayOfYear] = useState(180);
+  const [temporalDist, setTemporalDist] = useState(500); // km
+
+  // Live temporal ASF preview (500 km path by default)
+  const temporalResult = computeTemporalAsfMicroseconds({
+    distKm: temporalDist,
+    pressureHpa,
+    tempC,
+    humidityPct,
+    dayOfYear,
+    includeSeasonalDrift: true,
+  });
+  const temporalMeters = temporalAsfUsToMeters(temporalResult.totalMicroseconds);
 
   const [formulaInput, setFormulaInput] = useState(master?.asfFormula || '0');
   const [validation, setValidation] = useState(validateAsfExpression(master?.asfFormula || '0'));
@@ -104,7 +127,7 @@ export default function AsfPanel() {
         <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
           ASF Propagation Model Mode
         </label>
-        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+        <div className="grid grid-cols-3 gap-2 text-xs font-mono">
           <div className="flex items-center gap-1">
             <button
               onClick={() => updateSettings({ asfModelMode: 'millington' })}
@@ -115,9 +138,24 @@ export default function AsfPanel() {
               }`}
             >
               <Waves size={13} className="text-[var(--accent-eloran)] shrink-0" />
-              <span className="font-bold text-[11px] truncate">Millington Mixed</span>
+              <span className="font-bold text-[11px] truncate">Millington</span>
             </button>
             <InfoTooltip text="Physical mixed-path delay model based on ITU-R P.832 ground conductivity mapping." />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => updateSettings({ asfModelMode: 'temporal' })}
+              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
+                asfMode === 'temporal'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+              }`}
+            >
+              <Thermometer size={13} className="text-[var(--accent-eloran)] shrink-0" />
+              <span className="font-bold text-[11px] truncate">Temporal</span>
+            </button>
+            <InfoTooltip text="Atmospheric refractivity model with seasonal drift calibrated from Song &amp; Son (2025). ILLUSTRATIVE." />
           </div>
 
           <div className="flex items-center gap-1">
@@ -130,7 +168,7 @@ export default function AsfPanel() {
               }`}
             >
               <Sparkles size={13} className="text-[var(--accent-loran-c)] shrink-0" />
-              <span className="font-bold text-[11px] truncate">Formula AST</span>
+              <span className="font-bold text-[11px] truncate">Formula</span>
             </button>
             <InfoTooltip text="Manual sandboxed mathematical formula evaluation for synthetic delay profiles." />
           </div>
@@ -186,30 +224,36 @@ export default function AsfPanel() {
             {/* Split Provenance Status Card */}
             {engineMethod === 'grwave' ? (
               <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
-                <div className="flex items-start justify-between gap-1.5">
+                <div className="flex items-center justify-between gap-1.5">
                   <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
                   <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
-                    SOURCED (ITU-R P.368 GRWAVE Fortran output)
+                    SOURCED (ITU-R P.368 GRWAVE)
                   </span>
                 </div>
-                <div className="flex items-start justify-between gap-1.5">
-                  <span className="text-[var(--text-dim)]">Phase delay / timing (ASF):</span>
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)] flex items-center gap-1">
+                    <span>Phase delay / timing (ASF):</span>
+                    <InfoTooltip
+                      align="center"
+                      title="Phase Delay Verification Status"
+                      text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
+                    />
+                  </span>
                   <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
-                    Analytical Sommerfeld-Norton approximation
+                    Analytical Sommerfeld-Norton
                   </span>
                 </div>
-                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight pt-0.5 border-t border-[var(--border-subtle)]">
-                  *Note: Phase delay directly feeds the simulator&apos;s TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data.
-                </p>
               </div>
             ) : (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] space-y-1">
-                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-block">
-                  UNVERIFIED (Empirical k_asf)
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-flex items-center gap-1">
+                  <ShieldAlert size={10} /> UNVERIFIED — Empirical k_asf
                 </span>
-                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight">
-                  Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark.
-                </p>
+                <InfoTooltip
+                  align="right"
+                  title="Empirical Model Provenance"
+                  text="Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
+                />
               </div>
             )}
           </div>
@@ -261,14 +305,32 @@ export default function AsfPanel() {
 
           {/* Engine Parameters / Empirical Scale Slider */}
           {engineMethod === 'grwave' ? (
-            <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-1">
+            <div className="bg-[var(--bg-subtle)] rounded-lg p-2 border border-[var(--border-subtle)]">
               <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] font-semibold">
-                <span>Constitutive Formulation:</span>
+                <span className="flex items-center gap-1.5">
+                  <span>Constitutive Formulation:</span>
+                  <InfoTooltip
+                    align="center"
+                    title="Constitutive Formulation & Verification"
+                    content={
+                      <span className="block space-y-1.5 text-[10.5px]">
+                        <span className="block text-[var(--text-secondary)]">
+                          Sommerfeld surface impedance &amp; numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2.
+                        </span>
+                        <span className="block pt-1 border-t border-[var(--border-subtle)] space-y-1">
+                          <span className="block">
+                            <span className="font-semibold text-[var(--status-ok)]">• Field strength / path loss:</span> verified against compiled Fortran GRWAVE reference output.
+                          </span>
+                          <span className="block">
+                            <span className="font-semibold text-[var(--status-warn)]">• Phase delay / ASF (Millington averaging, feeds positioning):</span> analytical Sommerfeld-Norton approximation, cross-checked between Python and JS only; NOT validated against GRWAVE or empirical data.
+                          </span>
+                        </span>
+                      </span>
+                    }
+                  />
+                </span>
                 <span className="text-[var(--status-ok)] font-mono">100 kHz Groundwave</span>
               </div>
-              <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-                Sommerfeld surface impedance & numerical distance $p = (\pi d / \lambda)|\eta|^2$ with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2. Verified against compiled Fortran GRWAVE reference output.
-              </p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -323,6 +385,130 @@ export default function AsfPanel() {
                   Delay increases monotonically with path distance and land fraction over non-seawater terrain.
                 </span>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mode 3: Temporal ASF — Atmospheric Refractivity + Seasonal Drift */}
+      {asfMode === 'temporal' && (
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-4 font-mono text-xs">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+            <span className="text-[11px] font-semibold text-[var(--text-primary)]">
+              Temporal ASF — Atmospheric Refractivity
+            </span>
+            <InfoTooltip
+              align="right"
+              text="Weather-driven propagation delay variation. Refractivity formula is SOURCED; seasonal drift magnitudes are UNVERIFIED (Song &amp; Son 2025)."
+            />
+          </div>
+
+          {/* Split Provenance Badge */}
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[var(--text-dim)]">Refractivity formula (N = 77.6P/T + …):</span>
+              <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
+                SOURCED (Smith &amp; Weintraub 1953)
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[var(--text-dim)] flex items-center gap-1">
+                <span>Seasonal/weather drift:</span>
+                <InfoTooltip
+                  align="center"
+                  title="Empirical Drift Calibration"
+                  text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
+                />
+              </span>
+              <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
+                UNVERIFIED — 12-day Korean dataset
+              </span>
+            </div>
+          </div>
+
+          {/* Weather Inputs */}
+          <div className="space-y-3">
+            <Slider
+              label={`Temperature: ${tempC.toFixed(1)} °C`}
+              value={tempC}
+              min={-20}
+              max={45}
+              step={0.5}
+              unit="°C"
+              tooltip="Air temperature along the propagation path"
+              onChange={setTempC}
+            />
+            <Slider
+              label={`Relative Humidity: ${humidityPct.toFixed(0)} %`}
+              value={humidityPct}
+              min={0}
+              max={100}
+              step={1}
+              unit="%"
+              tooltip="Relative humidity (affects water vapour partial pressure and wet refractivity term)"
+              onChange={setHumidityPct}
+            />
+            <Slider
+              label={`Pressure: ${pressureHpa.toFixed(0)} hPa`}
+              value={pressureHpa}
+              min={900}
+              max={1080}
+              step={1}
+              unit="hPa"
+              tooltip="Atmospheric pressure (affects dry refractivity term)"
+              onChange={setPressureHpa}
+            />
+            <Slider
+              label={`Day of Year: ${dayOfYear}`}
+              value={dayOfYear}
+              min={1}
+              max={365}
+              step={1}
+              unit=""
+              tooltip="Day of year for seasonal drift (172 = summer solstice peak, 355 = winter trough)"
+              onChange={setDayOfYear}
+            />
+            <Slider
+              label={`Reference Path Length: ${temporalDist} km`}
+              value={temporalDist}
+              min={50}
+              max={1500}
+              step={50}
+              unit="km"
+              tooltip="Reference propagation path distance for preview calculation"
+              onChange={setTemporalDist}
+            />
+          </div>
+
+          {/* Live Preview Breakdown */}
+          <div className="bg-[var(--bg-subtle)] rounded-lg p-3 border border-[var(--border-subtle)] space-y-2">
+            <div className="text-[11px] font-bold text-[var(--text-secondary)]">Delay Breakdown at {temporalDist} km</div>
+            <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--status-ok-border)]">
+                <div className="text-[var(--text-muted)] mb-0.5">Refractivity Δτ</div>
+                <div className="font-bold text-[var(--status-ok)]">{(temporalResult.refractivityUs * 1000).toFixed(2)} ns</div>
+                <div className="text-[9px] text-[var(--text-dim)] mt-0.5">SOURCED</div>
+              </div>
+              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--status-warn-border)]">
+                <div className="text-[var(--text-muted)] mb-0.5">Seasonal Δτ</div>
+                <div className="font-bold text-[var(--status-warn)]">{(temporalResult.seasonalUs * 1000).toFixed(2)} ns</div>
+                <div className="text-[9px] text-[var(--text-dim)] mt-0.5">UNVERIFIED</div>
+              </div>
+              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--status-warn-border)]">
+                <div className="text-[var(--text-muted)] mb-0.5">Weather Δτ</div>
+                <div className="font-bold text-[var(--status-warn)]">{(temporalResult.weatherUs * 1000).toFixed(2)} ns</div>
+                <div className="text-[9px] text-[var(--text-dim)] mt-0.5">UNVERIFIED</div>
+              </div>
+            </div>
+            <div className="border-t border-[var(--border-subtle)] pt-2 flex items-center justify-between text-[11px]">
+              <span className="text-[var(--text-muted)]">Total Temporal ASF:</span>
+              <span className="font-bold text-[var(--accent-eloran)] font-mono">
+                {temporalMeters.toFixed(2)} m ({(temporalResult.totalMicroseconds * 1000).toFixed(2)} ns)
+              </span>
+            </div>
+            <div className="text-[9.5px] text-[var(--text-muted)] leading-tight">
+              N = {temporalResult.N.toFixed(1)} N-units &nbsp;|&nbsp; Δτ feeds reference table only — not wired to positioning solver in this version.
             </div>
           </div>
         </div>

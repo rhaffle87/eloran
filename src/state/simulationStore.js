@@ -92,10 +92,14 @@ export const DESIGN_PRESETS = {
   },
 };
 
-export const useSimulationStore = create((set, get) => ({
+export const useSimulationStore = create((set, get) => {
+  // Extract initial masters for validation (banner in App.jsx warns if length > 1)
+  const initialMasters = PRESET_SCENARIOS.jakarta_baseline.masters;
+
+  return {
   // Active Scenario & Stations
   activePresetId: 'jakarta_baseline',
-  masters: PRESET_SCENARIOS.jakarta_baseline.masters,
+  masters: initialMasters,
   slaves: PRESET_SCENARIOS.jakarta_baseline.slaves,
   receivers: PRESET_SCENARIOS.jakarta_baseline.receivers,
 
@@ -591,4 +595,5 @@ export const useSimulationStore = create((set, get) => ({
       simTimeSec: 0,
       isSimRunning: false,
     }),
-}));
+  };
+});

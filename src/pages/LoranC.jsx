@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Radio, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
@@ -27,11 +27,44 @@ function ModeButton({ active, onClick, title, accentVar, children }) {
   );
 }
 
+const SIDEBAR_MIN = 280;
+const SIDEBAR_MAX = 560;
+const SIDEBAR_DEFAULT = 380;
+
 export default function LoranC() {
   const [activeTab, setActiveTab] = useState('stations'); // 'stations' | 'display'
   const [sidebarOpen, setSidebarOpen] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
   );
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartWidthRef = useRef(SIDEBAR_DEFAULT);
+
+  const handleDragStart = useCallback((e) => {
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartWidthRef.current = sidebarWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = (ev) => {
+      if (!isDraggingRef.current) return;
+      const delta = dragStartXRef.current - ev.clientX;
+      const next = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, dragStartWidthRef.current + delta));
+      setSidebarWidth(next);
+      window.__maplibreInstance?.resize();
+    };
+    const onUp = () => {
+      isDraggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.__maplibreInstance?.resize();
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [sidebarWidth]);
 
   const {
     mapMode,
@@ -127,6 +160,7 @@ export default function LoranC() {
         {/* Sidebar Expand Toggle — only rendered when drawer is collapsed */}
         {!sidebarOpen && (
           <button
+            data-testid="sidebar-expand-btn"
             onClick={() => setSidebarOpen(true)}
             className="absolute top-4 right-3 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
             style={{
@@ -142,115 +176,125 @@ export default function LoranC() {
         )}
       </div>
 
-      {/* Collapsible right console drawer */}
+      {/* Collapsible right console drawer — stays mounted to prevent MapLibre flicker */}
       <div
-        className={`relative z-30 transition-[width] duration-300 ease-in-out flex flex-col ${
-          sidebarOpen ? 'w-full max-w-[380px] lg:w-96' : 'w-0 overflow-hidden'
-        }`}
+        data-testid="sidebar-container"
+        className="relative z-30 flex flex-col flex-shrink-0"
         style={{
+          width: sidebarOpen ? sidebarWidth : 0,
+          minWidth: 0,
+          transition: 'width 220ms cubic-bezier(0.4,0,0.2,1)',
           borderLeft: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
           background: 'var(--bg-surface)',
-        }}
-        onTransitionEnd={() => {
-          if (typeof window !== 'undefined' && window.__maplibreInstance) {
-            window.__maplibreInstance.resize();
-          }
+          overflow: sidebarOpen ? 'visible' : 'hidden',
         }}
       >
+        {/* Drag resize handle */}
         {sidebarOpen && (
-          <div className="flex flex-col h-full overflow-hidden">
-            {/* Console header */}
-            <div
-              className="p-4"
-              style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-2"
-                  style={{ color: 'var(--accent-loran-c)' }}
-                >
-                  <Radio size={14} aria-hidden="true" /> Loran-C Console
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)]" style={{ color: 'var(--text-dim)' }}>
-                    100 kHz LOP Engine
-                  </span>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="p-1.5 rounded-md hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer border border-[var(--border-subtle)]"
-                    title="Collapse console drawer"
-                    aria-label="Collapse console drawer"
-                  >
-                    <ChevronRight size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Primary Mode Switcher: Simulation vs Chain Design */}
+          <div
+            data-testid="sidebar-drag-handle"
+            onMouseDown={handleDragStart}
+            className="absolute left-0 top-0 bottom-0 w-1 z-40 cursor-col-resize"
+            style={{ background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-eloran-border)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+          />
+        )}
+        <div
+          data-testid="sidebar-content"
+          className="flex flex-col h-full overflow-hidden"
+          style={{ visibility: sidebarOpen ? 'visible' : 'hidden', width: sidebarWidth }}
+        >
+          {/* Console header */}
+          <div
+            className="p-3"
+            style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
               <div
-                className="flex rounded-lg p-0.5 font-mono text-xs mb-3"
+                className="font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5"
+                style={{ color: 'var(--accent-loran-c)' }}
+              >
+                <Radio size={13} aria-hidden="true" /> Loran-C Console
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
+                  100 kHz
+                </span>
+                <button
+                  data-testid="sidebar-collapse-btn"
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-1 rounded hover:bg-[var(--bg-muted)] transition cursor-pointer"
+                  title="Collapse console drawer"
+                  aria-label="Collapse console drawer"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Mode Switcher */}
+            <div
+              className="flex rounded p-0.5 font-mono text-xs mb-2"
+              style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
+            >
+              <button
+                onClick={() => toggleDesignMode(false)}
+                className="flex-1 py-1 rounded text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px]"
+                style={!isDesignMode
+                  ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
+                  : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+              >
+                <Radio size={11} aria-hidden="true" /> Simulation
+              </button>
+              <button
+                onClick={() => toggleDesignMode(true)}
+                className="flex-1 py-1 rounded text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px]"
+                style={isDesignMode
+                  ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
+                  : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+              >
+                <Compass size={11} aria-hidden="true" /> Chain Design
+              </button>
+            </div>
+
+            {!isDesignMode && (
+              <div
+                className="flex rounded p-0.5 font-mono text-[11px]"
                 style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
               >
-                <button
-                  onClick={() => toggleDesignMode(false)}
-                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  style={!isDesignMode
-                    ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-                >
-                  <Radio size={12} aria-hidden="true" />
-                  <span>Simulation</span>
-                </button>
-                <button
-                  onClick={() => toggleDesignMode(true)}
-                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  style={isDesignMode
-                    ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-                >
-                  <Compass size={12} aria-hidden="true" />
-                  <span>Chain Design</span>
-                </button>
+                {[
+                  { id: 'stations', label: 'Stations' },
+                  { id: 'display', label: 'Layers & Mesh' },
+                ].map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className="flex-1 py-1 rounded text-center transition cursor-pointer"
+                    style={activeTab === id
+                      ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
+                      : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-
-              {!isDesignMode && (
-                /* Tab switcher */
-                <div
-                  className="flex rounded-lg p-0.5 font-mono text-xs"
-                  style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
-                >
-                  {[
-                    { id: 'stations', label: 'Stations' },
-                    { id: 'display', label: 'Layers & Mesh' },
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id)}
-                      className="flex-1 py-1.5 rounded text-center transition cursor-pointer"
-                      style={activeTab === id
-                        ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                        : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Panel content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {isDesignMode ? (
-                <ChainDesignPanel />
-              ) : (
-                <>
-                  {activeTab === 'stations' && <StationEditor isELoran={false} />}
-                  {activeTab === 'display' && <DisplayPanel isELoran={false} />}
-                </>
-              )}
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Panel content */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {isDesignMode ? (
+              <ChainDesignPanel />
+            ) : (
+              <>
+                {activeTab === 'stations' && <StationEditor isELoran={false} />}
+                {activeTab === 'display' && <DisplayPanel isELoran={false} />}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

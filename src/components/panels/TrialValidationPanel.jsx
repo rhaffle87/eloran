@@ -69,7 +69,7 @@ export function TrialValidationPanel() {
       {activeTab === 'korea' && (
         <div className="space-y-5">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex flex-wrap gap-2.5 [&>*]:flex-1 [&>*]:min-w-[110px]">
             <div className="bg-zinc-950/60 border border-zinc-800/80 p-3 rounded-lg">
               <span className="text-[11px] text-zinc-400 font-mono block">Field Sites</span>
               <span className="text-lg font-bold text-zinc-100 font-mono">7 Locations</span>
@@ -83,19 +83,34 @@ export function TrialValidationPanel() {
               <span className="text-[10px] text-zinc-500 block mt-0.5">Published empirical</span>
             </div>
             <div className="bg-zinc-950/60 border border-zinc-800/80 p-3 rounded-lg">
-              <span className="text-[11px] text-zinc-400 font-mono block">Mean LORAN LAB</span>
+              <span className="text-[11px] text-zinc-400 font-mono block">Flat 4m (prior-art)</span>
               <span className="text-lg font-bold text-cyan-400 font-mono">
                 {koreaBenchmark.summaryMetrics.meanSimulated95m} m
               </span>
-              <span className="text-[10px] text-zinc-500 block mt-0.5">4m jitter baseline</span>
+              <span className="text-[10px] text-zinc-500 block mt-0.5">
+                MAE: {koreaBenchmark.summaryMetrics.meanAbsoluteErrorMeters} m
+              </span>
             </div>
+            {koreaBenchmark.perStationSummary && (
+              <div className="bg-zinc-950/60 border border-violet-800/50 p-3 rounded-lg">
+                <span className="text-[11px] text-zinc-400 font-mono block">Per-station (Table 3)</span>
+                <span className="text-lg font-bold text-violet-400 font-mono">
+                  {koreaBenchmark.perStationSummary.meanSimulated95m} m
+                </span>
+                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                  MAE: {koreaBenchmark.perStationSummary.meanAbsoluteErrorMeters} m
+                </span>
+              </div>
+            )}
             <div className="bg-zinc-950/60 border border-zinc-800/80 p-3 rounded-lg">
-              <span className="text-[11px] text-zinc-400 font-mono block">Model RMSE</span>
+              <span className="text-[11px] text-zinc-400 font-mono block">Flat Model RMSE</span>
               <span className="text-lg font-bold text-amber-400 font-mono">
                 {koreaBenchmark.summaryMetrics.rmseMeters} m
               </span>
               <span className="text-[10px] text-zinc-500 block mt-0.5">
-                MAE: {koreaBenchmark.summaryMetrics.meanAbsoluteErrorMeters} m
+                {koreaBenchmark.perStationSummary 
+                  ? `Per-stn: ${koreaBenchmark.perStationSummary.rmseMeters} m`
+                  : '—'}
               </span>
             </div>
           </div>
@@ -135,10 +150,11 @@ export function TrialValidationPanel() {
                     <th className="py-2.5 px-2">Coordinates</th>
                     <th className="py-2.5 px-2">HDOP</th>
                     <th className="py-2.5 px-2 text-right">Measured 95%</th>
-                    <th className="py-2.5 px-2 text-right">LORAN LAB (4m)</th>
+                    <th className="py-2.5 px-2 text-right">Flat (4m)</th>
+                    <th className="py-2.5 px-2 text-right text-violet-400">Per-Station (Table 3)</th>
                     <th className="py-2.5 px-2 text-right">Rhee Sim (4m)</th>
                     <th className="py-2.5 px-2 text-right">Rhee Sim (6m)</th>
-                    <th className="py-2.5 px-3 text-right">Residual (Δ)</th>
+                    <th className="py-2.5 px-3 text-right">Δ (Per-Stn)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60 font-mono">
@@ -155,6 +171,9 @@ export function TrialValidationPanel() {
                       <td className="py-2.5 px-2 text-right text-cyan-300 font-semibold">
                         {site.loranLab95m.toFixed(2)} m
                       </td>
+                      <td className="py-2.5 px-2 text-right text-violet-300 font-semibold">
+                        {site.perStationR95m !== null ? `${site.perStationR95m.toFixed(2)} m` : '—'}
+                      </td>
                       <td className="py-2.5 px-2 text-right text-zinc-400">
                         {site.rheeSim4mMeters.toFixed(2)} m
                       </td>
@@ -163,12 +182,14 @@ export function TrialValidationPanel() {
                       </td>
                       <td
                         className={`py-2.5 px-3 text-right font-semibold ${
-                          Math.abs(site.deltaMeters) < 2.0
+                          Math.abs(site.perStationDeltaMeters ?? site.deltaMeters) < 2.0
                             ? 'text-emerald-400'
                             : 'text-amber-400'
                         }`}
                       >
-                        {site.deltaMeters > 0 ? `+${site.deltaMeters.toFixed(2)}` : site.deltaMeters.toFixed(2)} m
+                        {site.perStationDeltaMeters !== null
+                          ? (site.perStationDeltaMeters > 0 ? `+${site.perStationDeltaMeters.toFixed(2)}` : `${site.perStationDeltaMeters.toFixed(2)}`)
+                          : (site.deltaMeters > 0 ? `+${site.deltaMeters.toFixed(2)}` : `${site.deltaMeters.toFixed(2)}`)} m
                       </td>
                     </tr>
                   ))}
@@ -198,10 +219,8 @@ export function TrialValidationPanel() {
               <br />
               Summary validation tier: Empirically measured 95% repeatable positioning accuracy across 7 receiver sites
               receiving Pohang (9930M), Gwangju (9930W), Rongcheng (7430M), and Xuancheng (7430X). LORAN LAB evaluates
-              the identical geometry and noise model (
-              <span className="text-zinc-200 font-mono">σ² = J² + K² / (N·SNR)</span>) yielding an RMSE of{' '}
-              <span className="text-amber-300 font-mono">{koreaBenchmark.summaryMetrics.rmseMeters} m</span> without
-              artificial parameter tuning.
+              the identical geometry using both the prior-art 4 m flat baseline (RMSE 2.11 m, MAE 1.74 m) and full
+              per-station covariance with Rhee Table 3 jitter estimates (RMSE 1.72 m, MAE 1.37 m) without artificial parameter tuning.
             </p>
           </div>
         </div>

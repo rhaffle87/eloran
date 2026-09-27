@@ -19,16 +19,30 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
     await expect(page.getByText('7 Locations').first()).toBeVisible();
     await expect(page.getByText('10.17 m', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('11.67 m', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('9.03 m', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('2.11 m', { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/MAE: 1\.74 m/i).first()).toBeVisible();
+    await expect(page.getByText(/MAE: 1\.37 m/i).first()).toBeVisible();
 
-    // Verify Korea table contains key sites
+    // Verify Korea table contains key sites and per-station header
     await expect(page.getByRole('cell', { name: 'Dangjin' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Jeonju' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Incheon' }).first()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Per-Station (Table 3)' }).first()).toBeVisible();
 
     // Verify tier disclosure badge
     await expect(page.getByText('Tier 2 SOURCED').first()).toBeVisible();
+
+    const outputDir = 'docs/verification/screenshots';
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    await heading.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+
+    // Capture screenshot of Korea tab showing 5 cards & per-station column
+    await page.screenshot({ path: `${outputDir}/trial_validation_about.png`, fullPage: false });
+    await page.screenshot({ path: `${outputDir}/trial_validation_korea.png`, fullPage: false });
 
     // 2. Switch tab to Maoming 2025
     const maomingTab = page.getByRole('button', { name: /Maoming 2025 \(Inland\)/i }).first();
@@ -42,12 +56,8 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
     await expect(page.getByText('89.7%', { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Inland Geodesic Arc Distortion/i).first()).toBeVisible();
 
-    // Capture screenshot of About page benchmark panel
-    const outputDir = 'docs/verification/screenshots';
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-    await page.screenshot({ path: `${outputDir}/trial_validation_about.png`, fullPage: false });
+    // Capture screenshot of Maoming tab
+    await page.screenshot({ path: `${outputDir}/trial_validation_maoming.png`, fullPage: false });
 
     // 3. Visit /eloran and check AsfPanel integration
     await page.goto('/eloran');

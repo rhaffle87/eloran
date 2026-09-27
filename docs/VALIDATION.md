@@ -42,36 +42,53 @@ In accordance with Rhee et al. (2021) Section III, the user-equivalent pseudoran
 $$\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + \frac{K^2}{N_{\text{pulses}} \cdot \text{SNR}_i}$$
 
 Where:
-- $\sigma_{\text{jitter}} \approx 4.0\text{ m}$ (nominal baseline transmitter jitter for modern solid-state eLoran exciters, Rhee Table 3).
 - $K = 337.5\text{ m}$ (scaling factor for 100 kHz pulse tracking).
 - $N_{\text{pulses}} = 8$ (standard Loran pulse group size).
 
-The 95% repeatable horizontal positioning error circle is modeled as:
-$$R_{95} = 2 \cdot HDOP \cdot \sigma_U$$
-where $HDOP = \sqrt{(H^T H)^{-1}_{11} + (H^T H)^{-1}_{22}}$ is computed via LORAN LAB's well-conditioned Gauss-Newton direction-cosine design matrix $H$.
+**Three jitter modes are evaluated:**
+
+**Mode 1 — Flat jitter baseline (prior-art reference):** $\sigma_{\text{flat}} = 4.0\text{ m}$ for all stations. This matches the UK simulator fixed assumption quoted verbatim in Rhee §I: *"Previous studies assumed a fixed jitter (e.g., 6 m [US] or 4 m [UK])..."* It is a prior-art baseline for historical comparison.
+
+$$R_{95}^{\text{flat}} = 2 \cdot HDOP \cdot \sigma_{\text{flat}}$$
+
+**Mode 2 — Best-fit flat constant:** $\sigma_{\text{flat}} = 3.5\text{ m}$ minimizes MAE/RMSE against Rhee Table 5 field measurements. This is the numerically best-fitting single uniform value but requires tuning against the validation target and assumes equal jitter across all transmitters (a simplification Rhee §I explicitly criticizes).
+
+**Mode 3 — Per-station jitter (Rhee Table 3):** Each transmitter's jitter is taken from the TOR measurement estimates in Rhee Table 3: Pohang 2.11 m, Gwangju 3.21 m, Rongcheng 2.13 m, Xuancheng 5.38 m. Position error is propagated via the full weighted covariance formula:
+
+$$R_{95}^{\text{per-station}} = 2 \cdot \sqrt{\operatorname{trace}\!\left[\left(H^T H\right)^{-1} H^T \Sigma_\tau H \left(H^T H\right)^{-1}\right]}$$
+
+where $\Sigma_\tau = \operatorname{diag}(\sigma_1^2, \ldots, \sigma_n^2)$ and $H$ is the direction-cosine geometry matrix. When all $\sigma_i$ are equal, this formula reduces to $2 \cdot HDOP \cdot \sigma$ (verified within 0.04 m rounding tolerance).
 
 ### 2.4 Empirical Field Comparison (No Parameter Tuning)
 
-The table below compares LORAN LAB unadjusted model predictions against published empirical measurements across all 7 nationwide test sites:
+The table below compares all three modes against published empirical measurements across all 7 sites:
 
-| Site | Location Description | Published Measured 95% Error | Published Simulator Baseline | LORAN LAB Model ($2 \cdot HDOP \cdot 4\text{m}$) | Geometry (HDOP) | Residual ($\Delta = \text{Model} - \text{Measured}$) |
-|---|---|---|---|---|---|---|
-| **Dangjin** | West Coast Port | **10.09 m** | 9.99 m | **10.08 m** | 1.26 | **-0.01 m** |
-| **Jeonju** | Western Inland | **8.49 m** | 9.22 m | **9.28 m** | 1.16 | **+0.79 m** |
-| **Gwangju** | Southwest Urban | **12.13 m** | 11.23 m | **11.28 m** | 1.41 | **-0.85 m** |
-| **Pyeongtaek** | Gyeonggi Port | **8.72 m** | 10.97 m | **11.04 m** | 1.38 | **+2.32 m** |
-| **Incheon** | Capital Northwest Port | **10.16 m** | 12.37 m | **12.48 m** | 1.56 | **+2.32 m** |
-| **Andong** | Northeast Inland | **12.73 m** | 14.67 m | **14.80 m** | 1.85 | **+2.07 m** |
-| **Gumi** | Central Inland | **8.87 m** | 12.63 m | **12.72 m** | 1.59 | **+3.85 m** |
+| Site | HDOP | Measured 95% | Flat 4m | Flat 3.5m | Per-station | Δ 4m | Δ 3.5m | Δ per-stn |
+|---|---|---|---|---|---|---|---|---|
+| **Dangjin** | 1.26 | **10.09 m** | 10.08 m | 8.82 m | 7.85 m | -0.01 m | -1.27 m | -2.24 m |
+| **Jeonju** | 1.16 | **8.49 m** | 9.28 m | 8.12 m | 6.61 m | +0.79 m | -0.37 m | -1.88 m |
+| **Gwangju** | 1.41 | **12.13 m** | 11.28 m | 9.87 m | 8.92 m | -0.85 m | -2.26 m | -3.21 m |
+| **Pyeongtaek** | 1.38 | **8.72 m** | 11.04 m | 9.66 m | 8.53 m | +2.32 m | +0.94 m | -0.19 m |
+| **Incheon** | 1.56 | **10.16 m** | 12.48 m | 10.92 m | 9.95 m | +2.32 m | +0.76 m | -0.21 m |
+| **Andong** | 1.85 | **12.73 m** | 14.80 m | 12.95 m | 11.70 m | +2.07 m | +0.22 m | -1.03 m |
+| **Gumi** | 1.59 | **8.87 m** | 12.72 m | 11.13 m | 9.68 m | +3.85 m | +2.26 m | +0.81 m |
 
 #### Summary Statistical Metrics
-- **Field Measured Mean 95% Accuracy**: $10.17\text{ m}$
-- **LORAN LAB Mean 95% Accuracy**: $11.67\text{ m}$
-- **Mean Absolute Error (MAE)**: **$1.74\text{ m}$**
-- **Root Mean Square Error (RMSE)**: **$2.11\text{ m}$**
 
-> [!NOTE]
-> LORAN LAB tracks published real-world measurements with **1.74 m MAE** across South Korea without artificial parameter tuning or per-site fudge factors.
+| Mode | Mean Simulated 95% | MAE | RMSE | Methodological Status |
+|---|---|---|---|---|
+| Flat 4m (prior-art) | 11.67 m (11.68 m unrounded) | **1.74 m** (1.77 m unrounded) | **2.11 m** (2.14 m unrounded) | Historical baseline; overshoots by +1.50 m |
+| Flat 3.5m (best-fit) | 10.21 m (10.22 m unrounded) | **1.15 m** (1.17 m unrounded) | **1.39 m** (1.41 m unrounded) | **Lowest error** but tuned to target; uniform simplification |
+| Per-station (Table 3) | 9.03 m | **1.37 m** | **1.72 m** | Real source data; no tuning; undershoots by -1.14 m |
+| **Field measured** | **10.17 m** | — | — | Ground truth |
+
+> [!IMPORTANT]
+> **Key Finding**: Flat 3.5 m has the lowest raw MAE/RMSE, but per-station jitter is the **methodologically principled choice**:
+> - Uses actual per-transmitter jitter from Rhee Table 3 (not a borrowed constant or tuned parameter)
+> - Implements full weighted covariance propagation (no uniform-jitter simplification)
+> - Resolves the "which flat σ?" debate by not using a flat σ at all
+>
+> Per-station is NOT the best-fitting number against this dataset, but it is the correct approach when real per-station measurements exist. While Rhee et al. (2021) formulate total error variance as $\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + \frac{K^2}{N_{\text{pulses}} \cdot \text{SNR}_i}$ (Section II-B, Eq. 1), per-site receiver SNR and pulse accumulation parameters ($N_{\text{pulses}}$) are not published in the paper for the 7 evaluation sites, so that term cannot be computed directly from published data. The cause of the remaining −1.14 m undershoot has not been investigated.
 
 ---
 

@@ -3,7 +3,9 @@ import {
   evaluateKoreaTrialBenchmark,
   evaluateMaomingTrialBenchmark,
   vincentyEllipsoidalDistance,
+  buildHMatrix as buildHMatrixTrial,
 } from '../trialValidation.js';
+import { buildHMatrix as buildHMatrixGdop } from '../gdop.js';
 import { KOREA_TRIAL_2021, MAOMING_TRIAL_2025 } from '../../data/benchmarks/trialData.js';
 import { haversineDistance } from '../geodesy.js';
 
@@ -52,6 +54,93 @@ describe('Trial Validation Engine & Empirical Benchmarks', () => {
       const incheon = KOREA_TRIAL_2021.signalStrengthMeasurements.find((m) => m.site === 'Incheon');
       expect(incheon.pohangTxMeasuredDb).toBe(56.25);
       expect(incheon.gwangjuTxMeasuredDb).toBe(57.45);
+    });
+
+    it('per-station jitter mode produces non-null results and better MAE than flat 4m baseline', () => {
+      const results = evaluateKoreaTrialBenchmark();
+      
+      // Per-station summary should exist and be valid
+      expect(results.perStationSummary).toBeDefined();
+      expect(results.perStationSummary).not.toBeNull();
+      expect(results.perStationSummary.meanSimulated95m).toBeGreaterThan(8.0);
+      expect(results.perStationSummary.meanSimulated95m).toBeLessThan(10.0);
+      
+      // Per-station MAE should be lower than flat 4m baseline
+      expect(results.perStationSummary.meanAbsoluteErrorMeters).toBeLessThan(
+        results.summaryMetrics.meanAbsoluteErrorMeters
+      );
+      
+      // All sites should have per-station R95 values
+      results.sites.forEach((site) => {
+        expect(site.perStationR95m).not.toBeNull();
+        expect(site.perStationR95m).toBeGreaterThan(6.0);
+        expect(site.perStationR95m).toBeLessThan(13.0);
+        expect(site.perStationDeltaMeters).not.toBeNull();
+      });
+      
+      // Snapshot regression: lock in current per-station metrics
+      expect(results.perStationSummary.meanSimulated95m).toBeCloseTo(9.03, 1);
+      expect(results.perStationSummary.meanAbsoluteErrorMeters).toBeCloseTo(1.37, 1);
+      expect(results.perStationSummary.rmseMeters).toBeCloseTo(1.72, 1);
+    });
+
+    it('uniform per-station jitter [4.0, 4.0, 4.0, 4.0] matches flat baseline within rounding tolerance', () => {
+      const flatResult = evaluateKoreaTrialBenchmark({ nominalJitterMeters: 4.0 });
+      const uniformResult = evaluateKoreaTrialBenchmark({ 
+        nominalJitterMeters: 4.0,
+        perStationJitters: [4.0, 4.0, 4.0, 4.0]
+      });
+
+      // When jitter is uniform, per-station covariance should reduce to 2·HDOP·σ (within rounding)
+      for (let i = 0; i < flatResult.sites.length; i++) {
+        const flat = flatResult.sites[i];
+        const uniform = uniformResult.sites[i];
+        const discrepancy = Math.abs(flat.loranLab95m - uniform.perStationR95m);
+        
+        // Allow 0.05m tolerance due to HDOP rounding in gdop.js
+        expect(discrepancy).toBeLessThan(0.05);
+        
+        // Relative error should be < 0.5%
+        const relativeError = (discrepancy / flat.loranLab95m) * 100;
+        expect(relativeError).toBeLessThan(0.5);
+      }
+    });
+
+    it('constructs identical H-matrix in gdop.js and trialValidation.js across all test sites', () => {
+      const master = KOREA_TRIAL_2021.transmitters.find((t) => t.role === 'master');
+      const slaves = KOREA_TRIAL_2021.transmitters.filter((t) => t.role === 'slave');
+
+      KOREA_TRIAL_2021.sites.forEach((site) => {
+        const rc = { lat: site.lat, lng: site.lng };
+        const hGdop = buildHMatrixGdop(rc, master, slaves);
+        const hTrial = buildHMatrixTrial(rc, master, slaves);
+
+        expect(hGdop.valid).toBe(true);
+        expect(hTrial.valid).toBe(true);
+        expect(hGdop.H).toHaveLength(hTrial.H.length);
+
+        for (let r = 0; r < hGdop.H.length; r++) {
+          for (let c = 0; c < 2; c++) {
+            expect(Math.abs(hGdop.H[r][c] - hTrial.H[r][c])).toBeLessThan(1e-6);
+          }
+        }
+      });
+    });
+
+    it('proves discrepancy between flat and uniform per-station scales linearly with sigma', () => {
+      const sigmas = [2.0, 4.0, 6.0];
+      const maxDiscrepancies = sigmas.map((sigma) => {
+        const flat = evaluateKoreaTrialBenchmark({ nominalJitterMeters: sigma });
+        const uniform = evaluateKoreaTrialBenchmark({
+          nominalJitterMeters: sigma,
+          perStationJitters: Array(4).fill(sigma),
+        });
+        return Math.max(...flat.sites.map((s, idx) => Math.abs(s.loranLab95m - uniform.sites[idx].perStationR95m)));
+      });
+
+      // Ratio 4.0/2.0 should be ~2.0, 6.0/4.0 should be ~1.5
+      expect(maxDiscrepancies[1] / maxDiscrepancies[0]).toBeCloseTo(2.0, 1);
+      expect(maxDiscrepancies[2] / maxDiscrepancies[1]).toBeCloseTo(1.5, 1);
     });
   });
 

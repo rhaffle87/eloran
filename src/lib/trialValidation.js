@@ -9,7 +9,7 @@
  */
 
 import { computeGDOPAtPoint } from './gdop.js';
-import { haversineDistance } from './geodesy.js';
+import { haversineDistance, latLngToLocalXY } from './geodesy.js';
 import { KOREA_TRIAL_2021, MAOMING_TRIAL_2025 } from '../data/benchmarks/trialData.js';
 
 /**
@@ -77,17 +77,114 @@ export function vincentyEllipsoidalDistance(p1, p2) {
 }
 
 /**
+ * Builds the LOP geometry matrix H (n×2) for a receiver against one master and n slaves.
+ * Each row is the unit-vector difference [uSx - uMx, uSy - uMy] in local Cartesian space.
+ * This is the same construction used inside computeGDOPAtPoint in gdop.js.
+ *
+ * @param {{lat: number, lng: number}} receiverCoord
+ * @param {object} master - {lat, lng}
+ * @param {Array<object>} slaves - [{lat, lng}]
+ * @returns {{H: number[][], valid: boolean}} rows of the geometry matrix
+ */
+export function buildHMatrix(receiverCoord, master, slaves) {
+  const refLat = receiverCoord.lat;
+  const refLng = receiverCoord.lng;
+  const rx = latLngToLocalXY(receiverCoord.lat, receiverCoord.lng, refLat, refLng);
+  const mxy = latLngToLocalXY(master.lat, master.lng, refLat, refLng);
+  const dM = Math.hypot(rx.x - mxy.x, rx.y - mxy.y);
+  if (dM < 10) return { H: [], valid: false };
+  const uMx = (mxy.x - rx.x) / dM;
+  const uMy = (mxy.y - rx.y) / dM;
+  const H = [];
+  for (const s of slaves) {
+    const sxy = latLngToLocalXY(s.lat, s.lng, refLat, refLng);
+    const dS = Math.hypot(rx.x - sxy.x, rx.y - sxy.y);
+    if (dS < 10) continue;
+    H.push([((sxy.x - rx.x) / dS) - uMx, ((sxy.y - rx.y) / dS) - uMy]);
+  }
+  return { H, valid: H.length >= 2 };
+}
+
+/**
+ * Computes the 95% repeatable horizontal error using per-station jitter variances.
+ *
+ * The covariance of the position estimate when each TD measurement has its own variance:
+ *   C = (H^T H)^{-1} H^T Σ_τ H (H^T H)^{-1}
+ * where Σ_τ = diag(σ_1², σ_2², ..., σ_n²) is the per-slave TD error covariance.
+ *
+ * R95 = 2 · sqrt(C_11 + C_22)
+ *
+ * This is the full WLS propagation; it reduces to R95 = 2·HDOP·σ when all σ_i are equal.
+ *
+ * @param {number[][]} H - Geometry matrix rows (n×2)
+ * @param {number[]} sigmas - Per-slave jitter standard deviations (m), same order as H rows
+ * @returns {number} R95 (meters), or NaN if ill-conditioned
+ */
+function computePerStationR95(H, sigmas) {
+  const n = H.length;
+  if (n < 2 || sigmas.length < n) return NaN;
+
+  // H^T H  (2×2)
+  let h11 = 0, h12 = 0, h22 = 0;
+  for (let i = 0; i < n; i++) {
+    h11 += H[i][0] * H[i][0];
+    h12 += H[i][0] * H[i][1];
+    h22 += H[i][1] * H[i][1];
+  }
+  const det = h11 * h22 - h12 * h12;
+  if (det <= 1e-6) return NaN;
+
+  // (H^T H)^{-1}  (2×2 symmetric)
+  const inv11 = h22 / det;
+  const inv12 = -h12 / det;
+  const inv22 = h11 / det;
+
+  // M = H^T Σ_τ H  (2×2): sum_i sigma_i^2 * [hx_i, hy_i]^T [hx_i, hy_i]
+  let m11 = 0, m12 = 0, m22 = 0;
+  for (let i = 0; i < n; i++) {
+    const v2 = sigmas[i] * sigmas[i];
+    m11 += v2 * H[i][0] * H[i][0];
+    m12 += v2 * H[i][0] * H[i][1];
+    m22 += v2 * H[i][1] * H[i][1];
+  }
+
+  // C = (H^T H)^{-1} M (H^T H)^{-1}  — compute trace (C_11 + C_22)
+  // (H^T H)^{-1} M  (2×2)
+  const t11 = inv11 * m11 + inv12 * m12;
+  const t12 = inv11 * m12 + inv12 * m22;
+  const t21 = inv12 * m11 + inv22 * m12;
+  const t22 = inv12 * m12 + inv22 * m22;
+  // C = T · (H^T H)^{-1}
+  const c11 = t11 * inv11 + t12 * inv12;
+  const c22 = t21 * inv12 + t22 * inv22;
+
+  const posVar = c11 + c22;
+  if (posVar <= 0) return NaN;
+  return 2.0 * Math.sqrt(posVar);
+}
+
+/**
  * Evaluates the Korean Nationwide eLoran Testbed benchmark (Rhee et al., 2021).
  * Computes HDOP, predicted 95% repeatable accuracy, and deviations against measured field data.
- * 
+ *
+ * Two jitter modes are evaluated in parallel:
+ *  - Flat jitter: R95 = 2·HDOP·σ_flat (σ=4.0m, matching prior-art UK simulator baseline)
+ *  - Per-station: R95 via full covariance propagation using Rhee Table 3 per-TX jitter values
+ *
  * @param {object} [options]
- * @param {number} [options.nominalJitterMeters=4.0] - Baseline pseudorange jitter (default: 4.0m)
+ * @param {number} [options.nominalJitterMeters=4.0] - Flat-baseline jitter (prior-art reference value)
  * @returns {object} Full benchmark evaluation results
  */
 export function evaluateKoreaTrialBenchmark(options = {}) {
   const nominalJitter = options.nominalJitterMeters || 4.0;
   const master = KOREA_TRIAL_2021.transmitters.find((t) => t.role === 'master');
   const slaves = KOREA_TRIAL_2021.transmitters.filter((t) => t.role === 'slave');
+
+  // Per-slave jitter sigmas (Rhee Table 3), same order as slaves array
+  // Can override with options.perStationJitters for consistency testing
+  const slaveJitterSigmas = options.perStationJitters
+    ? options.perStationJitters
+    : slaves.map((s) => s.estimatedJitterMeters);
 
   const evaluatedSites = KOREA_TRIAL_2021.sites.map((site) => {
     const receiverCoord = { lat: site.lat, lng: site.lng };
@@ -100,11 +197,25 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       distanceKm: parseFloat((haversineDistance(receiverCoord, { lat: tx.lat, lng: tx.lng }) / 1000).toFixed(1)),
     }));
 
-    // Standard 2-sigma 95% repeatable horizontal positioning error: R95 = 2.0 * HDOP * sigma_jitter
+    // Mode 1: Flat-jitter baseline — R95 = 2·HDOP·σ_flat
+    // σ=4.0m matches the prior-art UK simulator value quoted in Rhee §I as a reference
     const loranLab95m = parseFloat((2.0 * hdop * nominalJitter).toFixed(2));
     const deltaMeters = parseFloat((loranLab95m - site.measured95m).toFixed(2));
     const absDeltaMeters = parseFloat(Math.abs(deltaMeters).toFixed(2));
     const percentDiff = parseFloat(((deltaMeters / site.measured95m) * 100).toFixed(1));
+
+    // Mode 2: Per-station jitter — full covariance propagation C=(H^TH)^{-1}H^TΣH(H^TH)^{-1}
+    // Uses per-TX jitter from Rhee Table 3 (already stored in trialData.js)
+    const { H, valid: hValid } = buildHMatrix(receiverCoord, master, slaves);
+    const perStationR95m = (hValid && H.length === slaves.length)
+      ? parseFloat(computePerStationR95(H, slaveJitterSigmas).toFixed(2))
+      : null;
+    const perStationDeltaMeters = perStationR95m !== null
+      ? parseFloat((perStationR95m - site.measured95m).toFixed(2))
+      : null;
+    const perStationAbsDeltaMeters = perStationDeltaMeters !== null
+      ? parseFloat(Math.abs(perStationDeltaMeters).toFixed(2))
+      : null;
 
     return {
       name: site.name,
@@ -116,6 +227,9 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       ranges,
       measured95m: site.measured95m,
       loranLab95m,
+      perStationR95m,
+      perStationDeltaMeters,
+      perStationAbsDeltaMeters,
       rheeSim4mMeters: site.rheeSim4mMeters,
       rheeSim6mMeters: site.rheeSim6mMeters,
       rheeProposedMeters: site.rheeProposedMeters,
@@ -136,6 +250,21 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
   const meanAbsoluteErrorMeters = parseFloat((sumAbsDelta / n).toFixed(2));
   const rmseMeters = parseFloat(Math.sqrt(sumSqDelta / n).toFixed(2));
 
+  // Per-station jitter summary (only when all sites computed successfully)
+  const perStationSites = evaluatedSites.filter((s) => s.perStationR95m !== null);
+  let perStationSummary = null;
+  if (perStationSites.length === n) {
+    const psAbsDelta = perStationSites.reduce((acc, s) => acc + s.perStationAbsDeltaMeters, 0);
+    const psSqDelta = perStationSites.reduce((acc, s) => acc + s.perStationDeltaMeters * s.perStationDeltaMeters, 0);
+    const psMean = perStationSites.reduce((acc, s) => acc + s.perStationR95m, 0);
+    perStationSummary = {
+      meanSimulated95m: parseFloat((psMean / n).toFixed(2)),
+      meanAbsoluteErrorMeters: parseFloat((psAbsDelta / n).toFixed(2)),
+      rmseMeters: parseFloat(Math.sqrt(psSqDelta / n).toFixed(2)),
+      jitterSource: 'Rhee et al. (2021) Table 3 per-station TOR estimates',
+    };
+  }
+
   return {
     benchmarkId: KOREA_TRIAL_2021.id,
     name: KOREA_TRIAL_2021.name,
@@ -152,6 +281,7 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       rmseMeters,
       agreementSummary: `LORAN LAB model predicts mean 95% repeatable accuracy of ${meanSimulated95m}m vs published field measurements of ${meanMeasured95m}m (RMSE: ${rmseMeters}m, MAE: ${meanAbsoluteErrorMeters}m).`,
     },
+    perStationSummary,
     sites: evaluatedSites,
   };
 }

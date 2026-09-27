@@ -224,30 +224,36 @@ export default function AsfPanel() {
             {/* Split Provenance Status Card */}
             {engineMethod === 'grwave' ? (
               <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
-                <div className="flex items-start justify-between gap-1.5">
+                <div className="flex items-center justify-between gap-1.5">
                   <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
                   <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
-                    SOURCED (ITU-R P.368 GRWAVE Fortran output)
+                    SOURCED (ITU-R P.368 GRWAVE)
                   </span>
                 </div>
-                <div className="flex items-start justify-between gap-1.5">
-                  <span className="text-[var(--text-dim)]">Phase delay / timing (ASF):</span>
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="text-[var(--text-dim)] flex items-center gap-1">
+                    <span>Phase delay / timing (ASF):</span>
+                    <InfoTooltip
+                      align="right"
+                      title="Phase Delay Verification Status"
+                      text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
+                    />
+                  </span>
                   <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
-                    Analytical Sommerfeld-Norton approximation
+                    Analytical Sommerfeld-Norton
                   </span>
                 </div>
-                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight pt-0.5 border-t border-[var(--border-subtle)]">
-                  *Note: Phase delay directly feeds the simulator&apos;s TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data.
-                </p>
               </div>
             ) : (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] space-y-1">
-                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-block">
-                  UNVERIFIED (Empirical k_asf)
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-flex items-center gap-1">
+                  <ShieldAlert size={10} /> UNVERIFIED — Empirical k_asf
                 </span>
-                <p className="text-[var(--text-muted)] text-[9.5px] leading-tight">
-                  Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark.
-                </p>
+                <InfoTooltip
+                  align="right"
+                  title="Empirical Model Provenance"
+                  text="Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
+                />
               </div>
             )}
           </div>
@@ -299,14 +305,18 @@ export default function AsfPanel() {
 
           {/* Engine Parameters / Empirical Scale Slider */}
           {engineMethod === 'grwave' ? (
-            <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-1">
+            <div className="bg-[var(--bg-subtle)] rounded-lg p-2 border border-[var(--border-subtle)]">
               <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] font-semibold">
-                <span>Constitutive Formulation:</span>
+                <span className="flex items-center gap-1.5">
+                  <span>Constitutive Formulation:</span>
+                  <InfoTooltip
+                    align="left"
+                    title="Formulation & Verification"
+                    text="Sommerfeld surface impedance & numerical distance p = (πd / λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2. Verified against compiled Fortran GRWAVE reference output."
+                  />
+                </span>
                 <span className="text-[var(--status-ok)] font-mono">100 kHz Groundwave</span>
               </div>
-              <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-                Sommerfeld surface impedance & numerical distance $p = (\pi d / \lambda)|\eta|^2$ with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2. Verified against compiled Fortran GRWAVE reference output.
-              </p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -382,21 +392,25 @@ export default function AsfPanel() {
 
           {/* Split Provenance Badge */}
           <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
-            <div className="flex items-start justify-between gap-1.5">
+            <div className="flex items-center justify-between gap-1.5">
               <span className="text-[var(--text-dim)]">Refractivity formula (N = 77.6P/T + …):</span>
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
                 SOURCED (Smith &amp; Weintraub 1953)
               </span>
             </div>
-            <div className="flex items-start justify-between gap-1.5">
-              <span className="text-[var(--text-dim)]">Seasonal/weather drift magnitude:</span>
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[var(--text-dim)] flex items-center gap-1">
+                <span>Seasonal/weather drift:</span>
+                <InfoTooltip
+                  align="right"
+                  title="Empirical Drift Calibration"
+                  text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
+                />
+              </span>
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
                 UNVERIFIED — 12-day Korean dataset
               </span>
             </div>
-            <p className="text-[var(--text-muted)] text-[9.5px] leading-tight pt-0.5 border-t border-[var(--border-subtle)]">
-              *Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons.
-            </p>
           </div>
 
           {/* Weather Inputs */}

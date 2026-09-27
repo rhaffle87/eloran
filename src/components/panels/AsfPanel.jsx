@@ -252,8 +252,13 @@ export default function AsfPanel() {
               <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
                 <div className="flex items-center justify-between gap-1.5">
                   <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
-                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
+                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap inline-flex items-center gap-1">
                     SOURCED (ITU-R P.368 GRWAVE)
+                    <InfoTooltip
+                      align="right"
+                      title="Groundwave Attenuation Standard"
+                      text="Field strength and groundwave attenuation curve generation is SOURCED from ITU-R P.368-10 / GRWAVE."
+                    />
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-1.5">
@@ -278,7 +283,7 @@ export default function AsfPanel() {
                 <InfoTooltip
                   align="right"
                   title="Empirical Model Provenance"
-                  text="Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
+                  text="UNVERIFIED - Empirical k_asf phase lag scaling factor. Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
                 />
               </div>
             )}
@@ -559,7 +564,7 @@ export default function AsfPanel() {
             </span>
             <InfoTooltip
               align="right"
-              text="Weather-driven propagation delay variation. Refractivity formula is SOURCED; seasonal drift magnitudes are UNVERIFIED (Song &amp; Son 2025)."
+              text="Weather-driven propagation delay variation. Refractivity formula is SOURCED (Smith & Weintraub 1953); seasonal drift magnitudes are UNVERIFIED based on 12-day Korean dataset (Song & Son 2025)."
             />
           </div>
 
@@ -780,19 +785,33 @@ export default function AsfPanel() {
       <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 min-w-0">
-            <Database size={13} className="text-cyan-400 shrink-0" />
+            <Database size={13} className="text-[var(--accent-eloran)] shrink-0" />
             <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] truncate">
               Field Trial Benchmarks
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 shrink-0">
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 flex items-center gap-1 font-semibold"
+              style={{
+                background: 'var(--status-ok-subtle)',
+                borderColor: 'var(--status-ok-border)',
+                borderWidth: '1px',
+                color: 'var(--status-ok)',
+              }}
+            >
               Tier 2 SOURCED
+              <InfoTooltip
+                align="left"
+                title="Tier 2 Field Trial Validation Disclosure"
+                text="Validation in LORAN LAB is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
+              />
             </span>
           </div>
           <button
             type="button"
             data-testid="toggle-validation-benchmarks"
             onClick={() => setShowValidation(!showValidation)}
-            className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            className="text-[11px] hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            style={{ color: 'var(--accent-eloran)' }}
           >
             {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
           </button>

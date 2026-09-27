@@ -106,7 +106,7 @@ export default function ELoran() {
     { id: 'clocks',   label: 'Clocks',   icon: Clock },
     { id: 'asf',      label: 'ASF',      icon: Sparkles },
     { id: 'fusion',   label: 'Fusion',   icon: Navigation },
-    { id: 'display',  label: 'Mesh',     icon: Layers },
+    { id: 'display',  label: 'Layers',   icon: Layers },
   ];
 
   return (

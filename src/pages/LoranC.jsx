@@ -266,7 +266,7 @@ export default function LoranC() {
               >
                 {[
                   { id: 'stations', label: 'Stations' },
-                  { id: 'display', label: 'Layers & Mesh' },
+                  { id: 'display', label: 'Layers' },
                 ].map(({ id, label }) => (
                   <button
                     key={id}

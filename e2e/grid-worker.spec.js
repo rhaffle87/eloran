@@ -32,7 +32,7 @@ test.describe('Web Worker Grid Computation & CSP Suite', () => {
       return map && map.isStyleLoaded();
     }, { timeout: 20000 });
 
-    await page.click('button:has-text("Layers & Mesh")');
+    await page.click('button:has-text("Layers")');
     await page.waitForTimeout(500);
 
     const generateBtn = page.locator('button:has-text("Generate LOP Contours")');

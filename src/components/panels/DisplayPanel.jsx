@@ -320,12 +320,12 @@ export default function DisplayPanel({ isELoran = false }) {
         />
         <div className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between">
           <span className="text-[var(--text-muted)]">Status:</span>
-          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold flex items-center gap-1' : 'text-[var(--text-dim)]'}>
+          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold flex items-center gap-1' : 'text-[var(--text-dim)] flex items-center gap-1'}>
             {settings.enableSecondaryFactor ? 'SF Active (Brunavs 5 S/m)' : 'SF Disabled'}
             <InfoTooltip
               content={settings.enableSecondaryFactor
                 ? 'Secondary Factor is ON (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook).'
-                : 'Secondary Factor is OFF. Only Primary Factor (PF) atmospheric refraction is modeled.'}
+                : 'Secondary Factor is OFF (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook). Only Primary Factor (PF) atmospheric refraction is modeled.'}
               align="right"
             />
           </span>
@@ -346,13 +346,15 @@ export default function DisplayPanel({ isELoran = false }) {
         </div>
 
         {/* Status Pills */}
-        <div className="flex flex-wrap gap-2 text-[10px]">
-          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
-            Model: Boyce ILA 2006 (SOURCED)
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] inline-flex items-center gap-1 font-mono">
+            <CheckCircle2 size={10} /> Model: Boyce (SOURCED) · Noise: Rhee (SOURCED)
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
-            Noise: Rhee et al. 2021 (SOURCED)
-          </span>
+          <InfoTooltip
+            align="right"
+            title="Cycle Slip & Noise Model Provenance"
+            text="Carrier Cycle Slip: Boyce Theoretical Rician Ratio (SOURCED, ILA 2006, Section II-D, Fig. 9) & Austron Empirical Envelopes (Boyce Eq. 5 & 6). TOA Noise Injection: Nominal transmitter clock jitter (SOURCED: Rhee et al. 2021 Table 3) / Receiver scaling constant K (SOURCED: Rhee et al. 2021 / Lo 2008)."
+          />
         </div>
 
         <Toggle
@@ -362,24 +364,31 @@ export default function DisplayPanel({ isELoran = false }) {
           onChange={(checked) => updateSettings({ enableCycleSlips: checked })}
         />
 
-        <div className="space-y-2.5 bg-[var(--bg-canvas)] p-3 rounded-xl border border-[var(--border-subtle)]">
+        <div className="space-y-2.5 bg-[var(--bg-canvas)] p-3 rounded-lg border border-[var(--border-subtle)]">
           <div>
-            <label className="block text-[var(--text-dim)] text-[11px] mb-1">
-              Active Cycle Selection Model
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[var(--text-dim)] text-[11px]">
+                Active Cycle Selection Model
+              </label>
+              <InfoTooltip
+                align="right"
+                title="Carrier Cycle Selection Model"
+                text="Boyce Theoretical Rician Ratio (SOURCED, ILA 2006, Section II-D, Fig. 9). Austron New Empirical (28 µs) (SOURCED, Boyce Eq. 6) / Austron Old Empirical (42 µs) (SOURCED, Boyce Eq. 5)."
+              />
+            </div>
             <select
               value={settings.cycleSlipModel || 'boyce-ratio'}
               onChange={(e) => updateSettings({ cycleSlipModel: e.target.value })}
               className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
             >
               <option value="boyce-ratio">
-                Boyce Theoretical Rician Ratio (SOURCED, ILA 2006)
+                Boyce Theoretical Rician Ratio
               </option>
               <option value="austron-28">
-                Austron New Empirical (28 µs) (SOURCED, Boyce Eq. 6)
+                Austron New Empirical (28 µs)
               </option>
               <option value="austron-42">
-                Austron Old Empirical (42 µs) (SOURCED, Boyce Eq. 5)
+                Austron Old Empirical (42 µs)
               </option>
             </select>
           </div>
@@ -413,7 +422,7 @@ export default function DisplayPanel({ isELoran = false }) {
             max={20}
             step={0.5}
             unit="m"
-            tooltip="Nominal transmitter clock jitter (SOURCED: Rhee et al. 2021)"
+            tooltip="Nominal transmitter clock jitter (SOURCED: Rhee et al. 2021 Table 3)"
             onChange={(val) => updateSettings({ jitterMeters: val })}
           />
 
@@ -612,7 +621,7 @@ export default function DisplayPanel({ isELoran = false }) {
           />
         </div>
         <Link
-          to="/theory"
+          to="/learn"
           className="text-[11px] text-[var(--accent-eloran)] hover:underline flex items-center gap-1 font-semibold shrink-0"
         >
           <BookOpen size={12} />

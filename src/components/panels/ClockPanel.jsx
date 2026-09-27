@@ -68,6 +68,7 @@ export default function ClockPanel() {
             className="p-1.5 rounded-lg transition"
             style={{ background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
             title="Reset Time to 0s"
+            aria-label="Reset simulation time to 0 seconds"
           >
             <RotateCcw size={14} />
           </button>

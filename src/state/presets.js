@@ -12,6 +12,7 @@ export const PRESET_SCENARIOS = {
   jakarta_baseline: {
     id: 'jakarta_baseline',
     name: 'Jakarta Maritime Testbed (Synthetic / Illustrative)',
+    shortName: 'Jakarta Maritime Testbed',
     status: 'synthetic',
     description: 'Reference 3-station chain around Jakarta Bay. Ideal for initial TDOA geometry, harbor entrance and approach (HEA) studies, and baseline extension tests.',
     center: [106.816666, -6.200000],
@@ -77,6 +78,7 @@ export const PRESET_SCENARIOS = {
   north_sea_historical: {
     id: 'north_sea_historical',
     name: 'North Sea Chain (Historical - Decommissioned Dec 2015)',
+    shortName: 'North Sea Chain (Historical)',
     status: 'historical',
     description: 'Historical Northwest European Loran-C/eLoran chain (GRI 6731). Decommissioned on December 31, 2015. Sylt (Germany) and Lessay (France) were permanently shut down. Anthorn (UK) transmitter was retained solely for timing broadcast (UTC transfer). Demonstrates that a single transmitter provides time synchronization but cannot solve for a 2D position fix.',
     center: [3.5, 53.5],
@@ -142,6 +144,7 @@ export const PRESET_SCENARIOS = {
   bohai_yellow_sea_active: {
     id: 'bohai_yellow_sea_active',
     name: 'North China Sea Chain — GRI 7430 (Active)',
+    shortName: 'North China Sea Chain (GRI 7430)',
     status: 'active',
     description: 'Active Chinese eLoran North China Sea Chain (GRI 7430). Master: Rongcheng (37°04\'N 122°19\'E). Secondaries: Xuancheng (X, 31°04\'N 118°53\'E) and Helong (Y, 42°43\'N 129°06\'E). Coordinates from NGA Pub 117 (Radio Aids to Navigation, Chapter 6). Transmits navigation pulses plus 9th-pulse LDC differential corrections. GRI = 7430 (74.3 ms group interval). Note: GRI 6780 is the separate South China Sea chain (Hexian master).',
     center: [121.5, 36.5],
@@ -210,6 +213,7 @@ export const PRESET_SCENARIOS = {
   korea_yellow_sea_trial: {
     id: 'korea_yellow_sea_trial',
     name: 'Korea-Yellow Sea Trial Benchmark (Rhee et al., 2021)',
+    shortName: 'Korea-Yellow Sea Trial (2021)',
     status: 'benchmark',
     description: 'Northeast Asia 4-transmitter eLoran chain benchmarked against published field trial data from Rhee, Kim, Son, & Seo (2021, Table 5). Real measured 95% repeatable positioning accuracy across 7 South Korean test locations (Incheon, Pyeongtaek, Dangjin, Andong, Gumi, Jeonju, Gwangju) ranges from 8.49 m to 12.73 m.',
     center: [126.7, 36.5],
@@ -288,6 +292,7 @@ export const PRESET_SCENARIOS = {
   high_gdop: {
     id: 'high_gdop',
     name: 'Poor Geometry (High GDOP Collinear Scenario)',
+    shortName: 'Poor Geometry (High GDOP)',
     status: 'synthetic',
     description: 'Collinear transmitter layout causing high Geometric Dilution of Precision (GDOP) and severely elongated error ellipses along the baseline axis.',
     center: [107.0, -6.2],
@@ -341,6 +346,7 @@ export const PRESET_SCENARIOS = {
   gnss_denied: {
     id: 'gnss_denied',
     name: 'GNSS-Denied Maritime Resilience (Synthetic Testbed)',
+    shortName: 'GNSS-Denied Resilience',
     status: 'synthetic',
     description: 'Demonstrates eLoran autonomous resilient PNT when satellite GNSS signals are degraded, jammed, or spoofed.',
     center: [106.8, -6.15],

@@ -465,10 +465,10 @@ export default function ChainDesignPanel() {
           <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
             <span>Planning Thresholds & Heuristics</span>
             <InfoTooltip
-              text="Tunable geometric and timing rules of thumb used in chain feasibility validation."
+              text="Tunable geometric and timing rules of thumb used in chain feasibility validation. Illustrative default, not a regulatory limit — unverified against operational station licensing guidelines."
             />
           </div>
-          <span className="px-1.5 py-0.2 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/30">
             Illustrative default, not a regulatory limit
           </span>
         </div>

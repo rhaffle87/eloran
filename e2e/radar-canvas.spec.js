@@ -73,7 +73,7 @@ test.describe('Radar Canvas Map Mode — Comprehensive Functional & Visual Verif
     expect(hasBaselineLayer).toBe(true);
 
     // 7. Verify LOP Contours can be generated and rendered on top of Radar canvas
-    const meshTab = page.locator('button:has-text("Mesh")');
+    const meshTab = page.locator('button:has-text("Layers")').first();
     await meshTab.click();
     await page.waitForTimeout(300);
 

@@ -45,7 +45,7 @@ async function capture() {
 
       // Generate LOP Contours on 1280px to demonstrate composite layers on top of radar underlay
       if (vp.name === '1280px') {
-        const meshTab = page.locator('button:has-text("Mesh")');
+        const meshTab = page.locator('button:has-text("Layers"), button:has-text("Mesh")');
         if (await meshTab.isVisible()) {
           await meshTab.click();
           await page.waitForTimeout(300);

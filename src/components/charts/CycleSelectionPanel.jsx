@@ -7,6 +7,7 @@ import {
   BOYCE_2006_RATIO_BOUNDS,
 } from '../../lib/pulse.js';
 import Slider from '../ui/Slider.jsx';
+import { InfoTooltip } from '../ui/Tooltip.jsx';
 
 export default function CycleSelectionPanel() {
   const [numTrials, setNumTrials] = useState(1000);
@@ -91,6 +92,11 @@ export default function CycleSelectionPanel() {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] flex items-center gap-1 font-semibold uppercase tracking-wider">
               <CheckCircle2 size={11} /> Model: Boyce Ratio & Austron ECD (SOURCED)
+              <InfoTooltip
+                align="left"
+                title="Boyce (ILA 2006) & Austron ECD Model Sourced Excerpt"
+                text="Sourced Excerpt: Boyce, Lo, Powell, & Enge (ILA 2006, Section II-D): 'An offset in the time estimate of 5 µs would result in a wrong cycle selection, therefore, we can set bounds on Ratio(30) to lie between Ratio(25) and Ratio(35) in order to obtain the correct cycle. Therefore, a wrong cycle selection will occur if Ratio(30) ≤ Ratio(25) or Ratio(30) ≥ Ratio(35).' Historical Austron ECD variance: σ_ECD_Old = 42 / √(N · SNR) µs (Eq. 5), modern Peterson estimate: σ_ECD_New = 28 / √(N · SNR) µs (Eq. 6)."
+              />
             </span>
             <span className="text-[10px] font-mono text-[var(--text-muted)]">
               Boyce et al. (ILA 2006, Section II-D, Fig. 9)
@@ -121,7 +127,7 @@ export default function CycleSelectionPanel() {
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <span className="text-[var(--text-secondary)] font-semibold">
-            P[Wrong Cycle] vs Total SNR (N Â· SNR)
+            P[Wrong Cycle] vs Total SNR (N · SNR)
           </span>
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
             <label className="flex items-center gap-1.5 cursor-pointer text-[var(--accent-eloran)]">
@@ -140,7 +146,7 @@ export default function CycleSelectionPanel() {
                 onChange={(e) => setShowAustronNew(e.target.checked)}
                 className="accent-emerald-400"
               />
-              <span className="w-3 h-0.5 bg-emerald-400 border-b border-dashed inline-block"></span> Austron New (28 Âµs)
+              <span className="w-3 h-0.5 bg-emerald-400 border-b border-dashed inline-block"></span> Austron New (28 µs)
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer text-[var(--status-warn)]">
               <input
@@ -149,7 +155,7 @@ export default function CycleSelectionPanel() {
                 onChange={(e) => setShowAustronOld(e.target.checked)}
                 className="accent-amber-400"
               />
-              <span className="w-3 h-0.5 bg-amber-400 border-b border-dotted inline-block"></span> Austron Old (42 Âµs)
+              <span className="w-3 h-0.5 bg-amber-400 border-b border-dotted inline-block"></span> Austron Old (42 µs)
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer text-fuchsia-300">
               <input
@@ -176,7 +182,7 @@ export default function CycleSelectionPanel() {
                 <g key={`ygrid-${exp}`}>
                   <line x1="60" y1={y} x2="760" y2={y} stroke="#27272a" strokeWidth="0.8" strokeDasharray={exp === 0 ? 'none' : '3 3'} />
                   <text x="52" y={y + 3} fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
-                    10{exp === 0 ? 'â°' : exp === -1 ? 'â»Â¹' : exp === -2 ? 'â»Â²' : exp === -3 ? 'â»Â³' : 'â»â´'}
+                    10{exp === 0 ? '\u2070' : exp === -1 ? '\u207B\u00B9' : exp === -2 ? '\u207B\u00B2' : exp === -3 ? '\u207B\u00B3' : '\u207B\u2074'}
                   </text>
                 </g>
               );
@@ -197,7 +203,7 @@ export default function CycleSelectionPanel() {
 
             {/* Axis labels */}
             <text x="410" y="375" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle">
-              Total SNR [dB] = 10 Â· logâ‚â‚€(N Â· SNR)
+              {"Total SNR [dB] = 10 \u00B7 log\u2081\u2080(N \u00B7 SNR)"}
             </text>
             <text x="18" y="190" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle" transform="rotate(-90 18 190)">
               P[Wrong Cycle Selection]
@@ -317,7 +323,7 @@ export default function CycleSelectionPanel() {
               <span className="font-bold text-[var(--text-primary)]">{(inspectAustronNew * 100).toFixed(3)}%</span>
             </div>
             <div className="flex justify-between items-center bg-[var(--bg-subtle)]/80 p-2 rounded border border-[var(--border-subtle)] text-[11px]">
-              <span className="text-[var(--status-warn)] font-medium">Austron Old (42 Âµs / historical):</span>
+              <span className="text-[var(--status-warn)] font-medium">Austron Old (42 µs / historical):</span>
               <span className="font-bold text-[var(--text-primary)]">{(inspectAustronOld * 100).toFixed(3)}%</span>
             </div>
           </div>
@@ -326,12 +332,12 @@ export default function CycleSelectionPanel() {
           <div className="pt-2 border-t border-[var(--border-subtle)] text-[10px] text-[var(--text-dim)] space-y-1">
             <div className="flex justify-between">
               <span>Standard Zero Crossing (SZC):</span>
-              <span className="text-[var(--text-primary)] font-bold">Ï„ = 30 Âµs (Ideal Ratio â‰ˆ {BOYCE_2006_RATIO_BOUNDS.szc.toFixed(4)})</span>
+              <span className="text-[var(--text-primary)] font-bold">τ = 30 µs (Ideal Ratio ≈ {BOYCE_2006_RATIO_BOUNDS.szc.toFixed(4)})</span>
             </div>
             <div className="flex justify-between">
               <span>Wrong-Cycle Excursion Window:</span>
               <span className="text-[var(--text-primary)] font-bold">
-                [{BOYCE_2006_RATIO_BOUNDS.lower.toFixed(4)}, {BOYCE_2006_RATIO_BOUNDS.upper.toFixed(4)}] (Â±5 Âµs)
+                [{BOYCE_2006_RATIO_BOUNDS.lower.toFixed(4)}, {BOYCE_2006_RATIO_BOUNDS.upper.toFixed(4)}] (±5 µs)
               </span>
             </div>
           </div>
@@ -344,10 +350,10 @@ export default function CycleSelectionPanel() {
           <Info size={13} /> Sourced Excerpt: Boyce, Lo, Powell, & Enge (ILA 2006, Section II-D)
         </div>
         <blockquote className="border-l-2 pl-2.5 italic text-[var(--text-secondary)]" style={{ borderColor: 'var(--accent-eloran-border)' }}>
-          "An offset in the time estimate of 5 Âµs would result in a wrong cycle selection, therefore, we can set bounds on Ratio(30) to lie between Ratio(25) and Ratio(35) in order to obtain the correct cycle. Therefore, a wrong cycle selection will occur if Ratio(30) â‰¤ Ratio(25) or Ratio(30) â‰¥ Ratio(35)."
+          "An offset in the time estimate of 5 µs would result in a wrong cycle selection, therefore, we can set bounds on Ratio(30) to lie between Ratio(25) and Ratio(35) in order to obtain the correct cycle. Therefore, a wrong cycle selection will occur if Ratio(30) ≤ Ratio(25) or Ratio(30) ≥ Ratio(35)."
         </blockquote>
         <p className="text-[10px] text-[var(--text-muted)]">
-          Historical Austron ECD variance: Ïƒ_ECD_Old = 42 / âˆš(N Â· SNR) Âµs (Eq. 5), modern Peterson estimate: Ïƒ_ECD_New = 28 / âˆš(N Â· SNR) Âµs (Eq. 6).
+          Historical Austron ECD variance: σ_ECD_Old = 42 / √(N · SNR) µs (Eq. 5), modern Peterson estimate: σ_ECD_New = 28 / √(N · SNR) µs (Eq. 6).
         </p>
       </div>
     </div>

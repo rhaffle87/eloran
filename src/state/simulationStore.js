@@ -144,6 +144,7 @@ export const useSimulationStore = create((set, get) => {
     kConstantMeters: DEFAULT_TOA_NOISE_PARAMS.kConstantMeters, // SOURCED: 337.5 m (Rhee et al. 2021)
     asfModelMode: 'millington', // 'millington' (Physical Mixed-Path) | 'formula' (AST Override)
     asfEngineMethod: 'grwave', // 'grwave' (SOURCED ITU-R P.368 / GRWAVE) | 'empirical' (UNVERIFIED k_asf)
+    asfMillingtonPathMode: 'geo', // 'geo' (SOURCED Natural Earth 10m GIS Ray-Tracing) | 'manual' (Manual Land Fraction Slider)
     asfLandFraction: 0.5,
     asfLandSigma: 0.003, // ITU-R P.832 Agricultural/Forest
     asfMillingtonScale: DEFAULT_MILLINGTON_SCALE, // UNVERIFIED: 0.0008
@@ -427,6 +428,7 @@ export const useSimulationStore = create((set, get) => {
             landSigma: settings.asfLandSigma ?? 0.003,
             scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
             method: settings.asfEngineMethod ?? 'grwave',
+            pathMode: settings.asfMillingtonPathMode ?? 'geo',
           }),
         };
       }

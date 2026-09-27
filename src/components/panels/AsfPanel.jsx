@@ -12,6 +12,10 @@ import {
   temporalAsfUsToMeters,
   STANDARD_ATMOSPHERE,
 } from '../../lib/temporalAsf.js';
+import {
+  computeGeoMillingtonAsf,
+  COASTLINE_MANIFEST,
+} from '../../lib/geoAsf.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
 import InfoTooltip from '../ui/Tooltip.jsx';
@@ -32,10 +36,30 @@ const ASF_TEMPLATES = [
 ];
 
 export default function AsfPanel() {
-  const { masters, updateStation, receiverFixes, evaluateReceivers, settings, updateSettings } = useSimulationStore();
+  const {
+    masters,
+    receivers,
+    selectedReceiver,
+    updateStation,
+    receiverFixes,
+    evaluateReceivers,
+    settings,
+    updateSettings,
+  } = useSimulationStore();
   const master = masters[0];
+  const rx = (receivers && receivers.find((r) => r.label === selectedReceiver)) || receivers?.[0];
 
   const asfMode = settings.asfModelMode || 'millington'; // 'millington' | 'formula' | 'temporal'
+  const pathMode = settings.asfMillingtonPathMode || 'geo'; // 'geo' | 'manual'
+
+  // Live ray-tracing result for current master -> selected receiver
+  const geoResult = master && rx ? computeGeoMillingtonAsf({
+    start: master,
+    end: rx,
+    landSigma: settings.asfLandSigma ?? 0.003,
+    landEpslon: 15.0,
+    fallbackLandFraction: settings.asfLandFraction ?? 0.5,
+  }) : null;
 
   // Temporal ASF state
   const [tempC, setTempC] = useState(STANDARD_ATMOSPHERE.tempC);
@@ -291,17 +315,150 @@ export default function AsfPanel() {
             </div>
           </div>
 
-          {/* Land Fraction Slider */}
-          <Slider
-            label="Propagation Path Land Fraction (f_land)"
-            value={settings.asfLandFraction ?? 0.5}
-            min={0.0}
-            max={1.0}
-            step={0.05}
-            unit=""
-            tooltip="Fraction of transmitter-to-receiver geodesic path over land (0 = all-sea, 1 = all-land)"
-            onChange={(val) => updateSettings({ asfLandFraction: val })}
-          />
+          {/* Coastline Path Segmentation Mode */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[var(--text-secondary)] text-xs font-semibold block">
+                Coastline Path Segmentation Mode
+              </label>
+              <InfoTooltip
+                align="right"
+                title="Coastline Ray-Tracing"
+                text="Switches between geodesic ray-tracing against real Natural Earth 10m coastline vector geometry and an illustrative manual land-fraction ratio."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <button
+                type="button"
+                data-testid="asf-pathmode-geo"
+                data-active={pathMode === 'geo' ? 'true' : 'false'}
+                onClick={() => updateSettings({ asfMillingtonPathMode: 'geo' })}
+                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                  pathMode === 'geo'
+                    ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                    : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                }`}
+              >
+                Geodesic GIS (Real Coastline)
+              </button>
+              <button
+                type="button"
+                data-testid="asf-pathmode-manual"
+                data-active={pathMode === 'manual' ? 'true' : 'false'}
+                onClick={() => updateSettings({ asfMillingtonPathMode: 'manual' })}
+                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                  pathMode === 'manual'
+                    ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                    : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                }`}
+              >
+                Manual Land Fraction
+              </button>
+            </div>
+
+            {/* Path Mode Content */}
+            {pathMode === 'geo' ? (
+              geoResult?.isCovered ? (
+                <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[var(--status-ok)] inline-block"></span>
+                      <span>{geoResult.regionName}</span>
+                    </span>
+                    <span className="text-[10px] text-[var(--text-dim)] font-mono">
+                      {master?.label} → {rx?.label} ({geoResult.totalDistKm.toFixed(1)} km)
+                    </span>
+                  </div>
+
+                  {/* Segment Proportion Bar */}
+                  <div className="space-y-1">
+                    <div className="h-2 w-full rounded-full bg-blue-900/40 overflow-hidden flex">
+                      <div
+                        className="bg-amber-600 h-full transition-all duration-300"
+                        style={{ width: `${(geoResult.landFraction * 100).toFixed(1)}%` }}
+                        title={`Land: ${(geoResult.landFraction * 100).toFixed(1)}%`}
+                      />
+                      <div
+                        className="bg-blue-500 h-full transition-all duration-300"
+                        style={{ width: `${(geoResult.seaFraction * 100).toFixed(1)}%` }}
+                        title={`Sea: ${(geoResult.seaFraction * 100).toFixed(1)}%`}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-[var(--text-dim)] font-mono">
+                      <span className="text-amber-500 font-medium">
+                        Land: {geoResult.landDistKm.toFixed(1)} km ({(geoResult.landFraction * 100).toFixed(1)}%)
+                      </span>
+                      <span className="text-[var(--text-muted)]">
+                        {geoResult.transitions} boundary crossing{geoResult.transitions === 1 ? '' : 's'}
+                      </span>
+                      <span className="text-blue-400 font-medium">
+                        Sea: {geoResult.seaDistKm.toFixed(1)} km ({(geoResult.seaFraction * 100).toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Individual Segments Display */}
+                  <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1">
+                    <div className="text-[10px] text-[var(--text-muted)] flex justify-between">
+                      <span>Path Segments (Tx → Rx):</span>
+                      <span className="text-[var(--accent-eloran)] font-bold">
+                        Calculated ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                      {geoResult.segments.map((s, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-1.5 py-0.5 rounded text-[9.5px] border ${
+                            s.medium === 'land'
+                              ? 'bg-amber-950/40 border-amber-800/60 text-amber-300'
+                              : 'bg-blue-950/40 border-blue-800/60 text-blue-300'
+                          }`}
+                        >
+                          {s.medium.toUpperCase()} {s.distKm.toFixed(1)} km ({s.startKm.toFixed(0)}–{s.endKm.toFixed(0)} km)
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded-lg p-2.5 space-y-2">
+                  <div className="text-[10.5px] text-[var(--status-warn)] leading-relaxed">
+                    ⚠️ Current path ({master?.label || 'Tx'} → {rx?.label || 'Rx'}) is outside bundled coastline regions ({Object.values(COASTLINE_MANIFEST).map((m) => m.name.split('—')[0].trim()).join(', ')}).
+                    <div className="text-[var(--text-dim)] mt-0.5">
+                      Falling back to manual land-fraction ratio below ({Math.round((settings.asfLandFraction ?? 0.5) * 100)}%).
+                    </div>
+                  </div>
+                  <Slider
+                    label="Manual Land Fraction (Illustrative Fallback)"
+                    value={settings.asfLandFraction ?? 0.5}
+                    min={0.0}
+                    max={1.0}
+                    step={0.05}
+                    unit=""
+                    tooltip="Illustrative uniform land fraction applied when path is outside bundled coastline data"
+                    onChange={(val) => updateSettings({ asfLandFraction: val })}
+                  />
+                </div>
+              )
+            ) : (
+              <div className="space-y-1">
+                <Slider
+                  label="Manual Land Fraction (Illustrative, Any Region)"
+                  value={settings.asfLandFraction ?? 0.5}
+                  min={0.0}
+                  max={1.0}
+                  step={0.05}
+                  unit=""
+                  tooltip="Uniform land fraction applied to any geometry regardless of coastline vector data"
+                  onChange={(val) => updateSettings({ asfLandFraction: val })}
+                />
+                <div className="text-[10px] text-[var(--text-muted)] italic">
+                  Illustrative uniform ratio applied along the entire path.
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Engine Parameters / Empirical Scale Slider */}
           {engineMethod === 'grwave' ? (

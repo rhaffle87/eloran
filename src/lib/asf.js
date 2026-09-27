@@ -14,6 +14,7 @@ import {
   computeGroundwavePhaseProfile,
   ITU_GROUND_TYPES,
 } from './grwave.js';
+import { computeGeoMillingtonAsf } from './geoAsf.js';
 
 export {
   computeGrwaveMixedPathAsfMeters,
@@ -22,6 +23,7 @@ export {
   computeSurfaceImpedance,
   computeGroundwavePhaseProfile,
   ITU_GROUND_TYPES,
+  computeGeoMillingtonAsf,
 };
 
 // Supported math functions created with null prototype to avoid prototype pollution
@@ -497,14 +499,20 @@ export function computeMixedPathAsfMeters({
  * Creates an ASF evaluator function (lat, lng) => asfMeters for a transmitter station
  * based on the physical Millington mixed-path model.
  * 
+ * Supports:
+ * - 'geo': Real GIS coastline vector ray-tracing against Natural Earth 10m land polygons,
+ *   feeding the multi-boundary Millington solver. Automatically falls back to manual land fraction if outside covered regions.
+ * - 'manual': Standard 2-segment path using manual asfLandFraction slider.
+ * 
  * @param {object} params
  * @param {object} params.station - Station with { lat, lng }
- * @param {number} [params.landFraction=0.5] - Path land fraction [0.0 to 1.0]
+ * @param {number} [params.landFraction=0.5] - Fallback path land fraction [0.0 to 1.0]
  * @param {number} [params.landSigma=0.003] - Land conductivity in S/m
  * @param {number} [params.landEpslon=15.0] - Land relative permittivity
  * @param {number} [params.scale=DEFAULT_MILLINGTON_SCALE] - Scale factor
  * @param {'empirical'|'grwave'} [params.method='empirical'] - Propagation calculation engine
  * @param {number} [params.freqMhz=0.1] - Frequency in MHz (100 kHz)
+ * @param {'geo'|'manual'} [params.pathMode='geo'] - Path segmentation mode ('geo' real GIS or 'manual' slider)
  * @returns {(lat: number, lng: number) => number} Evaluator function
  */
 export function createMillingtonAsfEvaluator({
@@ -515,8 +523,21 @@ export function createMillingtonAsfEvaluator({
   scale = DEFAULT_MILLINGTON_SCALE,
   method = 'empirical',
   freqMhz = 0.1,
+  pathMode = 'manual',
 }) {
   return function millingtonEvaluator(lat, lng) {
+    if (pathMode === 'geo') {
+      const geoResult = computeGeoMillingtonAsf({
+        start: station,
+        end: { lat, lng },
+        landSigma,
+        landEpslon,
+        freqMhz,
+        fallbackLandFraction: landFraction,
+      });
+      return geoResult.asfMeters;
+    }
+
     const distMeters = haversineDistance(station, { lat, lng });
     return computeMixedPathAsfMeters({
       totalDistMeters: distMeters,

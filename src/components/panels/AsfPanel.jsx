@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
   validateAsfExpression,
@@ -16,6 +16,7 @@ import {
   computeGeoMillingtonAsf,
   COASTLINE_MANIFEST,
 } from '../../lib/geoAsf.js';
+import { TrialValidationPanel } from './TrialValidationPanel.jsx';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
 import InfoTooltip from '../ui/Tooltip.jsx';
@@ -81,6 +82,7 @@ export default function AsfPanel() {
 
   const [formulaInput, setFormulaInput] = useState(master?.asfFormula || '0');
   const [validation, setValidation] = useState(validateAsfExpression(master?.asfFormula || '0'));
+  const [showValidation, setShowValidation] = useState(false);
 
   const handleFormulaChange = (val) => {
     setFormulaInput(val);
@@ -773,6 +775,37 @@ export default function AsfPanel() {
           />
         </div>
       )}
+
+      {/* Empirical Field Trial Validation Benchmarks */}
+      <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Database size={13} className="text-cyan-400 shrink-0" />
+            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] truncate">
+              Field Trial Benchmarks
+            </span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 shrink-0">
+              Tier 2 SOURCED
+            </span>
+          </div>
+          <button
+            type="button"
+            data-testid="toggle-validation-benchmarks"
+            onClick={() => setShowValidation(!showValidation)}
+            className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+          >
+            {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
+          </button>
+        </div>
+        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+          Evaluated against 7-site Korean eLoran campaign (Rhee et al., 2021) and Maoming inland geodesic test (Gao et al., 2025).
+        </p>
+        {showValidation && (
+          <div className="mt-3">
+            <TrialValidationPanel />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

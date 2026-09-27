@@ -1,7 +1,8 @@
 import React from 'react';
-import { Cpu, ShieldCheck, Heart, Radio, ExternalLink, BookOpen } from 'lucide-react';
+import { Cpu, ShieldCheck, Heart, Radio, ExternalLink, BookOpen, Database } from 'lucide-react';
 
 import MathView from '../components/ui/MathView.jsx';
+import TrialValidationPanel from '../components/panels/TrialValidationPanel.jsx';
 
 const TECH_STACK = [
   'React 19', 'Vite 7', 'React Router v7', 'Tailwind CSS v4',
@@ -32,6 +33,8 @@ const ARCHITECTURE_CARDS = [
 ];
 
 const DOCS = [
+  { label: 'VALIDATION.md', description: 'Empirical field trial benchmarks (Korea 2021 & Maoming 2025).', href: 'https://github.com/rhaffle87/eloran/blob/main/docs/VALIDATION.md' },
+  { label: 'PROVENANCE.md', description: 'Master citation provenance register & verification audit.', href: 'https://github.com/rhaffle87/eloran/blob/main/docs/PROVENANCE.md' },
   { label: 'REFERENCES.md', description: 'Full survey of primary specs, books, theses & formula sheet.', href: 'https://github.com/rhaffle87/eloran/blob/main/docs/REFERENCES.md' },
   { label: 'DATA_NOTES.md', description: 'Global transmitter operational history (US, Europe, China).', href: 'https://github.com/rhaffle87/eloran/blob/main/docs/DATA_NOTES.md' },
   { label: 'TILES.md',      description: 'Centralized basemap setup, offline canvas & terms of use.',  href: 'https://github.com/rhaffle87/eloran/blob/main/docs/TILES.md'       },
@@ -129,6 +132,19 @@ export default function About() {
             </div>
           ))}
         </div>
+      </SectionCard>
+
+      {/* Empirical Field Trial Benchmarks */}
+      <SectionCard>
+        <SectionHeading icon={Database} iconColor="var(--accent-eloran)">
+          Empirical Field Trial Benchmarks (Phase 2 Part 2)
+        </SectionHeading>
+        <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+          To guard against circular self-validation, LORAN LAB is validated against published real-world
+          accuracy campaigns from the Korean Nationwide eLoran Testbed (Rhee et al., 2021) and the
+          Maoming Inland Ellipsoidal Geodesic Experiment (Gao et al., 2025) without artificial parameter tuning.
+        </p>
+        <TrialValidationPanel />
       </SectionCard>
 
       {/* Literature & Documentation */}

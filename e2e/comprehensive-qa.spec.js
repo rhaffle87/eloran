@@ -87,7 +87,7 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
     await page.waitForTimeout(1000);
 
     // Check radar canvas is rendered and visible
-    const radarCanvas = page.locator('canvas[style*="z-index: 1"]');
+    const radarCanvas = page.locator('canvas[data-testid="radar-backdrop-canvas"], canvas[style*="z-index: 0"]');
     await expect(radarCanvas).toBeVisible();
 
     // Capture Radar Canvas Light Theme screenshot

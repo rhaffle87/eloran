@@ -41,6 +41,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const [showFallbackNotice, setShowFallbackNotice] = useState(false);
   const [fallbackMessage, setFallbackMessage] = useState('');
   const [showLegend, setShowLegend] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
+  const [radarShowRadials, setRadarShowRadials] = useState(false);
+  const [radarShowGraticule, setRadarShowGraticule] = useState(true);
 
   const tileErrorsRef = useRef([]);
   const hasTileLoadedRef = useRef(false);
@@ -63,7 +65,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       if (map) {
         setIsStyleLoaded(false);
         try {
-          map.setStyle(getMapLibreStyle('osm-standard'));
+          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme));
         } catch (err) {
           console.warn('Error applying OSM fallback style:', err);
         }
@@ -87,13 +89,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
       if (map) {
         setIsStyleLoaded(false);
         try {
-          map.setStyle(getMapLibreStyle('offline-radar'));
+          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme));
         } catch (err) {
           console.warn('Error applying offline radar style:', err);
         }
       }
     }
-  }, []);
+  }, [effectiveTheme]);
 
   const handleDismissFallbackNotice = () => {
     setShowFallbackNotice(false);
@@ -179,8 +181,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
       mapInstance.on('error', (e) => {
         const errMsg = e?.error?.message || '';
 
-        // If tiles have already successfully loaded, ignore normal panning/zooming aborts
-        if (hasTileLoadedRef.current && (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError')) {
+        // If tiles are being aborted during rapid panning, ignore
+        if (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError') {
           return;
         }
 
@@ -211,7 +213,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
             (errMsg && /openstreetmap|tile\.open/i.test(errMsg)) ||
             (e?.error && (e.error.status || /failed|fetch|network|net::ERR|blocked|csp/i.test(errMsg)))
           );
-          if (isOsmError && !hasTileLoadedRef.current) {
+          if (isOsmError) {
             triggerNextFallback();
           }
           return;
@@ -219,7 +221,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       const handleTileLoaded = (e) => {
-        if (e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) {
+        const isBasemapSource = e.sourceId === 'openmaptiles' || e.sourceId === 'basemap-tiles';
+        if (isBasemapSource && e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) {
           hasTileLoadedRef.current = true;
         }
       };
@@ -858,54 +861,56 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const cy = centerScreen.y;
 
     // 1. Geographic graticule (lat/lng coordinates)
-    const bounds = map.getBounds();
-    const west = bounds.getWest();
-    const east = bounds.getEast();
-    const north = bounds.getNorth();
-    const south = bounds.getSouth();
+    if (radarShowGraticule) {
+      const bounds = map.getBounds();
+      const west = bounds.getWest();
+      const east = bounds.getEast();
+      const north = bounds.getNorth();
+      const south = bounds.getSouth();
 
-    const zoom = map.getZoom();
-    let step = 1.0;
-    if (zoom >= 11) step = 0.05;
-    else if (zoom >= 9) step = 0.1;
-    else if (zoom >= 7) step = 0.25;
-    else if (zoom >= 5) step = 0.5;
-    else if (zoom >= 3) step = 1.0;
-    else step = 2.0;
+      const zoom = map.getZoom();
+      let step = 1.0;
+      if (zoom >= 11) step = 0.05;
+      else if (zoom >= 9) step = 0.1;
+      else if (zoom >= 7) step = 0.25;
+      else if (zoom >= 5) step = 0.5;
+      else if (zoom >= 3) step = 1.0;
+      else step = 2.0;
 
-    ctx.strokeStyle = graticuleColor;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
+      ctx.strokeStyle = graticuleColor;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
 
-    const startLng = Math.floor(west / step) * step;
-    for (let lng = startLng; lng <= east; lng += step) {
-      const p1 = map.project([lng, north]);
-      const p2 = map.project([lng, south]);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
+      const startLng = Math.floor(west / step) * step;
+      for (let lng = startLng; lng <= east; lng += step) {
+        const p1 = map.project([lng, north]);
+        const p2 = map.project([lng, south]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
 
-      ctx.fillStyle = textMuted;
-      ctx.font = '9px monospace';
-      ctx.fillText(`${lng.toFixed(2)}°`, p1.x + 4, 14);
+        ctx.fillStyle = textMuted;
+        ctx.font = '9px monospace';
+        ctx.fillText(`${lng.toFixed(2)}°`, p1.x + 4, 14);
+      }
+
+      const startLat = Math.floor(south / step) * step;
+      for (let lat = startLat; lat <= north; lat += step) {
+        const p1 = map.project([west, lat]);
+        const p2 = map.project([east, lat]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        ctx.fillStyle = textMuted;
+        ctx.font = '9px monospace';
+        ctx.fillText(`${lat.toFixed(2)}°`, 6, p1.y - 4);
+      }
+
+      ctx.setLineDash([]);
     }
-
-    const startLat = Math.floor(south / step) * step;
-    for (let lat = startLat; lat <= north; lat += step) {
-      const p1 = map.project([west, lat]);
-      const p2 = map.project([east, lat]);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-
-      ctx.fillStyle = textMuted;
-      ctx.font = '9px monospace';
-      ctx.fillText(`${lat.toFixed(2)}°`, 6, p1.y - 4);
-    }
-
-    ctx.setLineDash([]);
 
     // 2. Concentric Range Rings centered on screen/map center
     const rangeNM = [2, 5, 10, 20, 40, 80, 160, 320, 640];
@@ -932,8 +937,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
       ctx.fillText(`${nm} NM (${km.toFixed(0)} km)`, cx + radiusPx + 4, cy - 3);
     }
 
-    // 3. Radial Bearing Lines (every 30 degrees)
-    const bearings = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+    // 3. Radial Bearing Lines (cardinal by default; full 12 radials when toggled)
+    const bearings = radarShowRadials
+      ? [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+      : [0, 90, 180, 270];
     const bearingLabels = {
       0: '000° N', 30: '030°', 60: '060°', 90: '090° E',
       120: '120°', 150: '150°', 180: '180° S', 210: '210°',
@@ -984,10 +991,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
     ctx.textBaseline = 'bottom';
     ctx.font = 'bold 10px monospace';
     ctx.fillStyle = isDark ? 'rgba(34, 211, 238, 0.7)' : 'rgba(2, 132, 199, 0.8)';
-    ctx.fillText('RADAR 2D VECTOR BACKDROP · OFFLINE STANDBY', 14, h - 14);
+    ctx.fillText('RADAR 2D VECTOR BACKDROP · OFFLINE ZERO-NETWORK', 14, h - 14);
 
     ctx.restore();
-  }, [activeTileProvider, effectiveTheme]);
+  }, [activeTileProvider, effectiveTheme, radarShowRadials, radarShowGraticule]);
 
   // Redraw radar canvas on map events and provider switch
   useEffect(() => {
@@ -1048,13 +1055,23 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
   return (
     <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
-      <div ref={mapContainer} className="w-full h-full" />
+      {/* Offline Radar 2D Vector Backdrop Canvas (underlay at z-index 0) */}
       <canvas
         ref={radarCanvasRef}
+        data-testid="radar-backdrop-canvas"
         className="absolute inset-0 pointer-events-none w-full h-full"
         style={{
-          zIndex: 1,
+          zIndex: 0,
           display: activeTileProvider === 'offline-radar' ? 'block' : 'none',
+        }}
+      />
+      {/* MapLibre WebGL container (overlay at z-index 1 with transparent background in radar mode) */}
+      <div
+        ref={mapContainer}
+        className="w-full h-full relative"
+        style={{
+          zIndex: 1,
+          backgroundColor: activeTileProvider === 'offline-radar' ? 'transparent' : undefined,
         }}
       />
 
@@ -1153,16 +1170,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
       >
         {Object.values(TILE_PROVIDERS).map((p) => {
           const isCartoUnset = p.id === 'carto-dark' && !CARTO_API_KEY;
+          const isRadar = p.id === 'offline-radar';
           return (
             <button
               key={p.id}
               onClick={() => handleSwitchProvider(p.id)}
+              data-testid={isRadar ? 'basemap-radar' : `basemap-${p.id}`}
               title={
-                isCartoUnset
+                isRadar
+                  ? 'Offline Radar: Zero-network 2D navigation backdrop with calibrated range rings and bearing radials. Operates without internet connectivity.'
+                  : isCartoUnset
                   ? 'CARTO Dark requires VITE_CARTO_API_KEY (optional commercial basemap). Click for setup details.'
                   : undefined
               }
-              className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1"
+              className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1 cursor-pointer"
               style={activeTileProvider === p.id
                 ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
                 : isCartoUnset
@@ -1181,6 +1202,49 @@ export default function MapView({ onMapClick, isELoran = false }) {
           );
         })}
       </div>
+
+      {/* Offline Radar Declutter & Feature Toggles */}
+      {activeTileProvider === 'offline-radar' && (
+        <div
+          data-testid="radar-controls-pill"
+          className="absolute top-26 sm:top-24 left-4 z-10 backdrop-blur-md rounded-full px-2.5 py-1 text-[10px] font-mono flex items-center gap-2 shadow-lg animate-fade-in"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
+        >
+          <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: 'var(--accent-eloran)' }}>
+            Offline 2D:
+          </span>
+          <button
+            type="button"
+            onClick={() => setRadarShowRadials((v) => !v)}
+            data-testid="toggle-radar-radials"
+            title="Toggle 30° radial bearing lines (default: cardinals only to minimize clutter)"
+            className="px-2 py-0.5 rounded-full transition-colors text-[10px] cursor-pointer flex items-center gap-1"
+            style={{
+              background: radarShowRadials ? 'var(--accent-eloran-subtle)' : 'transparent',
+              color: radarShowRadials ? 'var(--accent-eloran)' : 'var(--text-dim)',
+              border: `1px solid ${radarShowRadials ? 'var(--accent-eloran-border)' : 'var(--border-subtle)'}`,
+            }}
+          >
+            <span>Radials</span>
+            <span className="font-bold">{radarShowRadials ? 'ON' : 'OFF'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRadarShowGraticule((v) => !v)}
+            data-testid="toggle-radar-graticule"
+            title="Toggle geographic coordinate grid (lat/lng)"
+            className="px-2 py-0.5 rounded-full transition-colors text-[10px] cursor-pointer flex items-center gap-1"
+            style={{
+              background: radarShowGraticule ? 'var(--accent-eloran-subtle)' : 'transparent',
+              color: radarShowGraticule ? 'var(--accent-eloran)' : 'var(--text-dim)',
+              border: `1px solid ${radarShowGraticule ? 'var(--accent-eloran-border)' : 'var(--border-subtle)'}`,
+            }}
+          >
+            <span>Grid</span>
+            <span className="font-bold">{radarShowGraticule ? 'ON' : 'OFF'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
       <div className="absolute bottom-20 left-4 z-10 font-mono text-xs">

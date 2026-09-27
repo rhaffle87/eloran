@@ -186,8 +186,9 @@ export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER, theme = 'd
   }
 
   if (!provider.url) {
-    // Pure offline radar canvas style with theme-aware background
-    const isDark = theme === 'dark';
+    // Pure offline radar canvas style: transparent WebGL background so that
+    // the radar canvas underlay (z-index: 0) shines through while all MapLibre vector layers
+    // (baselines, LOP contours, GDOP heatmaps) and station markers composite ON TOP.
     return {
       version: 8,
       sources: {},
@@ -196,7 +197,8 @@ export function getMapLibreStyle(providerKey = DEFAULT_TILE_PROVIDER, theme = 'd
           id: 'background',
           type: 'background',
           paint: {
-            'background-color': isDark ? '#09090b' : '#f8fafc',
+            'background-color': 'rgba(0, 0, 0, 0)',
+            'background-opacity': 0,
           },
         },
       ],

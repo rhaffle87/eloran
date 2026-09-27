@@ -21,6 +21,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ## 2. Documentation & Research Standards
 
+- [**VALIDATION.md**](docs/VALIDATION.md) — Empirical field trial benchmarks (Korean Nationwide eLoran Testbed 2021 & Maoming Inland Geodesic Test 2025), validation tiers, and verification harness.
 - [**REFERENCES.md**](docs/REFERENCES.md) — Sourced literature compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans & Helwig 2003, Hargreaves 2010), and physics formulas.
 - [**PROVENANCE.md**](docs/PROVENANCE.md) — Provenance tracking, retrievable URLs/DOIs for all literature, and register of items marked UNVERIFIED.
 - [**DATA_NOTES.md**](docs/DATA_NOTES.md) — Global transmitter status (US/Canada 2010 shutdown, European 2015 decommissioning, Anthorn UK timing role, active China and Russia chains).
@@ -109,8 +110,6 @@ npm run dev
 
 # Build production bundle
 npm run build
-```
-
 ```
 
 ---

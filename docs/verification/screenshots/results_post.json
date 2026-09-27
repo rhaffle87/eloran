@@ -1,0 +1,10 @@
+{
+  "loranc": {
+    "hdopText": "1.23 / 0.60",
+    "screenshotPath": "docs/verification/screenshots/loran_c_drag_post.png"
+  },
+  "eloran": {
+    "hdopText": "1.69 / 0.61",
+    "screenshotPath": "docs/verification/screenshots/eloran_drag_post.png"
+  }
+}

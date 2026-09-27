@@ -13,9 +13,18 @@ import { latLngToLocalXY } from './geodesy.js';
  * @param {Array<object>} slaves - List of slave/secondary stations [{lat, lng}]
  * @returns {{gdop: number, hdop: number, valid: boolean}} Dilution values (smaller is better; < 2 excellent, > 10 poor)
  */
-export function computeGDOPAtPoint(receiverPoint, master, slaves) {
+/**
+ * Builds the LOP geometry matrix H (n×2) for a receiver against one master and n slaves.
+ * Each row is the unit-vector difference [uSx - uMx, uSy - uMy] in local Cartesian space.
+ *
+ * @param {{lat: number, lng: number}} receiverPoint - Point to evaluate
+ * @param {object} master - Master station {lat, lng}
+ * @param {Array<object>} slaves - List of slave/secondary stations [{lat, lng}]
+ * @returns {{H: number[][], valid: boolean}}
+ */
+export function buildHMatrix(receiverPoint, master, slaves) {
   if (!master || !slaves || slaves.length < 2 || !receiverPoint) {
-    return { gdop: 99.9, hdop: 99.9, valid: false };
+    return { H: [], valid: false };
   }
 
   const refLat = receiverPoint.lat;
@@ -25,7 +34,7 @@ export function computeGDOPAtPoint(receiverPoint, master, slaves) {
 
   const dM = Math.hypot(rx.x - mxy.x, rx.y - mxy.y);
   if (dM < 10) {
-    return { gdop: 99.9, hdop: 99.9, valid: false }; // Near antenna singularity
+    return { H: [], valid: false }; // Near antenna singularity
   }
 
   // Unit vector from receiver pointing toward master
@@ -49,8 +58,21 @@ export function computeGDOPAtPoint(receiverPoint, master, slaves) {
     H.push([hx, hy]);
   }
 
-  if (H.length < 2) {
-    return { gdop: 99.9, hdop: 99.9, valid: false };
+  return { H, valid: H.length >= 2 };
+}
+
+/**
+ * Computes horizontal Dilution of Precision (HDOP / GDOP) at a single geographic coordinate.
+ *
+ * @param {{lat: number, lng: number}} receiverPoint - Point to evaluate
+ * @param {object} master - Master station {lat, lng}
+ * @param {Array<object>} slaves - List of slave/secondary stations [{lat, lng}]
+ * @returns {{gdop: number, hdop: number, rawHdop: number, valid: boolean}} Dilution values
+ */
+export function computeGDOPAtPoint(receiverPoint, master, slaves) {
+  const { H, valid } = buildHMatrix(receiverPoint, master, slaves);
+  if (!valid) {
+    return { gdop: 99.9, hdop: 99.9, rawHdop: 99.9, valid: false };
   }
 
   // H^T * H
@@ -77,6 +99,7 @@ export function computeGDOPAtPoint(receiverPoint, master, slaves) {
   return {
     gdop: Math.min(99.9, parseFloat(gdop.toFixed(2))),
     hdop: Math.min(99.9, parseFloat(hdop.toFixed(2))),
+    rawHdop: hdop,
     valid: true,
   };
 }

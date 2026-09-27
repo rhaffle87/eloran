@@ -110,7 +110,7 @@ LORAN LAB incorporates open-source libraries, geospatial projection engines, dev
 
 ## 4. Government & Geographic Specifications
 
-- **Natural Earth**: Coastline and physical land vector geometry (`src/data/geo/`) is derived from Natural Earth v5.1.2 10m Physical Land (`ne_10m_land`). All Natural Earth vector data is in the **Public Domain** (Creative Commons CC0 equivalent). Project authors: Tom Patterson, Nathaniel Vaughn Kelso, and contributors. Website: [https://www.naturalearthdata.com/](https://www.naturalearthdata.com/). Used for client-side Great Circle path ray-tracing and land/sea segmentation in the Millington ASF engine.
+- **Natural Earth**: Coastline and physical land vector geometry (`src/data/geo/`) is derived from Natural Earth v5.1.2 10m Physical Land (`ne_10m_land`). All Natural Earth vector data is in the **Public Domain** (Creative Commons CC0 equivalent). Project authors: Tom Patterson, Nathaniel Vaughn Kelso, and contributors. Website: [https://www.naturalearthdata.com/](https://www.naturalearthdata.com/). Used for client-side Turf.js great-circle segmentation against Natural Earth Vector coastline polygons and land/sea segmentation in the Millington ASF engine.
 - **USCG Loran Signal Specifications**: Transmitted RF pulse envelope parameters are derived from public domain United States Coast Guard specification COMDTINST M16562.4A.
 - **USCG Loran-C User Handbook**: Station coordinates and chain baseline definitions are derived from public domain USCG Loran-C User Handbook (COMDTINST P16562.5, Table B-1).
 - **NGA Publication 117**: Modern North China Sea chain station coordinates are derived from National Geospatial-Intelligence Agency public domain Publication 117 (Radio Navigational Aids, Chapter 6).

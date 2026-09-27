@@ -25,45 +25,51 @@ export const KOREA_TRIAL_2021 = {
       id: 'pohang',
       label: 'Pohang (9930M)',
       role: 'master',
+      // Coordinates: Rhee et al. (2021) Table 1 / Korean KRISO facility records
       lat: 36.184814,
       lng: 129.340944,
       txDbm: 26,
       griMs: 9930,
       chain: 'Korean Chain (GRI 9930)',
-      estimatedJitterMeters: 2.11, // Rhee et al. Table 3 average
+      estimatedJitterMeters: 2.11, // Rhee et al. Table 3 average (TOR measurement estimate)
     },
     {
       id: 'gwangju',
       label: 'Gwangju (9930W)',
       role: 'slave',
+      // Coordinates: Rhee et al. (2021) Table 1
       lat: 35.040000,
       lng: 126.540833,
       txDbm: 26,
       griMs: 9930,
       chain: 'Korean Chain (GRI 9930)',
-      estimatedJitterMeters: 3.21, // Rhee et al. Table 3 average
+      estimatedJitterMeters: 3.21, // Rhee et al. Table 3 average (TOR measurement estimate)
     },
     {
       id: 'rongcheng',
       label: 'Rongcheng (7430M)',
       role: 'slave',
+      // Coordinates: NGA Pub 117 (2023) Ch. 6 — 37°04'N 122°19'E → 37.066667°N, 122.316667°E
+      // (matches bohai_yellow_sea_active preset; NOT sourced from Rhee Table 1 which lists Korean stations only)
       lat: 37.066667,
       lng: 122.316667,
       txDbm: 26,
       griMs: 7430,
       chain: 'North China Sea Chain (GRI 7430)',
-      estimatedJitterMeters: 2.13, // Rhee et al. Table 3 average
+      estimatedJitterMeters: 2.13, // Rhee et al. Table 3 average (TOR measurement estimate)
     },
     {
       id: 'xuancheng',
       label: 'Xuancheng (7430X)',
       role: 'slave',
+      // Coordinates: NGA Pub 117 (2023) Ch. 6 — 31°04'N 118°53'E → 31.066667°N, 118.883333°E
+      // (matches bohai_yellow_sea_active preset; NOT sourced from Rhee Table 1 which lists Korean stations only)
       lat: 31.066667,
       lng: 118.883333,
       txDbm: 26,
       griMs: 7430,
       chain: 'North China Sea Chain (GRI 7430)',
-      estimatedJitterMeters: 5.38, // Rhee et al. Table 3 average
+      estimatedJitterMeters: 5.38, // Rhee et al. Table 3 average (TOR measurement estimate)
     },
   ],
   // Table 5: Comparison of 95% repeatable accuracy [m] at seven locations in Korea

@@ -234,7 +234,7 @@ export default function AsfPanel() {
                   <span className="text-[var(--text-dim)] flex items-center gap-1">
                     <span>Phase delay / timing (ASF):</span>
                     <InfoTooltip
-                      align="right"
+                      align="center"
                       title="Phase Delay Verification Status"
                       text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
                     />
@@ -310,9 +310,23 @@ export default function AsfPanel() {
                 <span className="flex items-center gap-1.5">
                   <span>Constitutive Formulation:</span>
                   <InfoTooltip
-                    align="left"
-                    title="Formulation & Verification"
-                    text="Sommerfeld surface impedance & numerical distance p = (πd / λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2. Verified against compiled Fortran GRWAVE reference output."
+                    align="center"
+                    title="Constitutive Formulation & Verification"
+                    content={
+                      <span className="block space-y-1.5 text-[10.5px]">
+                        <span className="block text-[var(--text-secondary)]">
+                          Sommerfeld surface impedance &amp; numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2.
+                        </span>
+                        <span className="block pt-1 border-t border-[var(--border-subtle)] space-y-1">
+                          <span className="block">
+                            <span className="font-semibold text-[var(--status-ok)]">• Field strength / path loss:</span> verified against compiled Fortran GRWAVE reference output.
+                          </span>
+                          <span className="block">
+                            <span className="font-semibold text-[var(--status-warn)]">• Phase delay / ASF (Millington averaging, feeds positioning):</span> analytical Sommerfeld-Norton approximation, cross-checked between Python and JS only; NOT validated against GRWAVE or empirical data.
+                          </span>
+                        </span>
+                      </span>
+                    }
                   />
                 </span>
                 <span className="text-[var(--status-ok)] font-mono">100 kHz Groundwave</span>
@@ -402,7 +416,7 @@ export default function AsfPanel() {
               <span className="text-[var(--text-dim)] flex items-center gap-1">
                 <span>Seasonal/weather drift:</span>
                 <InfoTooltip
-                  align="right"
+                  align="center"
                   title="Empirical Drift Calibration"
                   text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
                 />

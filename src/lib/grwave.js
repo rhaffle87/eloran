@@ -7,7 +7,8 @@
  * 3. Additional Secondary Factor (ASF) timing delay excess over seawater at 100 kHz.
  * 4. Multi-boundary Millington mixed-path numerical solver (ITU-R P.368-10 Annex 2).
  * 
- * Validated against native ITU-R P.368 GRWAVE Fortran reference outputs.
+ * Surface impedance and field strength curves validated against native ITU-R P.368 GRWAVE Fortran reference outputs;
+ * Phase delay / timing delay computed via analytical Sommerfeld-Norton formulation.
  */
 
 export const SPEED_OF_LIGHT = 299792458.0; // m/s in vacuum (BIPM / CODATA)

@@ -16,26 +16,26 @@
     "id": "north_sea",
     "name": "Northwest Europe — North Sea & English Channel",
     "bbox": [
-      -4.5,
-      49,
+      -5,
+      48.5,
       9.5,
       56.5
     ],
     "presetId": "north_sea_historical",
     "featureCount": 10,
-    "fileSizeKb": 80.3
+    "fileSizeKb": 95.2
   },
   "bohai_yellow_sea": {
     "id": "bohai_yellow_sea",
     "name": "East Asia — Bohai & Yellow Sea (China / Korea)",
     "bbox": [
-      117,
-      31,
-      130,
-      42
+      116,
+      30.5,
+      131,
+      43.5
     ],
     "presetId": "bohai_yellow_sea_active",
     "featureCount": 10,
-    "fileSizeKb": 192.8
+    "fileSizeKb": 216.2
   }
 }

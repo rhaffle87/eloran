@@ -5,10 +5,10 @@
  * License: Public Domain (CC0 equivalent).
  */
 
-import indonesiaSunda from './indonesia_sunda.json';
-import northSea from './north_sea.json';
-import bohaiYellowSea from './bohai_yellow_sea.json';
-import manifest from './manifest.json';
+import indonesiaSunda from './indonesia_sunda.json' with { type: 'json' };
+import northSea from './north_sea.json' with { type: 'json' };
+import bohaiYellowSea from './bohai_yellow_sea.json' with { type: 'json' };
+import manifest from './manifest.json' with { type: 'json' };
 
 export const COASTLINE_REGIONS = {
   indonesia_sunda: {

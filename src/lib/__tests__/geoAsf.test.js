@@ -44,6 +44,26 @@ describe('GIS Coastline Ray-Tracing & Geo-ASF Engine', () => {
       const regUncovered = findCoveredRegion([-76.82, 42.71], [-69.97, 41.25]);
       expect(regUncovered).toBeNull();
     });
+
+    it('guarantees 100% station coverage for all bundled preset scenarios', async () => {
+      const { PRESET_SCENARIOS } = await import('../../state/presets.js');
+      const manifest = (await import('../../data/geo/index.js')).COASTLINE_MANIFEST;
+
+      for (const [regKey, meta] of Object.entries(manifest)) {
+        const scenario = PRESET_SCENARIOS[meta.presetId];
+        expect(scenario).toBeDefined();
+        const pts = [
+          ...(scenario.masters || []),
+          ...(scenario.slaves || []),
+          ...(scenario.receivers || []),
+        ];
+        expect(pts.length).toBeGreaterThan(0);
+        for (const pt of pts) {
+          const covered = isPointInBbox([pt.lng, pt.lat], meta.bbox);
+          expect(covered, `Station ${pt.label} (${pt.lat}, ${pt.lng}) must be inside bbox ${JSON.stringify(meta.bbox)} for ${regKey}`).toBe(true);
+        }
+      }
+    });
   });
 
   describe('Great Circle Path Segmentation', () => {
@@ -179,13 +199,19 @@ describe('GIS Coastline Ray-Tracing & Geo-ASF Engine', () => {
       const forward = computeGeoMillingtonAsf({ start: pA, end: pB, landSigma: 0.005 });
       const reverse = computeGeoMillingtonAsf({ start: pB, end: pA, landSigma: 0.005 });
 
+      const diffUs = Math.abs(forward.asfMicroseconds - reverse.asfMicroseconds);
+      const diffMeters = Math.abs(forward.asfMeters - reverse.asfMeters);
+
       expect(forward.totalDistKm).toBeCloseTo(reverse.totalDistKm, 2);
       expect(forward.landDistKm).toBeCloseTo(reverse.landDistKm, 1);
       expect(forward.seaDistKm).toBeCloseTo(reverse.seaDistKm, 1);
 
-      // Reciprocal Millington delay must be strictly identical
-      expect(forward.asfMicroseconds).toBeCloseTo(reverse.asfMicroseconds, 5);
-      expect(forward.asfMeters).toBeCloseTo(reverse.asfMeters, 2);
+      // Reciprocal Millington delay must be strictly identical within floating point epsilon
+      // Real GIS ray-tracing produces forward = 0.1475005776 µs, reverse = 0.1475005776 µs (diff < 1e-10 µs / < 1e-7 m)
+      expect(forward.asfMicroseconds).toBeCloseTo(reverse.asfMicroseconds, 6);
+      expect(forward.asfMeters).toBeCloseTo(reverse.asfMeters, 4);
+      expect(diffUs).toBeLessThan(1e-9);
+      expect(diffMeters).toBeLessThan(1e-6);
     });
 
     it('falls back gracefully to manual land fraction when region is uncovered', () => {

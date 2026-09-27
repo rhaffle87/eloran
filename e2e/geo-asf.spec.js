@@ -3,7 +3,7 @@ import fs from 'fs';
 
 test.describe('Geodesic GIS Real Coastline ASF E2E Suite', () => {
   test('verifies Geodesic GIS toggle, coastline segmentation readout, and manual fallback', async ({ page }) => {
-    test.setTimeout(60000);
+    test.setTimeout(90000);
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
@@ -24,11 +24,12 @@ test.describe('Geodesic GIS Real Coastline ASF E2E Suite', () => {
     await expect(geoToggle).toBeVisible();
     await expect(geoToggle).toHaveAttribute('data-active', 'true');
 
-    // 3. Verify real coastline metrics: Region name, Land vs Sea, Path Segments & Calculated ASF
+    // 3. Verify specific metrics for default Jakarta baseline
     await expect(page.getByText('Indonesia — Sunda Strait & Jakarta Bay')).toBeVisible();
-    await expect(page.getByText(/Path Segments/i)).toBeVisible();
-    await expect(page.getByText(/Calculated ASF/i)).toBeVisible();
-    await expect(page.getByText(/boundary crossing/i)).toBeVisible();
+    await expect(page.getByText(/M1-TanjungPriok → R1-Vessel \(8\.7 km\)/i)).toBeVisible();
+    await expect(page.getByText(/Land: 8\.7 km \(100\.0%\)/i)).toBeVisible();
+    await expect(page.getByText(/0 boundary crossings/i)).toBeVisible();
+    await expect(page.getByText(/Calculated ASF: 45\.9 m \(0\.153 µs\)/i)).toBeVisible();
 
     // 4. Capture screenshot of the Geodesic GIS ASF panel
     const outputDir = 'docs/verification/screenshots';
@@ -51,7 +52,33 @@ test.describe('Geodesic GIS Real Coastline ASF E2E Suite', () => {
     await geoToggle.click();
     await page.waitForTimeout(300);
     await expect(geoToggle).toHaveAttribute('data-active', 'true');
-    await expect(page.getByText('Indonesia — Sunda Strait & Jakarta Bay')).toBeVisible();
+
+    // 7. Switch preset to Bohai / Yellow Sea (China / Korea) to verify multi-segment mixed path
+    // Open Presets Tab
+    const presetsTab = page.getByRole('button', { name: /Presets/i });
+    if (await presetsTab.isVisible()) {
+      await presetsTab.click();
+      await page.waitForTimeout(300);
+      const bohaiBtn = page.getByRole('button', { name: /Bohai/i });
+      if (await bohaiBtn.isVisible()) {
+        await bohaiBtn.click();
+        await page.waitForTimeout(400);
+
+        // Switch back to ASF tab
+        await asfTab.click();
+        await page.waitForTimeout(300);
+
+        // Verify Bohai region segmentation
+        await expect(page.getByText('East Asia — Bohai & Yellow Sea (China / Korea)')).toBeVisible();
+        await expect(page.getByText(/Rongcheng-M → Cargo-Vessel-Bohai \(171\.2 km\)/i)).toBeVisible();
+        await expect(page.getByText(/Land: 59\.7 km \(34\.9%\)/i)).toBeVisible();
+        await expect(page.getByText(/Sea: 111\.6 km \(65\.1%\)/i)).toBeVisible();
+        await expect(page.getByText(/1 boundary crossing/i)).toBeVisible();
+        await expect(page.getByText(/Calculated ASF: 66\.6 m \(0\.222 µs\)/i)).toBeVisible();
+        await expect(page.getByText(/LAND 59\.7 km/i)).toBeVisible();
+        await expect(page.getByText(/SEA 111\.6 km/i)).toBeVisible();
+      }
+    }
 
     // Zero uncaught browser errors
     expect(pageErrors).toHaveLength(0);

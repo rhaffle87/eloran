@@ -25,8 +25,8 @@ function roundCoords(geom, precision = 4) {
 }
 
 async function bundleCoastlines() {
-  console.log('Fetching Natural Earth 10m land polygons from GitHub raw...');
-  const url = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_land.geojson';
+  console.log('Fetching Natural Earth 10m land polygons from GitHub raw (tag v5.1.2)...');
+  const url = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_land.geojson';
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Failed to fetch Natural Earth data: ${res.status} ${res.statusText}`);
@@ -49,13 +49,13 @@ async function bundleCoastlines() {
     north_sea: {
       id: 'north_sea',
       name: 'Northwest Europe — North Sea & English Channel',
-      bbox: [-4.5, 49.0, 9.5, 56.5],
+      bbox: [-5.0, 48.5, 9.5, 56.5],
       presetId: 'north_sea_historical',
     },
     bohai_yellow_sea: {
       id: 'bohai_yellow_sea',
       name: 'East Asia — Bohai & Yellow Sea (China / Korea)',
-      bbox: [117.0, 31.0, 130.0, 42.0],
+      bbox: [116.0, 30.5, 131.0, 43.5],
       presetId: 'bohai_yellow_sea_active',
     },
   };

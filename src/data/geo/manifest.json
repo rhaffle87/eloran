@@ -1,0 +1,41 @@
+{
+  "indonesia_sunda": {
+    "id": "indonesia_sunda",
+    "name": "Indonesia — Sunda Strait & Jakarta Bay",
+    "bbox": [
+      104.5,
+      -7.5,
+      108.5,
+      -5
+    ],
+    "presetId": "jakarta_baseline",
+    "featureCount": 10,
+    "fileSizeKb": 32.4
+  },
+  "north_sea": {
+    "id": "north_sea",
+    "name": "Northwest Europe — North Sea & English Channel",
+    "bbox": [
+      -4.5,
+      49,
+      9.5,
+      56.5
+    ],
+    "presetId": "north_sea_historical",
+    "featureCount": 10,
+    "fileSizeKb": 80.3
+  },
+  "bohai_yellow_sea": {
+    "id": "bohai_yellow_sea",
+    "name": "East Asia — Bohai & Yellow Sea (China / Korea)",
+    "bbox": [
+      117,
+      31,
+      130,
+      42
+    ],
+    "presetId": "bohai_yellow_sea_active",
+    "featureCount": 10,
+    "fileSizeKb": 192.8
+  }
+}

@@ -9,6 +9,7 @@ import {
   isInsideBaselineExtension,
   generateBaselineExtensionSectors,
 } from '../../lib/chainDesign.js';
+import { computeGDOPGrid } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 
 function isMapStyleReady(map) {
@@ -67,7 +68,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         setIsStyleLoaded(false);
         currentStyleKeyRef.current = `osm-standard:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme), { diff: false });
+          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme));
         } catch (err) {
           console.warn('Error applying OSM fallback style:', err);
         }
@@ -92,7 +93,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         setIsStyleLoaded(false);
         currentStyleKeyRef.current = `offline-radar:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme), { diff: false });
+          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme));
         } catch (err) {
           console.warn('Error applying offline radar style:', err);
         }
@@ -124,6 +125,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     mapZoom,
     baselinesVisible,
     lopsVisible,
+    gdopLayerVisible,
     receiverFixes,
     updateStation,
     evaluateReceivers,
@@ -154,6 +156,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
   useEffect(() => {
     if (mapRef.current || !mapContainer.current) return;
 
+    const handleGlobalMapResize = () => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('simuloran:map:resize', handleGlobalMapResize);
+    }
+
     let mapInstance = null;
     try {
       mapInstance = new maplibregl.Map({
@@ -162,6 +173,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         center: initialCenterRef.current || [106.816666, -6.200000],
         zoom: initialZoomRef.current || 8,
         attributionControl: false,
+        trackResize: false, // Prevent continuous GPU canvas thrashing during CSS drawer transitions
       });
 
       mapInstance.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
@@ -176,6 +188,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       mapInstance.on('load', handleStyleReady);
       mapInstance.on('styledata', handleStyleReady);
+      mapInstance.on('style.load', handleStyleReady);
 
       if (isMapStyleReady(mapInstance)) {
         setIsStyleLoaded(true);
@@ -288,29 +301,27 @@ export default function MapView({ onMapClick, isELoran = false }) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
-    let resizeObserver = null;
     let resizeDebounceTimer = null;
-    if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
-      resizeObserver = new ResizeObserver(() => {
-        if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
-        resizeDebounceTimer = setTimeout(() => {
-          if (mapRef.current) {
-            mapRef.current.resize();
-          }
-        }, 120);
-      });
-      resizeObserver.observe(mapContainer.current);
+    const handleWindowResize = () => {
+      if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+      resizeDebounceTimer = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 120);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleWindowResize);
     }
 
     return () => {
       if (resizeDebounceTimer) {
         clearTimeout(resizeDebounceTimer);
       }
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
       setIsStyleLoaded(false);
       if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleWindowResize);
+        window.removeEventListener('simuloran:map:resize', handleGlobalMapResize);
         delete window.__maplibreInstance;
       }
       Object.values(markersRef.current).forEach((m) => {
@@ -344,7 +355,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (activeTileProvider === 'openfreemap-dark' || activeTileProvider === 'openfreemap' || activeTileProvider === 'offline-radar') {
       setIsStyleLoaded(false);
       try {
-        map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme), { diff: false });
+        map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme));
       } catch (err) {
         console.warn('Error updating basemap style for theme change:', err);
       }
@@ -824,6 +835,132 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
   }, [contours, lopsVisible, isELoran, isStyleLoaded, safeRemoveLayerAndSource]);
 
+  // Render Live GDOP Heatmap Layer safely once style is fully loaded
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
+
+    const sourceId = 'loran-gdop-heatmap-source';
+    const layerId = 'loran-gdop-heatmap-layer';
+
+    const activeMaster = isDesignMode ? designChain.master : masters[0];
+    const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
+
+    if (!gdopLayerVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+      return;
+    }
+
+    try {
+      const lats = [activeMaster.lat, ...activeSecondaries.map((s) => s.lat)];
+      const lngs = [activeMaster.lng, ...activeSecondaries.map((s) => s.lng)];
+      const minLat = Math.min(...lats) - 3.0;
+      const maxLat = Math.max(...lats) + 3.0;
+      const minLng = Math.min(...lngs) - 4.5;
+      const maxLng = Math.max(...lngs) + 4.5;
+      const bbox = { minLat, maxLat, minLng, maxLng };
+
+      const nx = 35;
+      const ny = 35;
+      const grid = computeGDOPGrid(activeMaster, activeSecondaries, bbox, nx, ny);
+
+      const features = [];
+      const dLng = (bbox.maxLng - bbox.minLng) / (nx - 1);
+      const dLat = (bbox.maxLat - bbox.minLat) / (ny - 1);
+
+      let idx = 0;
+      for (let j = 0; j < ny; j++) {
+        const lat = bbox.minLat + j * dLat;
+        for (let i = 0; i < nx; i++, idx++) {
+          const lng = bbox.minLng + i * dLng;
+          const gdop = grid.data[idx];
+          if (gdop < 50 && Number.isFinite(gdop)) {
+            features.push({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lng, lat],
+              },
+              properties: {
+                gdop,
+              },
+            });
+          }
+        }
+      }
+
+      const geojson = { type: 'FeatureCollection', features };
+      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
+        window.__gdopGeoJson = geojson;
+      }
+
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+
+      map.addSource(sourceId, { type: 'geojson', data: geojson });
+      map.addLayer({
+        id: layerId,
+        type: 'heatmap',
+        source: sourceId,
+        paint: {
+          'heatmap-weight': [
+            'interpolate',
+            ['linear'],
+            ['get', 'gdop'],
+            1, 1.0,
+            3, 0.8,
+            6, 0.5,
+            15, 0.2,
+            30, 0.05,
+          ],
+          'heatmap-intensity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 1,
+            9, 3,
+          ],
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(0, 0, 0, 0)',
+            0.2, 'rgba(56, 189, 248, 0.3)',
+            0.4, 'rgba(52, 211, 153, 0.5)',
+            0.6, 'rgba(250, 204, 21, 0.65)',
+            0.8, 'rgba(251, 146, 60, 0.75)',
+            1, 'rgba(248, 113, 113, 0.85)',
+          ],
+          'heatmap-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            2, 18,
+            6, 36,
+            10, 70,
+          ],
+          'heatmap-opacity': 0.75,
+        },
+      });
+    } catch (err) {
+      console.warn('Failed to render GDOP heatmap layer:', err);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__gdopGeoJson;
+      }
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+    };
+  }, [
+    masters,
+    slaves,
+    designChain,
+    isDesignMode,
+    gdopLayerVisible,
+    isStyleLoaded,
+    safeRemoveLayerAndSource,
+  ]);
+
   // High-performance radar canvas fallback drawing
   const drawRadar = useCallback(() => {
     const canvas = radarCanvasRef.current;
@@ -1056,7 +1193,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     setShowFallbackNotice(false);
     currentStyleKeyRef.current = `${providerKey}:${effectiveTheme}`;
     try {
-      map.setStyle(getMapLibreStyle(providerKey, effectiveTheme), { diff: false });
+      map.setStyle(getMapLibreStyle(providerKey, effectiveTheme));
     } catch (err) {
       console.warn('Error setting map style:', err);
     }

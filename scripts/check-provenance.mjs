@@ -27,58 +27,43 @@ function normalizeWhitespace(str) {
  * Fetch a URL with automatic redirect following, IPv4 enforcement,
  * and support for CSL JSON content-negotiation on DOI URLs.
  */
-async function fetchWithRetry(urlStr, redirectCount = 0) {
-  if (redirectCount > 8) {
-    throw new Error(`Too many redirects (limit 8) for ${urlStr}`);
-  }
+async function fetchWithRetry(urlStr, retryCount = 0) {
+  const isCitationApi = urlStr.includes('doi.org') || urlStr.includes('crossref.org');
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SIMULORAN-Verifier/1.0',
+    'Accept': isCitationApi
+      ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
+      : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
 
-  return new Promise((resolve, reject) => {
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(urlStr);
-    } catch (err) {
-      return reject(new Error(`Invalid URL: ${urlStr} (${err.message})`));
+  try {
+    const res = await fetch(urlStr, {
+      headers,
+      signal: AbortSignal.timeout(25000),
+      redirect: 'follow',
+    });
+
+    if (res.status >= 500 && retryCount < 3) {
+      await new Promise((r) => setTimeout(r, (retryCount + 1) * 1500));
+      return fetchWithRetry(urlStr, retryCount + 1);
     }
 
-    const client = parsedUrl.protocol === 'https:' ? https : http;
-    const agent = parsedUrl.protocol === 'https:' ? httpsAgent : httpAgent;
-
-    const isCitationApi = parsedUrl.hostname.includes('doi.org') || parsedUrl.hostname.includes('crossref.org');
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SIMULORAN-Verifier/1.0',
-      'Accept': isCitationApi
-        ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
-        : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
-      'Accept-Language': 'en-US,en;q=0.9',
+    const contentType = res.headers.get('content-type') || '';
+    const buf = Buffer.from(await res.arrayBuffer());
+    return {
+      statusCode: res.status,
+      headers: Object.fromEntries(res.headers.entries()),
+      buffer: buf,
+      text: extractReadableText(buf, contentType),
     };
-
-    const req = client.get(parsedUrl, { agent, headers, timeout: 20000 }, (res) => {
-      // Follow redirects
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const nextUrl = new URL(res.headers.location, parsedUrl).toString();
-        res.resume();
-        return resolve(fetchWithRetry(nextUrl, redirectCount + 1));
-      }
-
-      const chunks = [];
-      res.on('data', (chunk) => chunks.push(chunk));
-      res.on('end', () => {
-        const buf = Buffer.concat(chunks);
-        resolve({
-          statusCode: res.statusCode,
-          headers: res.headers,
-          buffer: buf,
-          text: extractReadableText(buf, res.headers['content-type'] || ''),
-        });
-      });
-    });
-
-    req.on('error', reject);
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error(`Timeout (20s) fetching ${urlStr}`));
-    });
-  });
+  } catch (err) {
+    if (retryCount < 3) {
+      await new Promise((r) => setTimeout(r, (retryCount + 1) * 1500));
+      return fetchWithRetry(urlStr, retryCount + 1);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -219,6 +204,7 @@ async function main() {
   const auditResults = [];
 
   for (const row of rows) {
+    await new Promise(r => setTimeout(r, 250));
     process.stdout.write(`Checking: ${row.citation.padEnd(38)} ... `);
     try {
       const res = await fetchWithRetry(row.url);

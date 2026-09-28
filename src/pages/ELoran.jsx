@@ -62,7 +62,9 @@ export default function ELoran() {
       if (!rafId) {
         rafId = requestAnimationFrame(() => {
           rafId = null;
-          window.__maplibreInstance?.resize();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('simuloran:map:resize'));
+          }
         });
       }
     };
@@ -77,7 +79,9 @@ export default function ELoran() {
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
-      window.__maplibreInstance?.resize();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('simuloran:map:resize'));
+      }
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -223,7 +227,9 @@ export default function ELoran() {
         onTransitionEnd={(e) => {
           if (e.target === e.currentTarget) {
             setIsTransitioning(false);
-            window.__maplibreInstance?.resize();
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('simuloran:map:resize'));
+            }
           }
         }}
         className="relative z-30 flex flex-col flex-shrink-0 h-full"

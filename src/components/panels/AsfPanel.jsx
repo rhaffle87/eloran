@@ -376,7 +376,7 @@ export default function AsfPanel() {
                   {/* Individual Segments Display */}
                   <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1.5">
                     <div className="text-[10px] text-[var(--text-muted)] flex justify-between items-center">
-                      <span>Calculated ASF Delay:</span>
+                      <span>Calculated ASF:</span>
                       <span className="text-[var(--accent-eloran)] font-bold">
                         {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
                       </span>

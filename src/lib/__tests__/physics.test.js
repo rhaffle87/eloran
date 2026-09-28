@@ -794,6 +794,31 @@ describe("Mixed-Path Groundwave ASF (Millington's Method)", () => {
     }
   });
 
+  it('asserts groundwave phase delay increases monotonically with land path distance (d1 < d2 => dt(d1) <= dt(d2))', () => {
+    const sigma = 0.003; // Agricultural land
+    const distancesKm = [10, 25, 50, 100, 150, 200, 300, 500];
+    let prevDelayUs = 0;
+
+    for (const dKm of distancesKm) {
+      const delayUs = computeHomogeneousAsfMicroseconds(dKm, sigma);
+      expect(delayUs).toBeGreaterThanOrEqual(prevDelayUs);
+      expect(delayUs).toBeGreaterThan(0);
+      prevDelayUs = delayUs;
+    }
+
+    // Also assert on mixed path distance
+    let prevMixedMeters = 0;
+    for (const dKm of distancesKm) {
+      const asfMeters = computeMixedPathAsfMeters({
+        totalDistMeters: dKm * 1000,
+        landFraction: 0.8,
+        landSigma: sigma,
+      });
+      expect(asfMeters).toBeGreaterThanOrEqual(prevMixedMeters);
+      prevMixedMeters = asfMeters;
+    }
+  });
+
   it('preserves electromagnetic reciprocity (Millington forward and reverse average)', () => {
     // 2-segment path: 100 km sea (5 S/m), then 50 km land (0.003 S/m)
     const segmentsForward = [

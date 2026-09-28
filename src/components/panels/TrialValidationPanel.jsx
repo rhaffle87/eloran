@@ -46,24 +46,49 @@ export function TrialValidationPanel({ compact = false }) {
         </div>
 
         {/* Quick KPI stats */}
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
-            <span className="text-[var(--text-dim)] block">Korea 2021 (7 Sites)</span>
-            <span className="font-bold text-[var(--text-primary)] text-[11px] block">
-              {koreaBenchmark.summaryMetrics?.meanSimulated95m?.toFixed(2) ?? '10.17'} m (Flat)
-            </span>
-            <span className="text-[9px] text-[var(--text-muted)] block mt-0.5">
-              Ref: {koreaBenchmark.summaryMetrics?.meanMeasured95m?.toFixed(2) ?? '11.67'} m
-            </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
+          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-1" data-testid="korea-benchmark-card">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-dim)] font-semibold">Korea 2021 (7 Sites)</span>
+              <span className="text-[9px] font-mono text-[var(--text-primary)]">
+                <span className="text-[var(--text-muted)]">Measured: </span>
+                <span data-testid="korea-measured-mean" className="font-bold">{koreaBenchmark.summaryMetrics?.meanMeasured95m?.toFixed(2) ?? '10.17'}m</span>
+              </span>
+            </div>
+            <div className="space-y-0.5 pt-1 border-t border-[var(--border-subtle)]/60 font-mono">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-[var(--text-muted)]">Flat (4m):</span>
+                <span className="font-bold text-[var(--text-primary)]" data-testid="korea-flat-simulated-mean">
+                  {koreaBenchmark.summaryMetrics?.meanSimulated95m?.toFixed(2) ?? '11.67'}m <span className="font-normal text-[9px] text-[var(--text-dim)]">(MAE {koreaBenchmark.summaryMetrics?.meanAbsoluteErrorMeters?.toFixed(2) ?? '1.74'}m)</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-[var(--accent-eloran)] font-medium">Per-Station (T3):</span>
+                <span className="font-bold text-[var(--accent-eloran)]" data-testid="korea-per-station-simulated-mean">
+                  {koreaBenchmark.perStationSummary?.meanSimulated95m?.toFixed(2) ?? '9.03'}m <span className="font-normal text-[9px] text-[var(--text-dim)]">(MAE {koreaBenchmark.perStationSummary?.meanAbsoluteErrorMeters?.toFixed(2) ?? '1.37'}m)</span>
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
-            <span className="text-[var(--text-dim)] block">Maoming 2025</span>
-            <span className="font-bold text-[var(--text-primary)] text-[11px] block">
-              {maomingBenchmark.publishedResults?.measuredInlandErrorM ?? 417.2} m (Inland)
-            </span>
-            <span className="text-[9px] text-[var(--text-muted)] block mt-0.5">
-              Coastal: {maomingBenchmark.publishedResults?.measuredCoastalErrorM ?? 43.1} m
-            </span>
+          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-1" data-testid="maoming-benchmark-card">
+            <span className="text-[var(--text-dim)] font-semibold block">Maoming 2025 (Gao et al.)</span>
+            <div className="space-y-0.5 pt-1 border-t border-[var(--border-subtle)]/60 font-mono">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-[var(--text-muted)]">SHP (spherical hyperbola):</span>
+                <span className="font-bold text-[var(--text-primary)]" data-testid="maoming-shp-rmse">
+                  {maomingBenchmark.publishedResults?.sphericalHyperbolaPositioningRmseMeters ?? 417.2} m RMSE
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-[var(--accent-eloran)] font-medium">EPP (ellipsoidal PR):</span>
+                <span className="font-bold text-[var(--accent-eloran)]" data-testid="maoming-epp-rmse">
+                  {maomingBenchmark.publishedResults?.ellipsoidalPseudorangePositioningRmseMeters ?? 43.1} m RMSE
+                </span>
+              </div>
+              <div className="text-[9px] text-[var(--text-dim)] pt-0.5" data-testid="maoming-attribution">
+                Inland, Gao et al. 2025 (89.7% gain via ellipsoidal model)
+              </div>
+            </div>
           </div>
         </div>
 

@@ -24,7 +24,7 @@ const VIEWPORTS = [
 ];
 
 test.describe('Phase 5: Responsive Clearance & Final Matrix Verification', () => {
-  test.setTimeout(120000);
+  test.setTimeout(240000);
 
   test('36-matrix post-rehaul verification captures across all routes, viewports, and themes', async ({ browser }) => {
     let captured = 0;

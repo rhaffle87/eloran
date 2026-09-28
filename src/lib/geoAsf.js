@@ -3,12 +3,12 @@
  * 
  * Replaces synthetic land-fraction slider with real Great Circle path ray-tracing
  * against Natural Earth 10m physical land polygons, feeding the rigorous
- * ITU-R P.368-10 Annex 2 Millington reciprocal solver.
+ * ITU-R P.368-10 Annex 1, §3 Millington reciprocal solver.
  * 
  * Sourcing & Provenance:
  * - Coastline Geometries: SOURCED (Natural Earth v5.1.2 10m Physical Land, Public Domain / CC0).
  * - Soil Conductivities: SOURCED (ITU-R P.368-9 / ITU-R P.832 discrete terrain parameters).
- * - Multi-Boundary Solver: SOURCED (ITU-R P.368-10 Annex 2 reciprocal Millington formulation).
+ * - Multi-Boundary Solver: SOURCED (ITU-R P.368-10 Annex 1, §3 reciprocal Millington formulation).
  */
 
 import * as turf from '@turf/turf';

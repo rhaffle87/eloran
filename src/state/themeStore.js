@@ -46,10 +46,12 @@ applyThemeToDOM(initialTheme);
 if (typeof window !== 'undefined') {
   try {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', () => {
-      const current = getStoredTheme();
+    mediaQuery.addEventListener('change', (e) => {
+      const current = useThemeStore.getState().theme;
       if (current === 'system') {
         applyThemeToDOM('system');
+        const nextEffective = e.matches ? 'dark' : 'light';
+        useThemeStore.setState({ effectiveTheme: nextEffective });
       }
     });
   } catch {

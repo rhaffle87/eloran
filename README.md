@@ -84,7 +84,7 @@ eloran/
   - China National Standard: $\eta = 1.000315$
 - **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known ~0.236 µs / ~71 m step discontinuity at 100 statute miles; disabled by default with a visible UI indicator `Secondary Factor: off (UNVERIFIED model)` wherever results depend on PF+SF+ASF).
 - **Additional Secondary Factor (ASF)**: Real-time spatial polynomial and raster evaluation of overland phase delays.
-- **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 2 Millington reciprocal groundwave solver.
+- **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 1, §3 Millington reciprocal groundwave solver.
 
 ### 3. Cycle Slip Modeling (Boyce 2006)
 Simulates wrong-cycle selection where degraded SNR or skywave interference shifts the tracking point away from the 3rd zero crossing, introducing integer $\pm 10\ \mu s$ ($~3\text{ km}$) step errors.

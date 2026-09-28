@@ -1247,7 +1247,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       )}
 
       {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
-      <div className="absolute bottom-20 left-4 z-10 font-mono text-xs">
+      <div className="absolute bottom-12 left-2.5 z-10 font-mono text-xs">
         {showLegend ? (
           <div
             className="backdrop-blur-md rounded-lg p-2.5 shadow-md space-y-1.5 text-[11px] animate-fade-in"

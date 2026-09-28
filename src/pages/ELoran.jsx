@@ -124,7 +124,7 @@ export default function ELoran() {
 
         {/* Tactical mode toolbar overlay — theme-aware, positioned with clearance from sidebar toggle */}
         <div
-          className="absolute top-4 right-14 sm:right-16 z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 shadow-xl"
+          className={`absolute top-4 ${sidebarOpen ? 'right-4' : 'right-14'} z-20 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 shadow-xl transition-all duration-200`}
           style={{
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)',
@@ -183,7 +183,7 @@ export default function ELoran() {
           <button
             data-testid="sidebar-expand-btn"
             onClick={() => setSidebarOpen(true)}
-            className="absolute top-4 right-3 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
+            className="absolute top-4 right-3.5 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
             style={{
               background: 'var(--bg-surface)',
               borderColor: 'var(--border-subtle)',

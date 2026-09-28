@@ -25,7 +25,7 @@
 import { SPEED_OF_LIGHT, haversineDistance } from './geodesy.js';
 
 export const LORAN_CARRIER_FREQ = 100000;       // 100 kHz
-export const NOMINAL_PULSE_DURATION = 0.0001;   // 100 µs
+export const NOMINAL_PULSE_DURATION = 0.0003;   // 300 µs (USCG COMDTINST M16562.4A: nominal duration for pulse envelope decay < 1%)
 export const DEFAULT_SAMPLE_RATE = 1000000;     // 1 MHz
 
 /**
@@ -88,6 +88,10 @@ export function evaluateCarrierMicroseconds(tMicroseconds, phaseCode = 0) {
 
 /**
  * Computes single-pulse amplitude at time t in seconds (relative to pulse start).
+ * Implements the standard USCG COMDTINST M16562.4A pulse envelope:
+ *   E(t) = (t / tau)^2 * exp(-2 * (t - tau) / tau), with tau = 65 µs.
+ * Peak envelope is normalized to 1.0 at t = 65 µs (65e-6 s).
+ *
  * @param {number} t - Time in seconds from pulse start (0 <= t <= pulseDuration)
  * @param {number} [pulseDuration=NOMINAL_PULSE_DURATION] - Pulse width in seconds
  * @param {boolean} [includeCarrier=false] - If true, modulates by 100 kHz carrier
@@ -96,8 +100,8 @@ export function evaluateCarrierMicroseconds(tMicroseconds, phaseCode = 0) {
  */
 export function evaluatePulse(t, pulseDuration = NOMINAL_PULSE_DURATION, includeCarrier = false, phaseCode = 0) {
   if (t < 0 || t > pulseDuration) return 0;
-  // Standard Loran-C raised-cosine envelope (USCG M16562.4A, Eq. 4-1)
-  const envelope = 0.5 * (1 + Math.cos((Math.PI * t) / pulseDuration));
+  const tMicroseconds = t * 1e6;
+  const envelope = evaluateStandardLoranEnvelopeMicroseconds(tMicroseconds);
   if (!includeCarrier) return envelope;
   // t is in seconds here, so f = 100,000 Hz:
   const carrier = Math.sin(2 * Math.PI * LORAN_CARRIER_FREQ * t + phaseCode);
@@ -178,10 +182,11 @@ export function synthesizeReceiverWaveform({
 }) {
   const numSamples = Math.floor(totalDuration * sampleRate);
   const waveform = new Float32Array(numSamples);
+  const envelope = new Float32Array(numSamples);
   const arrivals = [];
 
   if (!stations.length || !receiver) {
-    return { waveform, arrivals, sampleRate, totalDuration, simTime };
+    return { waveform, envelope, arrivals, sampleRate, totalDuration, simTime };
   }
 
   // Determine reflection height for skywave calculations
@@ -223,7 +228,11 @@ export function synthesizeReceiverWaveform({
 
         for (let i = startSample; i < endSample; i++) {
           const t = (i - startSample) / sampleRate;
-          waveform[i] += amplitude * evaluatePulse(t, NOMINAL_PULSE_DURATION, includeCarrier);
+          const envVal = amplitude * evaluatePulse(t, NOMINAL_PULSE_DURATION, false);
+          envelope[i] += envVal;
+          waveform[i] += includeCarrier
+            ? amplitude * evaluatePulse(t, NOMINAL_PULSE_DURATION, true)
+            : envVal;
         }
 
         // Ionospheric skywave (1-hop E or D layer)
@@ -252,7 +261,11 @@ export function synthesizeReceiverWaveform({
             );
             for (let i = skyStart; i < skyEnd; i++) {
               const t = (i - skyStart) / sampleRate;
-              waveform[i] += skyAmp * evaluatePulse(t, NOMINAL_PULSE_DURATION, includeCarrier);
+              const skyEnvVal = skyAmp * evaluatePulse(t, NOMINAL_PULSE_DURATION, false);
+              envelope[i] += skyEnvVal;
+              waveform[i] += includeCarrier
+                ? skyAmp * evaluatePulse(t, NOMINAL_PULSE_DURATION, true)
+                : skyEnvVal;
             }
           }
         }
@@ -264,6 +277,7 @@ export function synthesizeReceiverWaveform({
 
   return {
     waveform,
+    envelope,
     arrivals,
     sampleRate,
     totalDuration,

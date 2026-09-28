@@ -9,8 +9,8 @@ const INFO_CARDS = [
     icon: Radio,
     accentVar: '--accent-eloran',
     title: '100 kHz Standard Pulse',
-    body: 'Every Loran pulse is transmitted on a centre frequency of 100 kHz with 99% of its spectral energy confined within the 90–110 kHz band. Standard raised-cosine envelope:',
-    formula: 'E(t) = 0.5\\left(1 + \\cos\\left(\\frac{\\pi t}{T_p}\\right)\\right)',
+    body: 'Every Loran pulse is transmitted on a centre frequency of 100 kHz with 99% of its spectral energy confined within 90–110 kHz. USCG COMDTINST M16562.4A standard pulse envelope with peak at τ = 65 µs:',
+    formula: 'E(t) = A\\left(\\frac{t}{\\tau}\\right)^2 e^{-2(t-\\tau)/\\tau}',
   },
   {
     icon: Zap,

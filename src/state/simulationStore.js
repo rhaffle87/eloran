@@ -156,7 +156,7 @@ export const useSimulationStore = create((set, get) => {
     contourEpsilonMeters: 8,
     gridResolution: 180,
     contourUnit: 'meters', // 'meters' | 'seconds'
-    includeCarrier: false, // RF carrier vs envelope
+    includeCarrier: true, // 100 kHz RF carrier modulation vs envelope-only
     includeSkywave: false,
     skywaveDelayMs: 1.5,
     skywaveAmpRatio: 0.3,

@@ -9,9 +9,9 @@ import { useSimulationStore } from '../state/simulationStore.js';
 
 /* ── Utility ──────────────────────────────────────────── */
 const statusMeta = {
-  active:     { label: 'Active',     cls: 'pill-ok'     },
+  active: { label: 'Active', cls: 'pill-ok' },
   historical: { label: 'Historical', cls: 'pill-loran-c' },
-  synthetic:  { label: 'Synthetic',  cls: 'pill-ghost'  },
+  synthetic: { label: 'Synthetic', cls: 'pill-ghost' },
 };
 
 /* ── Sub-components ───────────────────────────────────── */
@@ -35,8 +35,8 @@ function SpecRow({ label, value, accent }) {
 
 function ModuleCard({ icon: CardIcon, title, description, features, to, accent, badge }) {
   const accentColor = accent === 'eloran' ? 'var(--color-eloran)' : 'var(--color-loran-c)';
-  const accentBg    = accent === 'eloran' ? 'rgba(6,182,212,0.07)' : 'rgba(245,158,11,0.07)';
-  const accentBorder= accent === 'eloran' ? 'rgba(6,182,212,0.2)'  : 'rgba(245,158,11,0.2)';
+  const accentBg = accent === 'eloran' ? 'rgba(6,182,212,0.07)' : 'rgba(245,158,11,0.07)';
+  const accentBorder = accent === 'eloran' ? 'rgba(6,182,212,0.2)' : 'rgba(245,158,11,0.2)';
 
   return (
     <article className="panel-card flex flex-col justify-between p-6 hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
@@ -87,9 +87,8 @@ function PresetCard({ preset, isCurrent, onLaunchEloran, onLaunchLoranC }) {
   const meta = statusMeta[preset.status] || statusMeta.synthetic;
   return (
     <article
-      className={`panel-card flex flex-col p-4 transition-all duration-200 ${
-        isCurrent ? 'shadow-[0_0_20px_var(--glow-eloran)] border-cyan-500/60' : 'hover:border-[var(--surface-muted)]'
-      }`}
+      className={`panel-card flex flex-col p-4 transition-all duration-200 ${isCurrent ? 'shadow-[0_0_20px_var(--glow-eloran)] border-cyan-500/60' : 'hover:border-[var(--surface-muted)]'
+        }`}
       aria-current={isCurrent ? 'true' : undefined}
     >
       <div className="flex items-center justify-between mb-2">
@@ -165,7 +164,7 @@ export default function Home() {
 
           <h1 className="animate-fade-up mt-6 text-5xl sm:text-7xl font-black tracking-tight font-mono"
             style={{ color: 'var(--text-primary)' }}>
-            LORAN<span style={{ color: 'var(--color-eloran)' }}>&nbsp;LAB</span>
+            SIMU<span style={{ color: 'var(--color-eloran)' }}>LORAN</span>
           </h1>
 
           <p className="animate-fade-up-delay-1 mt-5 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
@@ -338,13 +337,13 @@ export default function Home() {
               System Specifications
             </div>
 
-            <SpecRow label="Carrier Frequency"     value="100.000 kHz"         accent="var(--color-eloran)" />
-            <SpecRow label="Vacuum Speed of Light"  value="299,792,458 m/s"     accent="var(--text-primary)" />
-            <SpecRow label="RTCM η (PF index)"      value="1.000338"            accent="var(--color-eloran)" />
-            <SpecRow label="Pulse Envelope"         value="Raised Cosine 100 µs" accent="var(--color-ok)" />
-            <SpecRow label="Carrier Cycle Period"   value="10 µs  (cycle-slip Δ ≈ 3 km)" accent="var(--color-warn)" />
-            <SpecRow label="Cesium Freq. Stability" value="σ_y ≈ 1×10⁻¹³ /s"  accent="var(--color-eloran)" />
-            <SpecRow label="Eurofix Data Rate"      value="9th-pulse PPM, 30 sym/frame" accent="var(--text-primary)" />
+            <SpecRow label="Carrier Frequency" value="100.000 kHz" accent="var(--color-eloran)" />
+            <SpecRow label="Vacuum Speed of Light" value="299,792,458 m/s" accent="var(--text-primary)" />
+            <SpecRow label="RTCM η (PF index)" value="1.000338" accent="var(--color-eloran)" />
+            <SpecRow label="Pulse Envelope" value="Raised Cosine 100 µs" accent="var(--color-ok)" />
+            <SpecRow label="Carrier Cycle Period" value="10 µs  (cycle-slip Δ ≈ 3 km)" accent="var(--color-warn)" />
+            <SpecRow label="Cesium Freq. Stability" value="σ_y ≈ 1×10⁻¹³ /s" accent="var(--color-eloran)" />
+            <SpecRow label="Eurofix Data Rate" value="9th-pulse PPM, 30 sym/frame" accent="var(--text-primary)" />
 
             <div className="pt-2 flex items-start gap-2 text-[10px]" style={{ color: 'var(--text-dim)' }}>
               <AlertTriangle size={11} className="shrink-0 mt-0.5" style={{ color: 'var(--color-warn)' }} aria-hidden="true" />

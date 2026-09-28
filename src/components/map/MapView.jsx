@@ -48,6 +48,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const hasTileLoadedRef = useRef(false);
   const activeTileProviderRef = useRef(activeTileProvider);
   activeTileProviderRef.current = activeTileProvider;
+  const currentStyleKeyRef = useRef(`${activeTileProvider}:${effectiveTheme}`);
 
   const triggerNextFallback = useCallback(() => {
     const current = activeTileProviderRef.current;
@@ -64,8 +65,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
       const map = mapRef.current;
       if (map) {
         setIsStyleLoaded(false);
+        currentStyleKeyRef.current = `osm-standard:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme));
+          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme), { diff: false });
         } catch (err) {
           console.warn('Error applying OSM fallback style:', err);
         }
@@ -88,8 +90,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
       const map = mapRef.current;
       if (map) {
         setIsStyleLoaded(false);
+        currentStyleKeyRef.current = `offline-radar:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme));
+          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme), { diff: false });
         } catch (err) {
           console.warn('Error applying offline radar style:', err);
         }
@@ -277,6 +280,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       mapRef.current = mapInstance;
+      currentStyleKeyRef.current = `${activeTileProvider}:${effectiveTheme}`;
       if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
         window.__maplibreInstance = mapInstance;
       }
@@ -285,22 +289,22 @@ export default function MapView({ onMapClick, isELoran = false }) {
     }
 
     let resizeObserver = null;
-    let rAFId = null;
+    let resizeDebounceTimer = null;
     if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
       resizeObserver = new ResizeObserver(() => {
-        if (rAFId) cancelAnimationFrame(rAFId);
-        rAFId = requestAnimationFrame(() => {
+        if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+        resizeDebounceTimer = setTimeout(() => {
           if (mapRef.current) {
             mapRef.current.resize();
           }
-        });
+        }, 120);
       });
       resizeObserver.observe(mapContainer.current);
     }
 
     return () => {
-      if (rAFId) {
-        cancelAnimationFrame(rAFId);
+      if (resizeDebounceTimer) {
+        clearTimeout(resizeDebounceTimer);
       }
       if (resizeObserver) {
         resizeObserver.disconnect();
@@ -333,10 +337,14 @@ export default function MapView({ onMapClick, isELoran = false }) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const styleKey = `${activeTileProvider}:${effectiveTheme}`;
+    if (currentStyleKeyRef.current === styleKey) return;
+    currentStyleKeyRef.current = styleKey;
+
     if (activeTileProvider === 'openfreemap-dark' || activeTileProvider === 'openfreemap' || activeTileProvider === 'offline-radar') {
       setIsStyleLoaded(false);
       try {
-        map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme));
+        map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme), { diff: false });
       } catch (err) {
         console.warn('Error updating basemap style for theme change:', err);
       }
@@ -1046,8 +1054,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
       tileErrorsRef.current = [];
     }
     setShowFallbackNotice(false);
+    currentStyleKeyRef.current = `${providerKey}:${effectiveTheme}`;
     try {
-      map.setStyle(getMapLibreStyle(providerKey, effectiveTheme));
+      map.setStyle(getMapLibreStyle(providerKey, effectiveTheme), { diff: false });
     } catch (err) {
       console.warn('Error setting map style:', err);
     }

@@ -37,25 +37,42 @@ export default function LoranC() {
     () => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
   );
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartWidthRef = useRef(SIDEBAR_DEFAULT);
 
   const handleDragStart = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
     isDraggingRef.current = true;
+    setIsDragging(true);
     dragStartXRef.current = e.clientX;
     dragStartWidthRef.current = sidebarWidth;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
+
+    let rafId = null;
     const onMove = (ev) => {
       if (!isDraggingRef.current) return;
       const delta = dragStartXRef.current - ev.clientX;
       const next = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, dragStartWidthRef.current + delta));
       setSidebarWidth(next);
-      window.__maplibreInstance?.resize();
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          window.__maplibreInstance?.resize();
+        });
+      }
     };
     const onUp = () => {
       isDraggingRef.current = false;
+      setIsDragging(false);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMove);
@@ -165,7 +182,10 @@ export default function LoranC() {
         {!sidebarOpen && (
           <button
             data-testid="sidebar-expand-btn"
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => {
+              setIsTransitioning(true);
+              setSidebarOpen(true);
+            }}
             className="absolute top-4 right-3.5 z-30 p-2 rounded-lg shadow-xl backdrop-blur-md transition cursor-pointer flex items-center justify-center border hover:bg-[var(--bg-muted)]"
             style={{
               background: 'var(--bg-surface)',
@@ -183,14 +203,20 @@ export default function LoranC() {
       {/* Collapsible right console drawer — stays mounted to prevent MapLibre flicker */}
       <div
         data-testid="sidebar-container"
-        className="relative z-30 flex flex-col flex-shrink-0"
+        onTransitionEnd={(e) => {
+          if (e.target === e.currentTarget) {
+            setIsTransitioning(false);
+            window.__maplibreInstance?.resize();
+          }
+        }}
+        className="relative z-30 flex flex-col flex-shrink-0 h-full"
         style={{
           width: sidebarOpen ? sidebarWidth : 0,
           minWidth: 0,
-          transition: 'width 220ms cubic-bezier(0.4,0,0.2,1)',
+          transition: isDragging ? 'none' : 'width 220ms cubic-bezier(0.4, 0, 0.2, 1)',
           borderLeft: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
           background: 'var(--bg-surface)',
-          overflow: sidebarOpen ? 'visible' : 'hidden',
+          overflow: 'hidden',
         }}
       >
         {/* Drag resize handle */}
@@ -198,16 +224,23 @@ export default function LoranC() {
           <div
             data-testid="sidebar-drag-handle"
             onMouseDown={handleDragStart}
-            className="absolute left-0 top-0 bottom-0 w-1 z-40 cursor-col-resize"
-            style={{ background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-eloran-border)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            className="absolute left-0 top-0 bottom-0 w-2 z-40 cursor-col-resize select-none transition-colors"
+            style={{
+              background: isDragging ? 'var(--accent-loran-c-border)' : 'transparent',
+            }}
+            onMouseEnter={e => {
+              if (!isDragging) e.currentTarget.style.background = 'var(--accent-loran-c-border)';
+            }}
+            onMouseLeave={e => {
+              if (!isDragging) e.currentTarget.style.background = 'transparent';
+            }}
+            title="Drag to resize console drawer"
           />
         )}
         <div
           data-testid="sidebar-content"
-          className="flex flex-col h-full overflow-hidden"
-          style={{ visibility: sidebarOpen ? 'visible' : 'hidden', width: sidebarWidth }}
+          className="absolute right-0 top-0 bottom-0 flex flex-col h-full overflow-hidden"
+          style={{ visibility: (sidebarOpen || isTransitioning) ? 'visible' : 'hidden', width: sidebarWidth }}
         >
           {/* Console header */}
           <div
@@ -227,7 +260,10 @@ export default function LoranC() {
                 </span>
                 <button
                   data-testid="sidebar-collapse-btn"
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => {
+                    setIsTransitioning(true);
+                    setSidebarOpen(false);
+                  }}
                   className="p-1 rounded hover:bg-[var(--bg-muted)] transition cursor-pointer"
                   title="Collapse console drawer"
                   aria-label="Collapse console drawer"

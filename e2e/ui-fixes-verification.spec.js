@@ -66,27 +66,23 @@ test.describe('UI & UX Fixes Verification Suite', () => {
     await page.waitForTimeout(400);
     await expect(page.locator('text=Loran-C Console')).toBeVisible();
 
-    // FIX 3: Interface Theme selection in DisplayPanel and Navbar
-    // Switch to Display tab in Loran-C console
-    const displayTab = page.locator('button:has-text("Display")');
-    if (await displayTab.count() > 0) {
-      await displayTab.click();
-      await page.waitForTimeout(200);
+    // FIX 3: Interface Theme selection via Navbar (sidebar decluttered)
+    const initialTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    const themeBtn = page.locator('button[aria-label^="Switch to "]');
+    await expect(themeBtn).toBeVisible();
+    await themeBtn.click();
+    await page.waitForTimeout(200);
+    const toggledTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    expect(toggledTheme).not.toBe(initialTheme);
 
-      // Verify Interface Theme controls are present
-      await expect(page.locator('text=Interface Theme')).toBeVisible();
-      const darkBtn = page.locator('button:has-text("Dark")').first();
-      await darkBtn.click();
-      await page.waitForTimeout(200);
-      const isDark = await page.evaluate(() => document.documentElement.getAttribute('data-theme') === 'dark');
-      expect(isDark).toBe(true);
+    // Toggle back to initial theme
+    await themeBtn.click();
+    await page.waitForTimeout(200);
+    const restoredTheme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    expect(restoredTheme).toBe(initialTheme);
 
-      const lightBtn = page.locator('button:has-text("Light")').first();
-      await lightBtn.click();
-      await page.waitForTimeout(200);
-      const isLight = await page.evaluate(() => document.documentElement.getAttribute('data-theme') === 'light');
-      expect(isLight).toBe(true);
-    }
+    // Verify redundant Interface Theme controls are removed from the sidebar console
+    await expect(page.locator('text=Interface Theme')).not.toBeVisible();
 
     // FIX 6: Top Warning Banner dismissal persists
     const eduDismissBtn = page.locator('button[aria-label="Dismiss educational notice"]');

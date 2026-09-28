@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2, Sun, Moon, Monitor, BookOpen } from 'lucide-react';
+import { Activity, Layers, Cpu, ShieldAlert, Zap, Radio, Clock, CheckCircle2, BookOpen } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
-import { useThemeStore } from '../../state/themeStore.js';
 import { computeGridAsync, sampleAsfRasterAsync } from '../../workers/workerClient.js';
 import { wgs84ToMercator, mercatorToWgs84, REFRACTIVE_INDEX_PRESETS } from '../../lib/geodesy.js';
 import { simplifyRDP } from '../../lib/contours.js';
@@ -34,8 +33,6 @@ export default function DisplayPanel({ isELoran = false }) {
     setContours,
     simTimeSec,
   } = useSimulationStore();
-
-  const { theme, effectiveTheme, setTheme } = useThemeStore();
 
   const [isComputing, setIsComputing] = useState(false);
 
@@ -179,15 +176,98 @@ export default function DisplayPanel({ isELoran = false }) {
 
   return (
     <div className="space-y-4">
-      {/* Compute Contours Action */}
-      <button
-        onClick={handleComputeContours}
-        disabled={isComputing}
-        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-black font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg  transition"
-      >
-        <Activity size={15} className={isComputing ? 'animate-spin' : ''} />
-        {isComputing ? 'Computing Grid Off-Thread...' : 'Generate LOP Contours'}
-      </button>
+      {/* Map Visual Layers */}
+      <div className="space-y-3">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+          Map Visual Layers
+        </label>
+
+        <Toggle
+          label="Hyperbolic Lines of Position (LOP)"
+          description="Display zero and equidistant TDOA isochrones"
+          checked={lopsVisible}
+          onChange={toggleLops}
+        />
+
+        <Toggle
+          label="Baseline Station Vectors"
+          description="Show dashed baseline links and extended lines beyond secondaries"
+          checked={baselinesVisible}
+          onChange={toggleBaselines}
+        />
+
+        <Toggle
+          label="Live GDOP Coverage Overlay"
+          description="Display precision dilution readout and gradient coverage"
+          checked={gdopLayerVisible}
+          onChange={toggleGdopLayer}
+        />
+      </div>
+
+      {/* Grid Mesh & Contour Rendering */}
+      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+          Grid Mesh & Decimation
+        </label>
+
+        <Slider
+          label="Grid Mesh Density"
+          value={settings.gridResolution}
+          min={80}
+          max={300}
+          step={20}
+          unit="cells"
+          tooltip="Higher resolution gives sharper hyperbolas but requires more compute"
+          onChange={(val) => updateSettings({ gridResolution: val })}
+        />
+
+        <Slider
+          label="RDP Contour Decimation"
+          value={settings.contourEpsilonMeters}
+          min={0}
+          max={25}
+          step={1}
+          unit="m"
+          tooltip="Tolerance in meters for polyline vertex reduction"
+          onChange={(val) => updateSettings({ contourEpsilonMeters: val })}
+        />
+
+        <div>
+          <label className="block text-[var(--text-secondary)] text-xs mb-1">Contour Display Units</label>
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <button
+              onClick={() => updateSettings({ contourUnit: 'meters' })}
+              className={`py-1.5 rounded border transition ${
+                settings.contourUnit === 'meters'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
+              }`}
+            >
+              Meters (Range Δ)
+            </button>
+            <button
+              onClick={() => updateSettings({ contourUnit: 'seconds' })}
+              className={`py-1.5 rounded border transition ${
+                settings.contourUnit === 'seconds'
+                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
+                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
+              }`}
+            >
+              Seconds (TDOA)
+            </button>
+          </div>
+        </div>
+
+        {/* Compute Contours Action */}
+        <button
+          onClick={handleComputeContours}
+          disabled={isComputing}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-black font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg transition mt-2 cursor-pointer"
+        >
+          <Activity size={15} className={isComputing ? 'animate-spin' : ''} />
+          {isComputing ? 'Computing Grid Off-Thread...' : 'Generate LOP Contours'}
+        </button>
+      </div>
 
       {/* Real-Time Positioning Fix Telemetry Card */}
       {activeFix && (
@@ -471,133 +551,6 @@ export default function DisplayPanel({ isELoran = false }) {
                   : computeTheoreticalRiceWrongCycleProbability((settings.snrDb || 18) + 10 * Math.log10(Math.max(1, settings.pulsesAveraged || 10)))) * 100).toFixed(4)}%
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Layer Visibility Toggles */}
-      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
-        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          Map Visual Layers
-        </label>
-
-        <Toggle
-          label="Hyperbolic Lines of Position (LOP)"
-          description="Display zero and equidistant TDOA isochrones"
-          checked={lopsVisible}
-          onChange={toggleLops}
-        />
-
-        <Toggle
-          label="Baseline Station Vectors"
-          description="Show dashed baseline links and extended lines beyond secondaries"
-          checked={baselinesVisible}
-          onChange={toggleBaselines}
-        />
-
-        <Toggle
-          label="Live GDOP Coverage Overlay"
-          description="Display precision dilution readout and gradient coverage"
-          checked={gdopLayerVisible}
-          onChange={toggleGdopLayer}
-        />
-      </div>
-
-      {/* Interface & Map Theme */}
-      <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-            Interface Theme
-          </label>
-          <span className="text-[10px] text-[var(--text-muted)] font-mono">
-            {theme === 'system' ? `Auto (${effectiveTheme})` : theme.toUpperCase()}
-          </span>
-        </div>
-        <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
-          <button
-            onClick={() => setTheme('dark')}
-            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-              theme === 'dark'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-            }`}
-          >
-            <Moon size={12} /> Dark
-          </button>
-          <button
-            onClick={() => setTheme('light')}
-            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-              theme === 'light'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-            }`}
-          >
-            <Sun size={12} /> Light
-          </button>
-          <button
-            onClick={() => setTheme('system')}
-            className={`py-1.5 px-2 rounded border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-              theme === 'system'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-            }`}
-          >
-            <Monitor size={12} /> Auto
-          </button>
-        </div>
-      </div>
-
-      {/* Numerical Grid Settings */}
-      <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
-        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          Grid Mesh & Decimation
-        </label>
-
-        <Slider
-          label="Grid Mesh Density"
-          value={settings.gridResolution}
-          min={80}
-          max={300}
-          step={20}
-          unit="cells"
-          tooltip="Higher resolution gives sharper hyperbolas but requires more compute"
-          onChange={(val) => updateSettings({ gridResolution: val })}
-        />
-
-        <Slider
-          label="RDP Contour Decimation"
-          value={settings.contourEpsilonMeters}
-          min={0}
-          max={25}
-          step={1}
-          unit="m"
-          tooltip="Tolerance in meters for polyline vertex reduction"
-          onChange={(val) => updateSettings({ contourEpsilonMeters: val })}
-        />
-
-        <div>
-          <label className="block text-[var(--text-secondary)] text-xs mb-1">Contour Display Units</label>
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <button
-              onClick={() => updateSettings({ contourUnit: 'meters' })}
-              className={`py-1.5 rounded border transition ${
-                settings.contourUnit === 'meters'
-                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
-              }`}
-            >
-              Meters (Range Δ)
-            </button>
-            <button
-              onClick={() => updateSettings({ contourUnit: 'seconds' })}
-              className={`py-1.5 rounded border transition ${
-                settings.contourUnit === 'seconds'
-                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
-              }`}
-            >
-              Seconds (TDOA)
-            </button>
           </div>
         </div>
       </div>

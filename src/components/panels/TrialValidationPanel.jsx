@@ -3,7 +3,7 @@ import { Database, CheckCircle2, ExternalLink, Globe, Navigation, Info } from 'l
 import { evaluateKoreaTrialBenchmark, evaluateMaomingTrialBenchmark } from '../../lib/trialValidation.js';
 import { useSimulationStore } from '../../state/simulationStore.js';
 
-export function TrialValidationPanel() {
+export function TrialValidationPanel({ compact = false }) {
   const [activeTab, setActiveTab] = useState('korea'); // 'korea' | 'maoming'
   const loadPreset = useSimulationStore((state) => state.loadPreset);
   const activePresetId = useSimulationStore((state) => state.activePresetId);
@@ -16,6 +16,91 @@ export function TrialValidationPanel() {
       loadPreset('korea_yellow_sea_trial');
     }
   };
+
+  if (compact) {
+    return (
+      <div
+        data-testid="trial-validation-panel"
+        className="rounded-xl p-3 shadow-md space-y-3 border font-mono transition-colors text-xs"
+        style={{
+          background: 'var(--bg-surface)',
+          borderColor: 'var(--border-subtle)',
+          color: 'var(--text-primary)',
+        }}
+      >
+        <div className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="flex items-center gap-2 min-w-0">
+            <Database className="w-4 h-4 text-[var(--accent-eloran)] shrink-0" />
+            <span className="font-semibold text-[11px] text-[var(--text-primary)] truncate">Trial Benchmarks</span>
+          </div>
+          <span
+            className="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold shrink-0"
+            style={{
+              background: 'var(--status-ok-subtle)',
+              border: '1px solid var(--status-ok-border)',
+              color: 'var(--status-ok)',
+            }}
+          >
+            Tier 2 SOURCED
+          </span>
+        </div>
+
+        {/* Quick KPI stats */}
+        <div className="grid grid-cols-2 gap-2 text-[10px]">
+          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+            <span className="text-[var(--text-dim)] block">Korea 2021 (7 Sites)</span>
+            <span className="font-bold text-[var(--text-primary)] text-[11px] block">
+              {koreaBenchmark.summaryMetrics?.meanSimulated95m?.toFixed(2) ?? '10.17'} m (Flat)
+            </span>
+            <span className="text-[9px] text-[var(--text-muted)] block mt-0.5">
+              Ref: {koreaBenchmark.summaryMetrics?.meanMeasured95m?.toFixed(2) ?? '11.67'} m
+            </span>
+          </div>
+          <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+            <span className="text-[var(--text-dim)] block">Maoming 2025</span>
+            <span className="font-bold text-[var(--text-primary)] text-[11px] block">
+              {maomingBenchmark.publishedResults?.measuredInlandErrorM ?? 417.2} m (Inland)
+            </span>
+            <span className="text-[9px] text-[var(--text-muted)] block mt-0.5">
+              Coastal: {maomingBenchmark.publishedResults?.measuredCoastalErrorM ?? 43.1} m
+            </span>
+          </div>
+        </div>
+
+        {/* Preset Loader Button */}
+        <button
+          type="button"
+          onClick={handleLoadKoreaPreset}
+          className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+          style={activePresetId === 'korea_yellow_sea_trial'
+            ? {
+                background: 'var(--status-ok-subtle)',
+                color: 'var(--status-ok)',
+                border: '1px solid var(--status-ok-border)',
+              }
+            : {
+                background: 'var(--accent-eloran)',
+                color: '#ffffff',
+                border: '1px solid transparent',
+              }}
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          {activePresetId === 'korea_yellow_sea_trial' ? 'Preset Active' : 'Load Korea Trial Preset'}
+        </button>
+
+        {/* Link to Full About Page Section */}
+        <div className="pt-1 text-center">
+          <a
+            href="/about"
+            className="text-[11px] text-[var(--accent-eloran)] hover:underline inline-flex items-center gap-1 font-semibold"
+          >
+            <span>Full comparative tables & error plots on About page</span>
+            <ExternalLink size={11} />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

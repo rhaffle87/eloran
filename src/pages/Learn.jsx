@@ -176,6 +176,130 @@ export default function Learn() {
           );
         })}
       </div>
+
+      {/* Deep-Dive Theoretical Foundations Section */}
+      <section className="space-y-6 pt-6 border-t border-[var(--border-subtle)]">
+        <div>
+          <div
+            className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider mb-1"
+            style={{ color: 'var(--accent-eloran)' }}
+          >
+            <BookOpen size={14} aria-hidden="true" /> Technical Reference & Derivations
+          </div>
+          <h2
+            className="text-2xl font-bold font-mono tracking-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Groundwave Propagation & Atmospheric Delay Physics
+          </h2>
+          <p className="text-xs mt-1 max-w-3xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Mathematical formulations relocated from interactive simulation panels to maintain a clean, focused user interface while preserving full scientific rigor.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card 1: Sommerfeld Impedance */}
+          <div
+            className="rounded-xl p-5 border space-y-3 font-mono text-xs"
+            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+              <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                1. Sommerfeld Numerical Distance & Surface Impedance
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
+                ITU-R P.368
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              Groundwave propagation over flat, finite-conductivity terrain is governed by the complex surface impedance <span className="font-mono text-[var(--text-primary)]">η</span> and numerical distance <span className="font-mono text-[var(--text-primary)]">p</span>:
+            </p>
+            <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] overflow-x-auto text-xs">
+              <MathView math="p = \frac{\pi d}{\lambda} |\eta|^2, \quad \eta = \frac{1}{\sqrt{\epsilon_r - j \frac{\sigma}{\omega \epsilon_0}}}" />
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              The attenuation function <span className="font-mono text-[var(--text-primary)]">F(p)</span> produces both field strength loss and phase retardation. For 100 kHz LF signals, groundwave field strength curves are sourced from ITU-R P.368-10 / GRWAVE, with phase delay computed via analytical Sommerfeld-Norton integrals.
+            </p>
+          </div>
+
+          {/* Card 2: Millington Mixed-Path */}
+          <div
+            className="rounded-xl p-5 border space-y-3 font-mono text-xs"
+            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+              <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                2. Millington's Reciprocal Mixed-Path Method
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
+                Boundary Crossing
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              When a 100 kHz wave traverses multiple media (e.g. land followed by sea), forward-only calculation violates electromagnetic reciprocity. Millington's method computes the arithmetic mean of forward and reverse boundary evaluations:
+            </p>
+            <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] overflow-x-auto text-xs">
+              <MathView math="\text{ASF} = \frac{1}{2} \left[ \sum_{i=1}^n \Delta t_{\text{fwd}, i} + \sum_{i=1}^n \Delta t_{\text{rev}, i} \right]" />
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              At coastlines, the wave experiences "phase recovery" over seawater due to higher conductivity (5.0 S/m vs 0.001–0.005 S/m for land). SIMULORAN performs geodesic ray-tracing against Natural Earth vector coastlines to evaluate these boundary crossings.
+            </p>
+          </div>
+
+          {/* Card 3: Monotonic Delay & Terrain Conductivity */}
+          <div
+            className="rounded-xl p-5 border space-y-3 font-mono text-xs"
+            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+              <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                3. Monotonic Delay & Terrain Conductivity Bounds
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
+                Physical Invariant
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              Electromagnetic phase delay exhibits strict physical monotonicity across path length and soil resistivity:
+            </p>
+            <ul className="space-y-1.5 text-[11px] text-[var(--text-secondary)] font-sans list-disc list-inside">
+              <li>
+                <strong className="text-[var(--text-primary)]">All-Seawater Paths:</strong> With high conductivity (<span className="font-mono">σ = 5.0 S/m</span>), the wave propagates near the speed of light in air, resulting in <span className="font-mono text-[var(--accent-eloran)]">ASF ≈ 0.00 m</span>.
+              </li>
+              <li>
+                <strong className="text-[var(--text-primary)]">Resistive Land Paths:</strong> Over low-conductivity soil (<span className="font-mono">σ = 0.001–0.005 S/m</span>), cumulative delay accumulates monotonically: ~15 m at 100 km, ~45 m at 300 km, and ~75 m at 500 km.
+              </li>
+              <li>
+                <strong className="text-[var(--text-primary)]">Reciprocal Equality:</strong> Delay from Transmitter to Receiver identically matches delay from Receiver to Transmitter.
+              </li>
+            </ul>
+          </div>
+
+          {/* Card 4: Atmospheric Refractivity */}
+          <div
+            className="rounded-xl p-5 border space-y-3 font-mono text-xs"
+            style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+              <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                4. Atmospheric Refractivity & Seasonal Drift
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
+                Smith & Weintraub 1953
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              The radio refractive index <span className="font-mono text-[var(--text-primary)]">n</span> of tropospheric air alters the groundwave phase velocity <span className="font-mono text-[var(--text-primary)]">v = c / n</span> per the empirical formula of Smith & Weintraub (1953):
+            </p>
+            <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] overflow-x-auto text-xs">
+              <MathView math="N = (n - 1) \times 10^6 = 77.6 \frac{P}{T} + 3.73 \times 10^5 \frac{e}{T^2}" />
+            </div>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
+              Where <span className="font-mono text-[var(--text-primary)]">P</span> is atmospheric pressure (hPa), <span className="font-mono text-[var(--text-primary)]">T</span> is temperature (K), and <span className="font-mono text-[var(--text-primary)]">e</span> is water vapor partial pressure (hPa). Seasonal temperature and humidity swings induce sinusoidal phase variations (up to ~100 ns across 500 km), calibrated in literature against Korean eLoran trials (Song & Son 2025).
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

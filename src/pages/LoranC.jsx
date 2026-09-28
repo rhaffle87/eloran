@@ -75,6 +75,10 @@ export default function LoranC() {
     toggleDesignMode,
   } = useSimulationStore();
 
+  React.useEffect(() => {
+    evaluateReceivers();
+  }, [evaluateReceivers]);
+
   const handleMapClick = (lngLat) => {
     if (isDesignMode) return;
     if (mapMode === 'add-master') {

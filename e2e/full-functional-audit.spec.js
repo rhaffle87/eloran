@@ -117,9 +117,11 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     }
 
     // Verify CSV structure contains headers and station data
-    expect(csvData).toContain('role,label,lat,lng');
+    expect(csvData).toContain('role,lat,lng,label');
     expect(csvData).toContain('master');
     expect(csvData).toContain('slave');
+    expect(csvData).toContain('M1-TanjungPriok');
+    expect(csvData).toContain('S1-Tangerang');
 
     // 2. Clear all stations
     await page.locator('button:has-text("Clear all")').click();
@@ -146,6 +148,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     const restoredStationCount = await page.locator('button[aria-label*="Delete station"]').count();
     expect(restoredStationCount).toBe(initialStationCount);
     await expect(page.locator(`text=Active Stations (${initialStationCount})`)).toBeVisible();
+    await expect(page.locator('text=M1-TanjungPriok').first()).toBeVisible();
+    await expect(page.locator('text=S1-Tangerang').first()).toBeVisible();
   });
 
   // ---------------------------------------------------------------------------
@@ -254,16 +258,26 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     const lopsInfo = await page.evaluate(() => {
       const map = window.__maplibreInstance;
       const src = map ? map.getSource('loran-lops-source') : null;
+      const count = src?._data?.features?.length || src?.serialize?.()?.data?.features?.length || 0;
       return {
         hasLayer: Boolean(map && map.getLayer('loran-lops-layer')),
         hasSource: Boolean(src),
+        featureCount: count,
       };
     });
     expect(lopsInfo.hasLayer || lopsInfo.hasSource).toBe(true);
+    expect(lopsInfo.featureCount).toBeGreaterThan(0);
 
     // Verify positioning telemetry fix card is rendered
     const fixCard = page.locator('text=PNT Solution');
-    await expect(fixCard.first()).toBeVisible();
+    await expect(fixCard.first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=PNT Solution (PSEUDORANGE)')).toBeVisible();
+
+    // Toggle solver mode to Hyperbolic TDOA and assert visible telemetry update
+    const tdoaBtn = page.getByRole('button', { name: /Hyperbolic TDOA/i });
+    await tdoaBtn.click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('text=PNT Solution (TDOA)')).toBeVisible();
   });
 
   // ---------------------------------------------------------------------------
@@ -306,8 +320,15 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     await formulaBtn.click();
     await page.waitForTimeout(200);
 
-    const formulaHeader = page.locator('text=Custom ASF Formula (Sandboxed Math.js)');
+    const formulaHeader = page.locator('text=Manual ASF Formula (AST)');
     await expect(formulaHeader).toBeVisible();
+    await expect(page.locator('text=Valid Sandboxed AST Expression')).toBeVisible();
+
+    // Switch back to Millington mode and assert clean mode restoration
+    const millingtonBtn = page.locator('button:has-text("Millington")').first();
+    await millingtonBtn.click();
+    await page.waitForTimeout(200);
+    await expect(millingtonHeader).toBeVisible();
   });
 
   // ---------------------------------------------------------------------------

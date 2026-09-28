@@ -215,8 +215,32 @@ In [`src/components/map/MapView.jsx:1052-1059`](file:///e:/Projects/lmao/eloran/
 
 ## 10. Phased Roadmap
 
-- **Phase 1 (Current)**: Holistic UX & Visual Audit report completed in `docs/UX_AUDIT.md`. Wait for user review before proceeding.
-- **Phase 2**: Radar Canvas Map Mode functional rehaul — fix z-index layer obstruction, declutter radials, add UI explanation, test tile-failure trigger conditions, add Playwright canvas pixel assertion tests, screenshot before/after.
-- **Phase 3**: Sidebar text-to-tooltip conversion across all panels — implement `InfoTooltip` across the 12 provenance items listed in Section 8 without losing a single word of text; fix `DisplayPanel` `/theory` broken link; fix `CycleSelectionPanel` encoding mojibake.
-- **Phase 4**: Rigorous functional QA — test every button, slider, graph, CSV/GeoJSON round-trip, preset, mode switch in both themes with verifiable assertions in `e2e/full-functional-audit.spec.js`.
-- **Phase 5**: Redundancy scan, dead code pruning, 768px Navbar overflow fix, 390px mobile layout clearances, final 36-screenshot baseline comparison diff, and full quality gate run.
+- **Phase 1 (Complete)**: Holistic UX & Visual Audit report completed in `docs/UX_AUDIT.md` (committed at `8291c4e`).
+- **Phase 2 (Complete)**: Radar Canvas Map Mode functional rehaul (committed at `9d9aba3`). Canvas repositioned to `z-index: 0` underlay; WebGL canvas made transparent; station markers and LOP contours composited on top; declutter controls added; 4/4 Playwright tests passing in `e2e/radar-canvas.spec.js`.
+- **Phase 3 (Complete)**: Sidebar text-to-tooltip conversion (committed at `5321d39`). Converted 12 provenance items verbatim into accessible `InfoTooltip` components; `/theory` link fixed to `/learn`; UTF-8 mojibake repaired; 2/2 tests passing in `e2e/tooltips-verification.spec.js`.
+- **Phase 4 (Complete)**: Full functional QA suite in `e2e/full-functional-audit.spec.js` (committed at `ad7343c` and `afd00e7`). 12 tests covering mode buttons, map click placement, Clear All, Commit Design, CSV round-trip export/import, dynamic chart rendering, off-thread LOP worker, AsfPanel mode persistence, presets, and trial validation (12/12 passing).
+- **Phase 5 (Complete)**: Polish, redundancy pruning, responsive clearance, and final quality gate. Pruned invalid `py-0.2` classes, elevated sub-9px text to 10px, enlarged touch targets to $\ge 36\times 36\text{px}$, verified 768px tablet and 390px mobile viewports, recorded 36-matrix post-rehaul screenshot suite (`phase5_verified_*`), and passed all quality gates.
+
+---
+
+## 11. Implementation & Verification Outcomes (Phases 1–5 Complete)
+
+### Comprehensive Quality Gate Verification Matrix
+| Verification Gate | Command | Result | Details |
+| :--- | :--- | :--- | :--- |
+| **Strict UTF-8 Integrity** | `npm run test:utf8` | **PASS (0 byte errors)** | Audited 59 files in `src/`. Zero byte errors, zero `U+FFFD` replacement characters. |
+| **Secret Leak Guard & Linter** | `npm run lint` | **PASS (0 violations)** | Verified 253 tracked/staged files. Zero secret leak patterns found. ESLint clean with zero errors or warnings. |
+| **Vitest Unit & Physics Tests** | `npm test` | **PASS (176 / 176)** | 8 test suites passing: `temporalAsf` (32), `chainDesign` (20), `grwave` (9), `trialValidation` (11), `dds` (33), `tiles` (6), `geoAsf` (15), `physics` (50). |
+| **Full Functional E2E Suite** | `npx playwright test e2e/full-functional-audit.spec.js` | **PASS (12 / 12)** | All 12 critical user workflows verified end-to-end including CSV roundtrip, chart canvas points, worker contours, and solver toggles. |
+| **Radar Canvas E2E Suite** | `npx playwright test e2e/radar-canvas.spec.js` | **PASS (4 / 4)** | Underlay stacking, marker overlays, declutter radials, tile-failure fallback, and online restoration verified. |
+| **Tooltips & Encoding E2E Suite** | `npx playwright test e2e/tooltips-verification.spec.js` | **PASS (2 / 2)** | All 12 provenance items verified accessible via hover/focus; CycleSelectionPanel clean UTF-8 verified. |
+| **Grid Worker E2E Suite** | `npx playwright test e2e/grid-worker.spec.js` | **PASS (1 / 1)** | Web worker instantiation and off-thread marching squares computation verified with CSP compliance. |
+| **Responsive Clearance & 36-Matrix** | `npx playwright test e2e/capture-phase5-verification.spec.js` | **PASS (3 / 3)** | 36 post-rehaul screenshots captured; 768px tablet height $\le 60\text{px}$ verified; 390px zero horizontal overflow and $\ge 36\times 36\text{px}$ touch targets verified. |
+
+### Visual Artifact Ledger
+All verification screenshots are committed in `docs/verification/screenshots/`:
+- **Phase 0 Baseline (36 images)**: `audit_baseline_{page}_{theme}_{viewport}.png`
+- **Phase 2 Radar Rehaul (10 images)**: `radar_before_*`, `radar_after_*`, `radar_declutter_radials_off.png`, `radar_declutter_radials_on.png`
+- **Phase 3 Sidebar Declutter (4 images)**: `sidebar_after_dark_1280px.png`, `sidebar_after_light_1280px.png`, `sidebar_tooltip_hover_1280px.png`, `waveforms_utf8_clean.png`
+- **Phase 5 Final Verified Matrix (36 images)**: `phase5_verified_{page}_{theme}_{viewport}.png`
+

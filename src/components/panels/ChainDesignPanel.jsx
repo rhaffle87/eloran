@@ -142,7 +142,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>USCG 400-mi</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1 py-0.2 rounded text-[8px] bg-blue-500/10 text-blue-500 border border-blue-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/30">
                   Textbook Benchmark
                 </span>
               </div>
@@ -159,7 +159,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Jakarta Coastal</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1 py-0.2 rounded text-[8px] bg-purple-500/10 text-purple-500 border border-purple-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/10 text-purple-500 border border-purple-500/30">
                   Synthetic / Proposal
                 </span>
               </div>
@@ -176,7 +176,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1 py-0.2 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
                   Illustrative — unverified this session
                 </span>
               </div>

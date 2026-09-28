@@ -29,7 +29,7 @@ function BrandLogo() {
       <div>
         <div className="font-mono font-bold text-xs tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
           LORAN LAB
-          <span className="text-[9px] px-1 py-0.2 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--accent-eloran)] font-semibold tracking-wider">
+          <span className="text-[9px] px-1 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--accent-eloran)] font-semibold tracking-wider">
             v1.1
           </span>
         </div>
@@ -110,22 +110,22 @@ export default function Navbar() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition"
+              className="w-9 h-9 flex items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition"
               title={`Switch to ${effectiveTheme === 'dark' ? 'Light' : 'Dark'} mode`}
               aria-label={effectiveTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             >
-              {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              {effectiveTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] transition"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] transition"
               onClick={() => setMobileOpen((o) => !o)}
               aria-expanded={mobileOpen}
               aria-controls="mobile-menu"
               aria-label="Toggle navigation menu"
             >
-              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>

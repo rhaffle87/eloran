@@ -1,6 +1,6 @@
 # Map Tile Configuration & Attribution Guide (TILES.md)
 
-LORAN LAB renders station networks, geodesic baselines, hyperbolic lines of position (LOPs), and receiver fixes on an interactive MapLibre GL basemap.
+SIMULORAN renders station networks, geodesic baselines, hyperbolic lines of position (LOPs), and receiver fixes on an interactive MapLibre GL basemap.
 
 ---
 
@@ -13,7 +13,7 @@ All map tile providers, styles, and fallback chains are configured in [`src/lib/
 | **OpenFreeMap Dark** *(Default)* | Vector (JSON / PBF) | `https://tiles.openfreemap.org/styles/dark` | © OpenStreetMap contributors © OpenFreeMap | Free and open-source map hosting (Hyperknot Software Kft.). Keyless, no rate limits, no tracking, zero watermarks. Provided "as-is" without formal SLA. Terms: [openfreemap.org](https://openfreemap.org) |
 | **OpenStreetMap Standard** *(Fallback 1)* | Raster (PNG) | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | © OpenStreetMap contributors | Standard community raster fallback basemap. Keyless; subject to [OSMF Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) |
 | **CARTO Dark** *(Optional Auth)* | Raster (PNG) | `https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?api_key=<KEY>` | © OpenStreetMap contributors © CARTO | Optional authenticated basemap. Requires `VITE_CARTO_API_KEY` environment variable. Never hardcoded. Governed by [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/) |
-| **Offline Radar Canvas** *(Fallback 2)* | Synthetic Canvas | `null` (Local client vector) | LORAN LAB Synthetic Grid | Zero-network fallback; renders pure dark radar canvas with high-contrast station markers and hyperbolic LOPs |
+| **Offline Radar Canvas** *(Fallback 2)* | Synthetic Canvas | `null` (Local client vector) | SIMULORAN Synthetic Grid | Zero-network fallback; renders pure dark radar canvas with high-contrast station markers and hyperbolic LOPs |
 
 ---
 
@@ -21,7 +21,7 @@ All map tile providers, styles, and fallback chains are configured in [`src/lib/
 
 As of September 2026, CARTO began enforcing an API key on its public raster endpoints, rendering keyless requests with diagonal "API KEY REQUIRED" watermarks.
 
-To maintain an unwatermarked, keyless, and production-ready experience by default, LORAN LAB defaults to **OpenFreeMap Dark**:
+To maintain an unwatermarked, keyless, and production-ready experience by default, SIMULORAN defaults to **OpenFreeMap Dark**:
 - **Format**: Vector MapLibre style JSON with vector tile layers (`openmaptiles`), Natural Earth shaded relief, sprites, and PBF glyphs.
 - **Provider Terms**: Quoted from [OpenFreeMap Terms & About](https://openfreemap.org):
   > *"OpenFreeMap is a free and open-source map service provided by Hyperknot Software Kft. It is completely free for commercial and non-commercial use. No API keys, no tracking, no limits."*
@@ -51,7 +51,7 @@ To resolve this without permanent divergence:
 
 ## 3. Automated Progressive Fallback Chain
 
-Because OpenFreeMap operates without an SLA, LORAN LAB implements an automated multi-tier fallback chain (`FALLBACK_CHAIN = ['openfreemap-dark', 'osm-standard', 'offline-radar']`):
+Because OpenFreeMap operates without an SLA, SIMULORAN implements an automated multi-tier fallback chain (`FALLBACK_CHAIN = ['openfreemap-dark', 'osm-standard', 'offline-radar']`):
 
 ```mermaid
 flowchart TD

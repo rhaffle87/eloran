@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 /**
- * Global Theme Management Store for LORAN LAB
+ * Global Theme Management Store for SIMULORAN
  * Supports 'light' (Bright / Warm Bone), 'dark' (Deep Carbon), and 'system' modes.
  * Persists user preference to localStorage and updates <html class="dark" data-theme="...">.
  */

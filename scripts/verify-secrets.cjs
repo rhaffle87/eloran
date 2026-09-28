@@ -38,7 +38,7 @@ function getTrackedAndStagedFiles() {
 
 function verifySecrets() {
   console.log('='.repeat(78));
-  console.log('LORAN LAB — MECHANICAL SECRET LEAK GUARD');
+  console.log('SIMULORAN — MECHANICAL SECRET LEAK GUARD');
   console.log('='.repeat(78));
 
   const files = getTrackedAndStagedFiles();

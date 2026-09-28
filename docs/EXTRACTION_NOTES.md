@@ -1,7 +1,7 @@
-# Extraction Notes: ACTIFE Loran-C & eLoran to Standalone "LORAN LAB"
+# Extraction Notes: ACTIFE Loran-C & eLoran to Standalone "SIMULORAN"
 
 ## 1. Overview
-This document records the architectural and mathematical extraction of the Loran-C and eLoran modules from ACTIFE (`actife/`) to the standalone **LORAN LAB** application (`eloran/`).
+This document records the architectural and mathematical extraction of the Loran-C and eLoran modules from ACTIFE (`actife/`) to the standalone **SIMULORAN** application (`eloran/`).
 
 All core physics, timing models, geospatial transforms, and numerical solvers from ACTIFE are cataloged below, along with identified quirks, bug fixes, and security improvements.
 

@@ -1,5 +1,5 @@
 /**
- * Trial Validation Harness for LORAN LAB
+ * Trial Validation Harness for SIMULORAN
  * 
  * Evaluates simulator accuracy predictions against published empirical field trial datasets:
  * 1. Korean Nationwide eLoran Testbed (Rhee et al., 2021, IEEE Access / arXiv:2108.06008)
@@ -199,8 +199,8 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
 
     // Mode 1: Flat-jitter baseline — R95 = 2·HDOP·σ_flat
     // σ=4.0m matches the prior-art UK simulator value quoted in Rhee §I as a reference
-    const loranLab95m = parseFloat((2.0 * hdop * nominalJitter).toFixed(2));
-    const deltaMeters = parseFloat((loranLab95m - site.measured95m).toFixed(2));
+    const simuloran95m = parseFloat((2.0 * hdop * nominalJitter).toFixed(2));
+    const deltaMeters = parseFloat((simuloran95m - site.measured95m).toFixed(2));
     const absDeltaMeters = parseFloat(Math.abs(deltaMeters).toFixed(2));
     const percentDiff = parseFloat(((deltaMeters / site.measured95m) * 100).toFixed(1));
 
@@ -226,7 +226,8 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       valid,
       ranges,
       measured95m: site.measured95m,
-      loranLab95m,
+      simuloran95m,
+      loranLab95m: simuloran95m, // backward-compatibility alias
       perStationR95m,
       perStationDeltaMeters,
       perStationAbsDeltaMeters,
@@ -241,7 +242,7 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
 
   const n = evaluatedSites.length;
   const sumMeasured = evaluatedSites.reduce((acc, s) => acc + s.measured95m, 0);
-  const sumSimulated = evaluatedSites.reduce((acc, s) => acc + s.loranLab95m, 0);
+  const sumSimulated = evaluatedSites.reduce((acc, s) => acc + s.simuloran95m, 0);
   const sumAbsDelta = evaluatedSites.reduce((acc, s) => acc + s.absDeltaMeters, 0);
   const sumSqDelta = evaluatedSites.reduce((acc, s) => acc + s.deltaMeters * s.deltaMeters, 0);
 
@@ -279,7 +280,7 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       meanSimulated95m,
       meanAbsoluteErrorMeters,
       rmseMeters,
-      agreementSummary: `LORAN LAB model predicts mean 95% repeatable accuracy of ${meanSimulated95m}m vs published field measurements of ${meanMeasured95m}m (RMSE: ${rmseMeters}m, MAE: ${meanAbsoluteErrorMeters}m).`,
+      agreementSummary: `SIMULORAN model predicts mean 95% repeatable accuracy of ${meanSimulated95m}m vs published field measurements of ${meanMeasured95m}m (RMSE: ${rmseMeters}m, MAE: ${meanAbsoluteErrorMeters}m).`,
     },
     perStationSummary,
     sites: evaluatedSites,

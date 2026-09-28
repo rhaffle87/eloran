@@ -101,6 +101,7 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
 
     // Record initial station count via delete buttons
     const deleteButtonsBefore = page.locator('button[aria-label*="Delete station"]');
+    await expect(deleteButtonsBefore.first()).toBeVisible({ timeout: 10000 });
     const initialStationCount = await deleteButtonsBefore.count();
     expect(initialStationCount).toBeGreaterThanOrEqual(2);
 

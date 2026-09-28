@@ -74,7 +74,7 @@ export default function About() {
           <Cpu size={14} aria-hidden="true" /> System Specifications
         </div>
         <h1 className="text-3xl font-bold font-mono tracking-tight" style={{ color: 'var(--text-primary)' }}>
-          About LORAN LAB
+          About SIMULORAN
         </h1>
         <p className="text-sm mt-2 max-w-2xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           A dedicated, high-performance, in-browser simulator for 100 kHz Loran-C and enhanced
@@ -86,7 +86,7 @@ export default function About() {
       <SectionCard>
         <SectionHeading icon={Heart} iconColor="var(--status-danger)">Origin & Attribution</SectionHeading>
         <p className="text-xs leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
-          LORAN LAB was extracted, refactored, and modularized from the radio-navigation subsystems of{' '}
+          SIMULORAN was extracted, refactored, and modularized from the radio-navigation subsystems of{' '}
           <strong style={{ color: 'var(--accent-eloran)' }}>ACTIFE</strong>{' '}
           (Artificial Computing Toolkit for Intelligent Feature Experiments),
           originally created by <strong style={{ color: 'var(--text-primary)' }}>Rafli Alif</strong> (
@@ -102,7 +102,7 @@ export default function About() {
         </p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
           While ACTIFE spanned diverse AI/ML disciplines (TensorFlow, MediaPipe, image compression,
-          linear regression), LORAN LAB isolates the navigation and RF physics into a production-grade,
+          linear regression), SIMULORAN isolates the navigation and RF physics into a production-grade,
           zero-dependency, standalone application with strict unit test coverage and mathematical precision.
         </p>
       </SectionCard>
@@ -140,7 +140,7 @@ export default function About() {
           Empirical Field Trial Benchmarks (Phase 2 Part 2)
         </SectionHeading>
         <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-          To guard against circular self-validation, LORAN LAB is validated against published real-world
+          To guard against circular self-validation, SIMULORAN is validated against published real-world
           accuracy campaigns from the Korean Nationwide eLoran Testbed (Rhee et al., 2021) and the
           Maoming Inland Ellipsoidal Geodesic Experiment (Gao et al., 2025) without artificial parameter tuning.
         </p>

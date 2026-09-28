@@ -1,5 +1,5 @@
 /**
- * Predefined Scenarios and Station Presets for LORAN LAB
+ * Predefined Scenarios and Station Presets for SIMULORAN
  * 
  * Accurately reflects operational status as of 2026:
  * - US & Canada chains terminated in 2010.

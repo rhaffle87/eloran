@@ -12,7 +12,7 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('LORAN LAB ErrorBoundary caught exception:', error, info);
+    console.error('SIMULORAN ErrorBoundary caught exception:', error, info);
   }
 
   render() {

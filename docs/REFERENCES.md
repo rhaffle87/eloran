@@ -1,6 +1,6 @@
 # Loran-C & eLoran Reference Compendium
 
-This document compiles primary standards, technical reports, PhD and MSc dissertations, peer-reviewed journals, and terminology definitions underpinning the **LORAN LAB** physics engine. Complete verification provenance, retrievable links, and items marked `UNVERIFIED` are maintained in [docs/PROVENANCE.md](PROVENANCE.md).
+This document compiles primary standards, technical reports, PhD and MSc dissertations, peer-reviewed journals, and terminology definitions underpinning the **SIMULORAN** physics engine. Complete verification provenance, retrievable links, and items marked `UNVERIFIED` are maintained in [docs/PROVENANCE.md](PROVENANCE.md).
 
 ---
 
@@ -97,7 +97,7 @@ $$t = PF + SF + ASF$$
   > - For $d_{sm} \le 100\text{ statute miles}$: $SF(\mu\text{s}) = \frac{-0.4076}{d_{sm}} + 0.08182 + 0.003914 \cdot d_{sm}$
   > - For $d_{sm} > 100\text{ statute miles}$: $SF(\mu\text{s}) = \frac{-107.8}{d_{sm}} + 1.297 + 0.000139 \cdot d_{sm}$
   >
-  > Because these coefficients fail continuity testing, they are **UNVERIFIED and disabled by default** in LORAN LAB.
+  > Because these coefficients fail continuity testing, they are **UNVERIFIED and disabled by default** in SIMULORAN.
 - **Additional Secondary Factor (ASF)**: Overland excess phase delay due to sub-surface conductivity variations and terrain impedance ($\sigma \approx 0.0001\text{ to }0.01\text{ S/m}$).
 
 ### 3. Pseudorange Observation Model
@@ -141,6 +141,6 @@ $$\sigma_i^2 = \sigma_{\text{jitter}}^2 + \frac{337.5^2}{N_{\text{pulses}} \cdot
 - **SGR (Skywave-to-Groundwave Ratio)**: Ratio of ionospheric reflected signal amplitude to line-of-sight groundwave amplitude.
 - **Secondary Blink**: An integrity warning transmitted by a secondary station when its timing or phase synchronization exceeds operational tolerance. The station modulates the first two pulses of the secondary group on and off in an established cadence (e.g. 0.25 s on, 0.25 s off), warning receivers that the baseline is unusable for navigation.
 - **HEA (Harbor Entrance and Approach)**: Strict IMO maritime navigation accuracy standard (typically requiring horizontal positioning accuracy better than $10\text{ meters}$ at 95% confidence).
-- **HPL (Horizontal Protection Level)**: In LORAN LAB, computed as a simplified $k \cdot \sigma$ estimate ($3\sigma$), not a certified integrity bound per RTCM MPS.
+- **HPL (Horizontal Protection Level)**: In SIMULORAN, computed as a simplified $k \cdot \sigma$ estimate ($3\sigma$), not a certified integrity bound per RTCM MPS.
 - **DLoran (Differential Loran)**: Ground monitor stations measuring local real-time ASF deviations and broadcasting pseudorange / position corrections via the 9th pulse to nearby vessels.
 - **LDC (Loran Data Channel)**: Low-rate digital data channel modulated onto the 9th pulse (or pulses 3–8 via Eurofix) transmitting differential GPS/GNSS corrections, UTC leap second warnings, and station integrity flags.

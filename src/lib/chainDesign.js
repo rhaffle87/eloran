@@ -1,5 +1,5 @@
 /**
- * Chain Design & Planning Module for LORAN LAB
+ * Chain Design & Planning Module for SIMULORAN
  *
  * Implements standard engineering procedures from the US Coast Guard Loran-C
  * User Handbook (COMDTINST P16562.5 / COMDTINST M16562.4A):

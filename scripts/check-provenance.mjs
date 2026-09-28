@@ -45,7 +45,7 @@ async function fetchWithRetry(urlStr, redirectCount = 0) {
 
     const isCitationApi = parsedUrl.hostname.includes('doi.org') || parsedUrl.hostname.includes('crossref.org');
     const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) LORAN-LAB-Verifier/1.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SIMULORAN-Verifier/1.0',
       'Accept': isCitationApi
         ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
         : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
@@ -200,7 +200,7 @@ function parseProvenanceMarkdown(content) {
 
 async function main() {
   console.log('='.repeat(78));
-  console.log('LORAN LAB — PROVENANCE MACHINE-VERIFICATION AUDIT');
+  console.log('SIMULORAN — PROVENANCE MACHINE-VERIFICATION AUDIT');
   console.log('='.repeat(78));
   console.log(`Reading register: ${PROVENANCE_PATH}`);
 

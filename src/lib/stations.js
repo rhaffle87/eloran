@@ -193,7 +193,7 @@ export function exportScenarioGeoJson(masters = [], slaves = [], receivers = [],
   return {
     type: 'FeatureCollection',
     metadata: {
-      generator: 'LORAN LAB',
+      generator: 'SIMULORAN',
       timestamp: new Date().toISOString(),
       stationCount: masters.length + slaves.length + receivers.length,
     },

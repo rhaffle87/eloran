@@ -1,5 +1,5 @@
 /**
- * LORAN LAB — GIS Coastline Ray-Tracing & Geodesic Path Segmentation for ASF
+ * SIMULORAN — GIS Coastline Ray-Tracing & Geodesic Path Segmentation for ASF
  * 
  * Replaces synthetic land-fraction slider with real Great Circle path ray-tracing
  * against Natural Earth 10m physical land polygons, feeding the rigorous

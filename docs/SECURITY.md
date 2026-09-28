@@ -1,4 +1,4 @@
-# LORAN LAB – Security Architecture & Tradeoffs
+# SIMULORAN – Security Architecture & Tradeoffs
 
 ## 1. Content Security Policy (CSP)
 
@@ -32,7 +32,7 @@ Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
 
 > [!WARNING]
 > **Preload Decision Caution:**
-> While `preload` is safe on standard `*.vercel.app` preview deployments, if attaching a custom production domain (e.g., `loranlab.org`), **do NOT submit the domain to the HSTS preload list (`hstspreload.org`) without a deliberate engineering decision**. Inclusion in browser preload lists is permanent and irreversible for months, and will break any internal subdomains that lack valid public HTTPS certificates.
+> While `preload` is safe on standard `*.vercel.app` preview deployments, if attaching a custom production domain (e.g., `simuloran.org`), **do NOT submit the domain to the HSTS preload list (`hstspreload.org`) without a deliberate engineering decision**. Inclusion in browser preload lists is permanent and irreversible for months, and will break any internal subdomains that lack valid public HTTPS certificates.
 
 ---
 

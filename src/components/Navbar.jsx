@@ -15,7 +15,7 @@ const navLinks = [
 
 function BrandLogo() {
   return (
-    <Link to="/" className="flex items-center gap-3 group shrink-0" aria-label="LORAN LAB home">
+    <Link to="/" className="flex items-center gap-3 group shrink-0" aria-label="SIMULORAN home">
       {/* Precision antenna icon */}
       <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-[var(--border-subtle)] bg-[var(--bg-subtle)] group-hover:border-[var(--accent-eloran)] transition duration-200">
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -28,7 +28,7 @@ function BrandLogo() {
 
       <div>
         <div className="font-mono font-bold text-xs tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
-          LORAN LAB
+          SIMULORAN
           <span className="text-[9px] px-1 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--accent-eloran)] font-semibold tracking-wider">
             v1.1
           </span>

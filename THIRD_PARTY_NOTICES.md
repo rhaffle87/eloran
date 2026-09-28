@@ -1,6 +1,6 @@
 # Third-Party Software Notices and Licenses
 
-LORAN LAB incorporates open-source libraries, geospatial projection engines, development toolchains, and typography assets. This document acknowledges the respective authors and provides copyright and license notices for these third-party components.
+SIMULORAN incorporates open-source libraries, geospatial projection engines, development toolchains, and typography assets. This document acknowledges the respective authors and provides copyright and license notices for these third-party components.
 
 ---
 

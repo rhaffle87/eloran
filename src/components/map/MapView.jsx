@@ -54,7 +54,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (current === 'offline-radar') return;
 
     if (current === 'openfreemap-dark') {
-      console.warn('LORAN LAB: OpenFreeMap vector service unreachable. Auto-switched to OpenStreetMap raster fallback.');
+      console.warn('SIMULORAN: OpenFreeMap vector service unreachable. Auto-switched to OpenStreetMap raster fallback.');
       setActiveTileProvider('osm-standard');
       activeTileProviderRef.current = 'osm-standard';
       hasTileLoadedRef.current = false;
@@ -71,7 +71,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         }
       }
     } else {
-      console.warn('LORAN LAB: Basemap network unreachable. Auto-switched to offline Radar Canvas fallback.');
+      console.warn('SIMULORAN: Basemap network unreachable. Auto-switched to offline Radar Canvas fallback.');
       try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
           sessionStorage.setItem('loran_offline_radar', 'true');

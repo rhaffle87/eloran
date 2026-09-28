@@ -35,9 +35,11 @@ describe('Trial Validation Engine & Empirical Benchmarks', () => {
       
       // Published measured range across the 7 sites is 8.49m to 12.73m (Rhee et al. Table 5)
       results.sites.forEach((site) => {
-        expect(site.loranLab95m).toBeGreaterThan(8.0);
-        expect(site.loranLab95m).toBeLessThan(16.0);
-        // Absolute delta between LORAN LAB model and field measurement must be < 4.0 meters
+        expect(site.simuloran95m).toBeGreaterThan(8.0);
+        expect(site.simuloran95m).toBeLessThan(16.0);
+        // Verify backward compatibility alias
+        expect(site.loranLab95m).toBe(site.simuloran95m);
+        // Absolute delta between SIMULORAN model and field measurement must be < 4.0 meters
         expect(site.absDeltaMeters).toBeLessThan(4.0);
       });
 
@@ -95,13 +97,13 @@ describe('Trial Validation Engine & Empirical Benchmarks', () => {
       for (let i = 0; i < flatResult.sites.length; i++) {
         const flat = flatResult.sites[i];
         const uniform = uniformResult.sites[i];
-        const discrepancy = Math.abs(flat.loranLab95m - uniform.perStationR95m);
+        const discrepancy = Math.abs(flat.simuloran95m - uniform.perStationR95m);
         
         // Allow 0.05m tolerance due to HDOP rounding in gdop.js
         expect(discrepancy).toBeLessThan(0.05);
         
         // Relative error should be < 0.5%
-        const relativeError = (discrepancy / flat.loranLab95m) * 100;
+        const relativeError = (discrepancy / flat.simuloran95m) * 100;
         expect(relativeError).toBeLessThan(0.5);
       }
     });
@@ -135,7 +137,7 @@ describe('Trial Validation Engine & Empirical Benchmarks', () => {
           nominalJitterMeters: sigma,
           perStationJitters: Array(4).fill(sigma),
         });
-        return Math.max(...flat.sites.map((s, idx) => Math.abs(s.loranLab95m - uniform.sites[idx].perStationR95m)));
+        return Math.max(...flat.sites.map((s, idx) => Math.abs(s.simuloran95m - uniform.sites[idx].perStationR95m)));
       });
 
       // Ratio 4.0/2.0 should be ~2.0, 6.0/4.0 should be ~1.5

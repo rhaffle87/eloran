@@ -1,11 +1,11 @@
-# LORAN LAB
+# SIMULORAN
 
 > **High-Fidelity Loran-C & eLoran Simulation Suite**  
 > An interactive, physics-based radio-navigation engineering laboratory for hyperbolic time-difference of arrival (TDOA) positioning, pseudorange multilateration, atmospheric refraction, oscillator stability, Additional Secondary Factor (ASF) modeling, and GNSS-resilient multi-sensor fusion.
 
 > [!CAUTION]
 > **EDUCATIONAL & RESEARCH SIMULATOR ONLY**  
-> LORAN LAB is an academic and engineering research simulation tool. It is **not** certified, approved, or intended for real-world maritime navigation, aviation, or safety-critical positioning, navigation, and timing (PNT).
+> SIMULORAN is an academic and engineering research simulation tool. It is **not** certified, approved, or intended for real-world maritime navigation, aviation, or safety-critical positioning, navigation, and timing (PNT).
 
 ---
 
@@ -15,7 +15,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 **eLoran (enhanced Loran)** is the internationally standardized, terrestrial, low-frequency (100 kHz) navigation system providing high-power (hundreds of kilowatts to megawatts) signals that share no common failure modes with GNSS, delivering resilient, autonomous Positioning, Navigation, and Timing (PNT).
 
-**LORAN LAB** is a standalone, web-based engineering simulation suite designed to model, visualize, and analyze hyperbolic and pseudorange radio navigation chains with mathematical rigor.
+**SIMULORAN** is a standalone, web-based engineering simulation suite designed to model, visualize, and analyze hyperbolic and pseudorange radio navigation chains with mathematical rigor.
 
 ---
 

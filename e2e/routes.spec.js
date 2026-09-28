@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('LORAN LAB E2E Suite', () => {
+test.describe('SIMULORAN E2E Suite', () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
   });

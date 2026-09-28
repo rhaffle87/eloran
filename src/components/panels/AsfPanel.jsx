@@ -802,7 +802,7 @@ export default function AsfPanel() {
               <InfoTooltip
                 align="left"
                 title="Tier 2 Field Trial Validation Disclosure"
-                text="Validation in LORAN LAB is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
+                text="Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
               />
             </span>
           </div>

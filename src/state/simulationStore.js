@@ -1,5 +1,5 @@
 /**
- * Central Simulation State Store for LORAN LAB
+ * Central Simulation State Store for SIMULORAN
  * Implemented with Zustand. Shared seamlessly across Loran-C, eLoran, Waveforms, and Map.
  */
 

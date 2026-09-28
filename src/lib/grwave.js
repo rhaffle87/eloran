@@ -1,5 +1,5 @@
 /**
- * LORAN LAB — ITU-R P.368 Groundwave Propagation & Millington Mixed-Path Engine
+ * SIMULORAN — ITU-R P.368 Groundwave Propagation & Millington Mixed-Path Engine
  * 
  * Implements:
  * 1. Complex surface impedance and Sommerfeld constitutive electrical parameters (ITU-R P.368-9 / ITU-R P.832).

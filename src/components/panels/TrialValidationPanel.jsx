@@ -255,7 +255,7 @@ export function TrialValidationPanel() {
                         {site.measured95m.toFixed(2)} m
                       </td>
                       <td className="py-2.5 px-2 text-right font-semibold" style={{ color: 'var(--accent-eloran)' }}>
-                        {site.loranLab95m.toFixed(2)} m
+                        {(site.simuloran95m ?? site.loranLab95m).toFixed(2)} m
                       </td>
                       <td className="py-2.5 px-2 text-right font-semibold text-violet-600 dark:text-violet-400">
                         {site.perStationR95m !== null ? `${site.perStationR95m.toFixed(2)} m` : '—'}
@@ -312,7 +312,7 @@ export function TrialValidationPanel() {
               <strong style={{ color: 'var(--text-primary)' }}>{koreaBenchmark.citation}</strong>
               <br />
               Summary validation tier: Empirically measured 95% repeatable positioning accuracy across 7 receiver sites
-              receiving Pohang (9930M), Gwangju (9930W), Rongcheng (7430M), and Xuancheng (7430X). LORAN LAB evaluates
+              receiving Pohang (9930M), Gwangju (9930W), Rongcheng (7430M), and Xuancheng (7430X). SIMULORAN evaluates
               the identical geometry using both the prior-art 4 m flat baseline (RMSE 2.11 m, MAE 1.74 m) and full
               per-station covariance with Rhee Table 3 jitter estimates (RMSE 1.72 m, MAE 1.37 m) without artificial parameter tuning.
             </p>
@@ -470,7 +470,7 @@ export function TrialValidationPanel() {
             Validation Tier Disclosure & Open Data Audit
           </span>
           <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-dim)' }}>
-            Validation in LORAN LAB is classified as <strong>Tier 2 (Published Empirical Summary Statistics)</strong>.
+            Validation in SIMULORAN is classified as <strong>Tier 2 (Published Empirical Summary Statistics)</strong>.
             Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable
             accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs.
             Detailed methodology and known gaps are documented in <code className="px-1 py-0.5 rounded font-mono" style={{ background: 'var(--bg-muted)', color: 'var(--text-primary)' }}>docs/VALIDATION.md</code>.

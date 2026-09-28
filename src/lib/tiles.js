@@ -1,5 +1,5 @@
 /**
- * LORAN LAB - Centralized Map Tile Configuration & Progressive Offline Fallbacks
+ * SIMULORAN - Centralized Map Tile Configuration & Progressive Offline Fallbacks
  * 
  * Provides robust basemap options:
  * 1. OpenFreeMap Dark (Vector Default, keyless, zero watermarks)
@@ -47,7 +47,7 @@ export const TILE_PROVIDERS = {
     name: 'Offline Radar Canvas (No Network Required)',
     type: 'offline',
     url: null,
-    attribution: 'LORAN LAB Offline Radar Basemap',
+    attribution: 'SIMULORAN Offline Radar Basemap',
     maxZoom: 22,
     tileSize: 256,
   },

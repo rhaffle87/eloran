@@ -1,6 +1,6 @@
 # Provenance and Citation Verification Audit (PROVENANCE.md)
 
-This document records the provenance, retrievable URLs (publisher DOI, official institutional repository, or government standards portal), exact retrieved evidence strings, publication dates, and verification status for all citations, empirical models, and station data used in **LORAN LAB**.
+This document records the provenance, retrievable URLs (publisher DOI, official institutional repository, or government standards portal), exact retrieved evidence strings, publication dates, and verification status for all citations, empirical models, and station data used in **SIMULORAN**.
 
 Per project protocol:
 - Every citation must record: **URL | Evidence String | Date / Details | Status**.
@@ -39,7 +39,7 @@ Per project protocol:
 
 The following citations, models, and empirical figures have been audited and explicitly classified as **UNVERIFIED**. Where applicable, their default behavior in the codebase has been disabled or guarded:
 
-| Parameter / Item | Evaluated In | Reason Marked UNVERIFIED | Action in LORAN LAB Codebase |
+| Parameter / Item | Evaluated In | Reason Marked UNVERIFIED | Action in SIMULORAN Codebase |
 |---|---|---|---|
 | **ITU-R P.372-17 (2024)** (*Radio Noise Models*) | `docs/REFERENCES.md`, `docs/PROVENANCE.md` | Applicability to radionavigation questioned by Boyce/LORIPP (2005) because P.372 was developed for telecommunications links rather than navigation pulse timing error budgets. Furthermore, ITU web portal returns non-standard dynamic redirects to automated fetch requests. | Moved to UNVERIFIED. Documented as an accepted limitation and non-settled physics model in navigation literature. |
 | **Secondary Factor (SF) Piecewise Polynomial Coefficients** | `docs/REFERENCES.md`, `src/lib/geodesy.js`, `src/lib/__tests__/physics.test.js` | The historical piecewise polynomial exhibits an unphysical $\approx 0.236\ \mu\text{s}$ ($\approx 71\text{ m}$) step discontinuity at the 100 statute mile ($160,934.4\text{ m}$) boundary. The exact continuous coefficients from the original Brunavs 1977 Canadian Hydrographic Service contract report are not retrievable via public open access. | Marked `UNVERIFIED`; disabled by default (`enableSecondaryFactor: false`). Continuity test updated to `it.fails`. Visible UI status badge `Secondary Factor: off (UNVERIFIED model)` displayed. |
@@ -76,5 +76,5 @@ The following citations, models, and empirical figures have been audited and exp
 - **Methodological Disclosure & Circularity Guard**:
   - The JavaScript engine in [`src/lib/grwave.js`](file:///e:/Projects/lmao/eloran/src/lib/grwave.js) implements the identical analytical Sommerfeld surface impedance equations and multi-segment Millington reciprocal path averaging method (ITU-R P.368-10 Annex 2).
   - The $< 0.0001\,\mu\text{s}$ tolerance in unit tests is an exact cross-language floating-point verification confirming that the JavaScript implementation precisely reproduces the Python reference implementation of the Sommerfeld-Norton equations. It is **not** an independent validation against Fortran phase output.
-- **Atmospheric Noise Caveat**: While ITU-R P.368 groundwave propagation is rigorous for LF terrestrial signals, the atmospheric noise figures in ITU-R P.372 are documented in navigation literature (e.g. Boyce et al., 2005, *Atmospheric Noise Mitigation for Loran*) as having been developed for communications receiver bandwidths rather than navigation pulse timing error budgets, and are treated with appropriate caveats in LORAN LAB.
+- **Atmospheric Noise Caveat**: While ITU-R P.368 groundwave propagation is rigorous for LF terrestrial signals, the atmospheric noise figures in ITU-R P.372 are documented in navigation literature (e.g. Boyce et al., 2005, *Atmospheric Noise Mitigation for Loran*) as having been developed for communications receiver bandwidths rather than navigation pulse timing error budgets, and are treated with appropriate caveats in SIMULORAN.
 

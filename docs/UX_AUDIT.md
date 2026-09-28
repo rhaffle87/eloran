@@ -1,4 +1,4 @@
-# LORAN LAB — Comprehensive UX, Visual & Functional Audit Report
+# SIMULORAN — Comprehensive UX, Visual & Functional Audit Report
 **Date**: September 27, 2026  
 **Auditor**: Antigravity Pair-Programming Agent (Advanced Agentic Architecture)  
 **Branch**: `audit/ux-holistic`  
@@ -158,7 +158,7 @@ Per project guidelines and past session directives, **no provenance claim, citat
   - *Target*: Tooltip on Temporal ASF header (MUST NOT BE CUT).
 - [ ] **Item 9 (`AsfPanel.jsx:788`, `TrialValidationPanel.jsx:32, 333-337`)**:
   - *Context*: Field Trial Validation Disclosure
-  - *Verbatim Claim*: `"Validation in LORAN LAB is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."`
+  - *Verbatim Claim*: `"Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."`
   - *Status*: Tier 2 SOURCED disclosure
   - *Target*: Accessible disclosure tooltip/modal.
 - [ ] **Item 10 (`FusionPanel.jsx:147`)**:

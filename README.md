@@ -34,7 +34,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 ## 3. System Architecture & Features
 
 ```
-eloran/
+simuloran/
 ├── docs/
 │   ├── REFERENCES.md            # Standards, formulas, and literature compendium
 │   ├── PROVENANCE.md            # Provenance audit, citation links & unverified ledger

@@ -36,3 +36,11 @@ sources/
 test-results/
 playwright-report/
 blob-report/
+
+# Scratch, tasks, & local temporary evidence dumps
+scratch/
+task.md
+docs/evidence/2026-*
+*.tmp
+*.temp
+.tempmediaStorage

@@ -61,5 +61,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "eloran-one.vercel.app"
+        }
+      ],
+      "destination": "https://simuloran.vercel.app/$1",
+      "permanent": true
+    }
   ]
 }

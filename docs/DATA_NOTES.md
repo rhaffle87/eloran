@@ -1,6 +1,6 @@
 # Global Station Data & Operational Status Notes
 
-This document provides context on the operational status, history, and geographical coordinates of Loran-C and eLoran transmitter networks used throughout **LORAN LAB**.
+This document provides context on the operational status, history, and geographical coordinates of Loran-C and eLoran transmitter networks used throughout **SIMULORAN**.
 
 ---
 
@@ -18,7 +18,7 @@ This document provides context on the operational status, history, and geographi
 
 ---
 
-## 2. Presets in LORAN LAB
+## 2. Presets in SIMULORAN
 
 ### 1. `north_sea_historical` (Historical — Decommissioned Dec 31, 2015)
 - **Status**: Historical simulation based on published chain records.
@@ -48,5 +48,5 @@ This document provides context on the operational status, history, and geographi
 ## 3. Coordinate Systems & Geodetic Standards
 
 - All geographic positions reference the **WGS 84** ellipsoid (semi-major axis $a = 6,378,137\text{ m}$, flattening $f = 1 / 298.257223563$).
-- Great-circle transmitter-receiver ranges are computed in LORAN LAB using the spherical Haversine formula with mean Earth radius $R = 6,371,000\text{ m}$. Rigorous ellipsoidal geodesic distances (such as Vincenty 1975 or Karney 2013) can be evaluated where millimeter-level geodesic fidelity is needed.
+- Great-circle transmitter-receiver ranges are computed in SIMULORAN using the spherical Haversine formula with mean Earth radius $R = 6,371,000\text{ m}$. Rigorous ellipsoidal geodesic distances (such as Vincenty 1975 or Karney 2013) can be evaluated where millimeter-level geodesic fidelity is needed.
 - Planar map projections utilize Web Mercator (**EPSG:3857**) for raster basemap display.

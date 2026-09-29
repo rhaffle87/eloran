@@ -1,5 +1,5 @@
 /**
- * Clock Models and Oscillator Physics for LORAN LAB
+ * Clock Models and Oscillator Physics for SIMULORAN
  *
  * Implements:
  *   1. Deterministic drift + bias model (first-order polynomial)

@@ -9,6 +9,7 @@ import {
   isInsideBaselineExtension,
   generateBaselineExtensionSectors,
 } from '../../lib/chainDesign.js';
+import { computeGDOPGrid } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 
 function isMapStyleReady(map) {
@@ -27,11 +28,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
   const effectiveTheme = useThemeStore((s) => s.effectiveTheme);
 
-  const [isStyleLoaded, setIsStyleLoaded] = useState(false);
   const [activeTileProvider, setActiveTileProvider] = useState(() => {
     try {
-      if (typeof window !== 'undefined' && window.sessionStorage?.getItem('loran_offline_radar') === 'true') {
-        return 'offline-radar';
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        // One-time session migration: migrate legacy 'loran_offline_radar' to canonical 'simuloran_offline_radar'
+        const legacy = window.sessionStorage.getItem('loran_offline_radar');
+        if (legacy !== null) {
+          window.sessionStorage.setItem('simuloran_offline_radar', legacy);
+          window.sessionStorage.removeItem('loran_offline_radar');
+        }
+        if (window.sessionStorage.getItem('simuloran_offline_radar') === 'true') {
+          return 'offline-radar';
+        }
       }
     } catch {
       // ignore
@@ -41,18 +49,21 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const [showFallbackNotice, setShowFallbackNotice] = useState(false);
   const [fallbackMessage, setFallbackMessage] = useState('');
   const [showLegend, setShowLegend] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
+  const [radarShowRadials, setRadarShowRadials] = useState(false);
+  const [radarShowGraticule, setRadarShowGraticule] = useState(true);
 
   const tileErrorsRef = useRef([]);
   const hasTileLoadedRef = useRef(false);
   const activeTileProviderRef = useRef(activeTileProvider);
   activeTileProviderRef.current = activeTileProvider;
+  const currentStyleKeyRef = useRef(`${activeTileProvider}:${effectiveTheme}`);
 
   const triggerNextFallback = useCallback(() => {
     const current = activeTileProviderRef.current;
     if (current === 'offline-radar') return;
 
     if (current === 'openfreemap-dark') {
-      console.warn('LORAN LAB: OpenFreeMap vector service unreachable. Auto-switched to OpenStreetMap raster fallback.');
+      console.warn('SIMULORAN: OpenFreeMap vector service unreachable. Auto-switched to OpenStreetMap raster fallback.');
       setActiveTileProvider('osm-standard');
       activeTileProviderRef.current = 'osm-standard';
       hasTileLoadedRef.current = false;
@@ -61,18 +72,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
       setShowFallbackNotice(true);
       const map = mapRef.current;
       if (map) {
-        setIsStyleLoaded(false);
+        currentStyleKeyRef.current = `osm-standard:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('osm-standard'));
+          map.setStyle(getMapLibreStyle('osm-standard', effectiveTheme));
         } catch (err) {
           console.warn('Error applying OSM fallback style:', err);
         }
       }
     } else {
-      console.warn('LORAN LAB: Basemap network unreachable. Auto-switched to offline Radar Canvas fallback.');
+      console.warn('SIMULORAN: Basemap network unreachable. Auto-switched to offline Radar Canvas fallback.');
       try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
-          sessionStorage.setItem('loran_offline_radar', 'true');
+          sessionStorage.setItem('simuloran_offline_radar', 'true');
         }
       } catch {
         // ignore
@@ -85,15 +96,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
       setShowFallbackNotice(true);
       const map = mapRef.current;
       if (map) {
-        setIsStyleLoaded(false);
+        currentStyleKeyRef.current = `offline-radar:${effectiveTheme}`;
         try {
-          map.setStyle(getMapLibreStyle('offline-radar'));
+          map.setStyle(getMapLibreStyle('offline-radar', effectiveTheme));
         } catch (err) {
           console.warn('Error applying offline radar style:', err);
         }
       }
     }
-  }, []);
+  }, [effectiveTheme]);
 
   const handleDismissFallbackNotice = () => {
     setShowFallbackNotice(false);
@@ -119,6 +130,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     mapZoom,
     baselinesVisible,
     lopsVisible,
+    gdopLayerVisible,
     receiverFixes,
     updateStation,
     evaluateReceivers,
@@ -137,6 +149,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const designRef = useRef({ isDesignMode, designChain, designParams, showCrossingAngles });
   designRef.current = { isDesignMode, designChain, designParams, showCrossingAngles };
 
+  const baselinesVisibleRef = useRef(baselinesVisible);
+  baselinesVisibleRef.current = baselinesVisible;
+  const lopsVisibleRef = useRef(lopsVisible);
+  lopsVisibleRef.current = lopsVisible;
+  const gdopVisibleRef = useRef(gdopLayerVisible);
+  gdopVisibleRef.current = gdopLayerVisible;
+
+  const overlayRenderersRef = useRef({
+    baselines: null,
+    extensions: null,
+    lops: null,
+    gdop: null,
+  });
+
   const [cursorPos, setCursorPos] = useState(null);
   const [cursorGdop, setCursorGdop] = useState(null);
   const [cursorCrossing, setCursorCrossing] = useState(null);
@@ -149,6 +175,15 @@ export default function MapView({ onMapClick, isELoran = false }) {
   useEffect(() => {
     if (mapRef.current || !mapContainer.current) return;
 
+    const handleGlobalMapResize = () => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('simuloran:map:resize', handleGlobalMapResize);
+    }
+
     let mapInstance = null;
     try {
       mapInstance = new maplibregl.Map({
@@ -157,30 +192,42 @@ export default function MapView({ onMapClick, isELoran = false }) {
         center: initialCenterRef.current || [106.816666, -6.200000],
         zoom: initialZoomRef.current || 8,
         attributionControl: false,
+        trackResize: false, // Prevent continuous GPU canvas thrashing during CSS drawer transitions
       });
 
       mapInstance.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
       mapInstance.addControl(new maplibregl.ScaleControl({ maxWidth: 200, unit: 'metric' }), 'bottom-left');
       mapInstance.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-      const handleStyleReady = () => {
-        if (isMapStyleReady(mapInstance)) {
-          setIsStyleLoaded(true);
+      // Self-healing overlay recovery:
+      // MapLibre emits 'styledata' whenever a style is loaded or updated via map.setStyle().
+      // If any active overlay layers were removed by MapLibre during setStyle(),
+      // this handler detects their absence and re-adds them once the style is ready.
+      const handleStyleData = () => {
+        if (!isMapStyleReady(mapInstance)) return;
+        if (baselinesVisibleRef.current && !mapInstance.getLayer('loran-baselines-layer')) {
+          overlayRenderersRef.current.baselines?.();
+        }
+        if (designRef.current?.showBaselineExtensions && !mapInstance.getLayer('loran-baseline-ext-0')) {
+          overlayRenderersRef.current.extensions?.();
+        }
+        if (lopsVisibleRef.current && !mapInstance.getLayer('loran-lops-layer')) {
+          overlayRenderersRef.current.lops?.();
+        }
+        if (gdopVisibleRef.current && !mapInstance.getLayer('loran-gdop-heatmap-layer')) {
+          overlayRenderersRef.current.gdop?.();
         }
       };
 
-      mapInstance.on('load', handleStyleReady);
-      mapInstance.on('styledata', handleStyleReady);
-
-      if (isMapStyleReady(mapInstance)) {
-        setIsStyleLoaded(true);
-      }
+      mapInstance.on('load', handleStyleData);
+      mapInstance.on('styledata', handleStyleData);
+      mapInstance.on('idle', handleStyleData);
 
       mapInstance.on('error', (e) => {
         const errMsg = e?.error?.message || '';
 
-        // If tiles have already successfully loaded, ignore normal panning/zooming aborts
-        if (hasTileLoadedRef.current && (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError')) {
+        // If tiles are being aborted during rapid panning, ignore
+        if (/abort|cancel/i.test(errMsg) || e?.error?.name === 'AbortError') {
           return;
         }
 
@@ -211,7 +258,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
             (errMsg && /openstreetmap|tile\.open/i.test(errMsg)) ||
             (e?.error && (e.error.status || /failed|fetch|network|net::ERR|blocked|csp/i.test(errMsg)))
           );
-          if (isOsmError && !hasTileLoadedRef.current) {
+          if (isOsmError) {
             triggerNextFallback();
           }
           return;
@@ -219,7 +266,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       const handleTileLoaded = (e) => {
-        if (e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) {
+        const isBasemapSource = e.sourceId === 'openmaptiles' || e.sourceId === 'basemap-tiles';
+        if (isBasemapSource && e.tile && (e.tile.state === 'loaded' || e.tile.state === 'ready')) {
           hasTileLoadedRef.current = true;
         }
       };
@@ -274,37 +322,38 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       mapRef.current = mapInstance;
-      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
+      currentStyleKeyRef.current = `${activeTileProvider}:${effectiveTheme}`;
+      if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
         window.__maplibreInstance = mapInstance;
       }
     } catch (err) {
       console.error('Failed to initialize MapLibre map:', err);
     }
 
-    let resizeObserver = null;
-    let rAFId = null;
-    if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
-      resizeObserver = new ResizeObserver(() => {
-        if (rAFId) cancelAnimationFrame(rAFId);
-        rAFId = requestAnimationFrame(() => {
-          if (mapRef.current) {
-            mapRef.current.resize();
-          }
-        });
-      });
-      resizeObserver.observe(mapContainer.current);
+    let resizeDebounceTimer = null;
+    const handleWindowResize = () => {
+      if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+      resizeDebounceTimer = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 120);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleWindowResize);
     }
 
     return () => {
-      if (rAFId) {
-        cancelAnimationFrame(rAFId);
+      if (resizeDebounceTimer) {
+        clearTimeout(resizeDebounceTimer);
       }
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      setIsStyleLoaded(false);
+      // epoch: overlay effects re-run when style.load fires after remount
       if (typeof window !== 'undefined') {
-        delete window.__maplibreInstance;
+        window.removeEventListener('resize', handleWindowResize);
+        window.removeEventListener('simuloran:map:resize', handleGlobalMapResize);
+        if (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV) {
+          delete window.__maplibreInstance;
+        }
       }
       Object.values(markersRef.current).forEach((m) => {
         try { m.remove(); } catch { /* ignore */ }
@@ -330,8 +379,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const styleKey = `${activeTileProvider}:${effectiveTheme}`;
+    if (currentStyleKeyRef.current === styleKey) return;
+    currentStyleKeyRef.current = styleKey;
+
     if (activeTileProvider === 'openfreemap-dark' || activeTileProvider === 'openfreemap' || activeTileProvider === 'offline-radar') {
-      setIsStyleLoaded(false);
       try {
         map.setStyle(getMapLibreStyle(activeTileProvider, effectiveTheme));
       } catch (err) {
@@ -504,7 +556,6 @@ export default function MapView({ onMapClick, isELoran = false }) {
     designChain,
     isDesignMode,
     mapMode,
-    isStyleLoaded,
     updateStation,
     updateDesignMaster,
     updateDesignSecondary,
@@ -561,7 +612,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
         }
       }
     });
-  }, [receivers, receiverFixes, isStyleLoaded, isDesignMode]);
+  }, [receivers, receiverFixes, isDesignMode]);
 
 
   // Safe removal helper for MapLibre layers and sources
@@ -582,8 +633,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
   // Render Baselines Layer safely once style is fully loaded
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
+    if (!map) return;
 
+    let cancelled = false;
     const sourceId = 'loran-baselines-source';
     const layerId = 'loran-baselines-layer';
 
@@ -591,72 +643,89 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
 
     if (!baselinesVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
+      overlayRenderersRef.current.baselines = null;
       safeRemoveLayerAndSource(map, layerId, sourceId);
       return;
     }
 
-    try {
-      const features = [];
-
-      activeSecondaries.forEach((slave, sidx) => {
-        const d = haversineDistance(activeMaster, slave);
-        const b = initialBearing(activeMaster, slave);
-        const ext = destinationPoint(slave, d * 0.5, b);
-
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [activeMaster.lng, activeMaster.lat],
-              [slave.lng, slave.lat],
-              [ext.lng, ext.lat],
-            ],
-          },
-          properties: {
-            id: `baseline-${sidx}`,
-            label: `${activeMaster.label}-${slave.label}`,
-            lengthKm: (d / 1000).toFixed(1),
-          },
-        });
-      });
-
-      const geojson = { type: 'FeatureCollection', features };
-      if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
-        window.__baselineGeoJson = geojson;
+    const render = () => {
+      if (cancelled) return;
+      if (!isMapStyleReady(map)) {
+        return;
       }
 
-      safeRemoveLayerAndSource(map, layerId, sourceId);
+      try {
+        const features = [];
 
-      map.addSource(sourceId, { type: 'geojson', data: geojson });
-      map.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        paint: {
-          'line-color': isDesignMode ? '#f59e0b' : '#06b6d4',
-          'line-width': isDesignMode ? 2.2 : 1.8,
-          'line-opacity': 0.85,
-          'line-dasharray': [4, 3],
-        },
-      });
-    } catch (err) {
-      console.warn('Failed to render baselines layer:', err);
-    }
+        activeSecondaries.forEach((slave, sidx) => {
+          const d = haversineDistance(activeMaster, slave);
+          const b = initialBearing(activeMaster, slave);
+          const ext = destinationPoint(slave, d * 0.5, b);
+
+          features.push({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [activeMaster.lng, activeMaster.lat],
+                [slave.lng, slave.lat],
+                [ext.lng, ext.lat],
+              ],
+            },
+            properties: {
+              id: `baseline-${sidx}`,
+              label: `${activeMaster.label}-${slave.label}`,
+              lengthKm: (d / 1000).toFixed(1),
+            },
+          });
+        });
+
+        const geojson = { type: 'FeatureCollection', features };
+        if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
+          window.__baselineGeoJson = geojson;
+        }
+
+        safeRemoveLayerAndSource(map, layerId, sourceId);
+
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          paint: {
+            'line-color': isDesignMode ? '#f59e0b' : '#06b6d4',
+            'line-width': isDesignMode ? 2.2 : 1.8,
+            'line-opacity': 0.85,
+            'line-dasharray': [4, 3],
+          },
+        });
+      } catch (err) {
+        console.warn('Failed to render baselines layer:', err);
+      }
+    };
+
+    const renderers = overlayRenderersRef.current;
+    renderers.baselines = render;
+    render();
 
     return () => {
+      cancelled = true;
+      renderers.baselines = null;
+      map.off('styledata', render);
+      map.off('idle', render);
       if (typeof window !== 'undefined') {
         delete window.__baselineGeoJson;
       }
       safeRemoveLayerAndSource(map, layerId, sourceId);
     };
-  }, [masters, slaves, designChain, isDesignMode, baselinesVisible, isStyleLoaded, safeRemoveLayerAndSource]);
+  }, [masters, slaves, designChain, isDesignMode, baselinesVisible, safeRemoveLayerAndSource]);
 
   // Render Baseline Extension Hazard Sectors (±7.5° wedges)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
+    if (!map) return;
 
+    let cancelled = false;
     const fillSourceId = 'loran-baseline-ext-source';
     const fillLayerId = 'loran-baseline-ext-fill';
     const lineLayerId = 'loran-baseline-ext-line';
@@ -666,63 +735,83 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
 
     if (!shouldShow || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
+      overlayRenderersRef.current.extensions = null;
       safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
       safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
       return;
     }
 
-    try {
-      const halfWidth = designParams?.hazardConeHalfAngleDeg || 10;
-      const geojson = generateBaselineExtensionSectors(activeMaster, activeSecondaries, 800000, halfWidth);
-      safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
-      safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
+    let clickHandler = null;
 
-      map.addSource(fillSourceId, { type: 'geojson', data: geojson });
-      map.addLayer({
-        id: fillLayerId,
-        type: 'fill',
-        source: fillSourceId,
-        paint: {
-          'fill-color': '#f59e0b',
-          'fill-opacity': 0.14,
-        },
-      });
-      map.addLayer({
-        id: lineLayerId,
-        type: 'line',
-        source: fillSourceId,
-        paint: {
-          'line-color': '#ef4444',
-          'line-width': 1.5,
-          'line-opacity': 0.75,
-          'line-dasharray': [3, 2],
-        },
-      });
+    const render = () => {
+      if (cancelled) return;
+      if (!isMapStyleReady(map)) {
+        return;
+      }
 
-      const clickHandler = (e) => {
-        const feat = e.features?.[0];
-        if (!feat) return;
-        const p = feat.properties;
-        const content = `
-          <div class="font-mono text-xs">
-            <div class="font-bold text-amber-500 mb-1">Baseline Extension Hazard Zone</div>
-            <div class="text-[11px] text-zinc-300">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
-            <div class="text-[10px] text-zinc-400 mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
-          </div>
-        `;
-        new maplibregl.Popup({ offset: 10 }).setLngLat(e.lngLat).setHTML(content).addTo(map);
-      };
-
-      map.on('click', fillLayerId, clickHandler);
-
-      return () => {
-        try { map.off('click', fillLayerId, clickHandler); } catch { /* ignore */ }
+      try {
+        const halfWidth = designParams?.hazardConeHalfAngleDeg || 10;
+        const geojson = generateBaselineExtensionSectors(activeMaster, activeSecondaries, 800000, halfWidth);
         safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
         safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
-      };
-    } catch (err) {
-      console.warn('Failed to render baseline extensions layer:', err);
-    }
+
+        map.addSource(fillSourceId, { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: fillLayerId,
+          type: 'fill',
+          source: fillSourceId,
+          paint: {
+            'fill-color': '#f59e0b',
+            'fill-opacity': 0.14,
+          },
+        });
+        map.addLayer({
+          id: lineLayerId,
+          type: 'line',
+          source: fillSourceId,
+          paint: {
+            'line-color': '#ef4444',
+            'line-width': 1.5,
+            'line-opacity': 0.75,
+            'line-dasharray': [3, 2],
+          },
+        });
+
+        clickHandler = (e) => {
+          const feat = e.features?.[0];
+          if (!feat) return;
+          const p = feat.properties;
+          const content = `
+            <div class="font-mono text-xs">
+              <div class="font-bold text-amber-500 mb-1">Baseline Extension Hazard Zone</div>
+              <div class="text-[11px] text-zinc-300">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
+              <div class="text-[10px] text-zinc-400 mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
+            </div>
+          `;
+          new maplibregl.Popup({ offset: 10 }).setLngLat(e.lngLat).setHTML(content).addTo(map);
+        };
+
+        map.on('click', fillLayerId, clickHandler);
+      } catch (err) {
+        console.warn('Failed to render baseline extensions layer:', err);
+      }
+    };
+
+    const renderers = overlayRenderersRef.current;
+    renderers.extensions = render;
+    render();
+
+    return () => {
+      cancelled = true;
+      renderers.extensions = null;
+      map.off('styledata', render);
+      map.off('idle', render);
+      if (clickHandler) {
+        try { map.off('click', fillLayerId, clickHandler); } catch { /* ignore */ }
+      }
+      safeRemoveLayerAndSource(map, lineLayerId, fillSourceId);
+      safeRemoveLayerAndSource(map, fillLayerId, fillSourceId);
+    };
   }, [
     masters,
     slaves,
@@ -730,88 +819,250 @@ export default function MapView({ onMapClick, isELoran = false }) {
     isDesignMode,
     showBaselineExtensions,
     designParams,
-    isStyleLoaded,
     safeRemoveLayerAndSource,
   ]);
 
   // Render Hyperbolic LOP Contours Layer safely once style is fully loaded
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isStyleLoaded || !isMapStyleReady(map)) return;
+    if (!map) return;
 
+    let cancelled = false;
     const sourceId = 'loran-lops-source';
     const layerId = 'loran-lops-layer';
 
     if (!lopsVisible || !contours.length) {
+      overlayRenderersRef.current.lops = null;
       safeRemoveLayerAndSource(map, layerId, sourceId);
       return;
     }
 
-    try {
-      const features = [];
-      contours.forEach((c, idx) => {
-        if (!c.points || c.points.length < 2) return;
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: c.points,
-          },
-          properties: {
-            id: `lop-${c.masterIndex}-${c.slaveIndex}-${idx}`,
-            masterIndex: c.masterIndex,
-            slaveIndex: c.slaveIndex,
-            levelMeters: c.levelMeters,
-            levelSeconds: c.levelSeconds,
+    let clickHandler = null;
+
+    const render = () => {
+      if (cancelled) return;
+      if (!isMapStyleReady(map)) {
+        return;
+      }
+
+      try {
+        const features = [];
+        contours.forEach((c, idx) => {
+          if (!c.points || c.points.length < 2) return;
+          features.push({
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: c.points,
+            },
+            properties: {
+              id: `lop-${c.masterIndex}-${c.slaveIndex}-${idx}`,
+              masterIndex: c.masterIndex,
+              slaveIndex: c.slaveIndex,
+              levelMeters: c.levelMeters,
+              levelSeconds: c.levelSeconds,
+            },
+          });
+        });
+
+        const geojson = { type: 'FeatureCollection', features };
+
+        safeRemoveLayerAndSource(map, layerId, sourceId);
+
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          paint: {
+            'line-color': isELoran ? '#06b6d4' : '#ef4444',
+            'line-width': 2,
+            'line-opacity': 0.85,
           },
         });
-      });
 
-      const geojson = { type: 'FeatureCollection', features };
+        clickHandler = (e) => {
+          const feat = e.features?.[0];
+          if (!feat) return;
+          const p = feat.properties;
+          const content = `
+            <div class="font-mono text-xs">
+              <div class="font-bold text-cyan-400 mb-1">Hyperbolic Line of Position (LOP)</div>
+              <div>Master index: ${p.masterIndex} | Secondary: ${p.slaveIndex}</div>
+              <div>Delay offset: ${(p.levelMeters || 0).toFixed(0)} m</div>
+              <div>TDOA: ${(p.levelSeconds || 0).toExponential(3)} s</div>
+            </div>
+          `;
+          new maplibregl.Popup().setLngLat(e.lngLat).setHTML(content).addTo(map);
+        };
 
-      safeRemoveLayerAndSource(map, layerId, sourceId);
+        map.on('click', layerId, clickHandler);
+      } catch (err) {
+        console.warn('Failed to render LOP contours layer:', err);
+      }
+    };
 
-      map.addSource(sourceId, { type: 'geojson', data: geojson });
-      map.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        paint: {
-          'line-color': isELoran ? '#06b6d4' : '#ef4444',
-          'line-width': 2,
-          'line-opacity': 0.85,
-        },
-      });
+    const renderers = overlayRenderersRef.current;
+    renderers.lops = render;
+    render();
 
-      const clickHandler = (e) => {
-        const feat = e.features?.[0];
-        if (!feat) return;
-        const p = feat.properties;
-        const content = `
-          <div class="font-mono text-xs">
-            <div class="font-bold text-cyan-400 mb-1">Hyperbolic Line of Position (LOP)</div>
-            <div>Master index: ${p.masterIndex} | Secondary: ${p.slaveIndex}</div>
-            <div>Delay offset: ${(p.levelMeters || 0).toFixed(0)} m</div>
-            <div>TDOA: ${(p.levelSeconds || 0).toExponential(3)} s</div>
-          </div>
-        `;
-        new maplibregl.Popup().setLngLat(e.lngLat).setHTML(content).addTo(map);
-      };
-
-      map.on('click', layerId, clickHandler);
-
-      return () => {
+    return () => {
+      cancelled = true;
+      renderers.lops = null;
+      map.off('styledata', render);
+      map.off('idle', render);
+      if (clickHandler) {
         try {
           map.off('click', layerId, clickHandler);
         } catch {
           // ignore
         }
-        safeRemoveLayerAndSource(map, layerId, sourceId);
-      };
-    } catch (err) {
-      console.warn('Failed to render LOP contours layer:', err);
+      }
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+    };
+  }, [contours, lopsVisible, isELoran, safeRemoveLayerAndSource]);
+
+  // Render Live GDOP Heatmap Layer safely once style is fully loaded
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    let cancelled = false;
+    const sourceId = 'loran-gdop-heatmap-source';
+    const layerId = 'loran-gdop-heatmap-layer';
+
+    const activeMaster = isDesignMode ? designChain.master : masters[0];
+    const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
+
+    if (!gdopLayerVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
+      overlayRenderersRef.current.gdop = null;
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+      return;
     }
-  }, [contours, lopsVisible, isELoran, isStyleLoaded, safeRemoveLayerAndSource]);
+
+    const render = () => {
+      if (cancelled) return;
+      if (!isMapStyleReady(map)) {
+        return;
+      }
+
+      try {
+        const lats = [activeMaster.lat, ...activeSecondaries.map((s) => s.lat)];
+        const lngs = [activeMaster.lng, ...activeSecondaries.map((s) => s.lng)];
+        const minLat = Math.min(...lats) - 3.0;
+        const maxLat = Math.max(...lats) + 3.0;
+        const minLng = Math.min(...lngs) - 4.5;
+        const maxLng = Math.max(...lngs) + 4.5;
+        const bbox = { minLat, maxLat, minLng, maxLng };
+
+        const nx = 35;
+        const ny = 35;
+        const grid = computeGDOPGrid(activeMaster, activeSecondaries, bbox, nx, ny);
+
+        const features = [];
+        const dLng = (bbox.maxLng - bbox.minLng) / (nx - 1);
+        const dLat = (bbox.maxLat - bbox.minLat) / (ny - 1);
+
+        let idx = 0;
+        for (let j = 0; j < ny; j++) {
+          const lat = bbox.minLat + j * dLat;
+          for (let i = 0; i < nx; i++, idx++) {
+            const lng = bbox.minLng + i * dLng;
+            const gdop = grid.data[idx];
+            if (gdop < 50 && Number.isFinite(gdop)) {
+              features.push({
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [lng, lat],
+                },
+                properties: {
+                  gdop,
+                },
+              });
+            }
+          }
+        }
+
+        const geojson = { type: 'FeatureCollection', features };
+        if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
+          window.__gdopGeoJson = geojson;
+        }
+
+        safeRemoveLayerAndSource(map, layerId, sourceId);
+
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: layerId,
+          type: 'heatmap',
+          source: sourceId,
+          paint: {
+            'heatmap-weight': [
+              'interpolate',
+              ['linear'],
+              ['get', 'gdop'],
+              1, 1.0,
+              3, 0.8,
+              6, 0.5,
+              15, 0.2,
+              30, 0.05,
+            ],
+            'heatmap-intensity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 1,
+              9, 3,
+            ],
+            'heatmap-color': [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(0, 0, 0, 0)',
+              0.2, 'rgba(56, 189, 248, 0.3)',
+              0.4, 'rgba(52, 211, 153, 0.5)',
+              0.6, 'rgba(250, 204, 21, 0.65)',
+              0.8, 'rgba(251, 146, 60, 0.75)',
+              1, 'rgba(248, 113, 113, 0.85)',
+            ],
+            'heatmap-radius': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              2, 18,
+              6, 36,
+              10, 70,
+            ],
+            'heatmap-opacity': 0.75,
+          },
+        });
+      } catch (err) {
+        console.warn('Failed to render GDOP heatmap layer:', err);
+      }
+    };
+
+    const renderers = overlayRenderersRef.current;
+    renderers.gdop = render;
+    render();
+
+    return () => {
+      cancelled = true;
+      renderers.gdop = null;
+      map.off('styledata', render);
+      map.off('idle', render);
+      if (typeof window !== 'undefined') {
+        delete window.__gdopGeoJson;
+      }
+      safeRemoveLayerAndSource(map, layerId, sourceId);
+    };
+  }, [
+    masters,
+    slaves,
+    designChain,
+    isDesignMode,
+    gdopLayerVisible,
+    safeRemoveLayerAndSource,
+  ]);
 
   // High-performance radar canvas fallback drawing
   const drawRadar = useCallback(() => {
@@ -858,54 +1109,56 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const cy = centerScreen.y;
 
     // 1. Geographic graticule (lat/lng coordinates)
-    const bounds = map.getBounds();
-    const west = bounds.getWest();
-    const east = bounds.getEast();
-    const north = bounds.getNorth();
-    const south = bounds.getSouth();
+    if (radarShowGraticule) {
+      const bounds = map.getBounds();
+      const west = bounds.getWest();
+      const east = bounds.getEast();
+      const north = bounds.getNorth();
+      const south = bounds.getSouth();
 
-    const zoom = map.getZoom();
-    let step = 1.0;
-    if (zoom >= 11) step = 0.05;
-    else if (zoom >= 9) step = 0.1;
-    else if (zoom >= 7) step = 0.25;
-    else if (zoom >= 5) step = 0.5;
-    else if (zoom >= 3) step = 1.0;
-    else step = 2.0;
+      const zoom = map.getZoom();
+      let step = 1.0;
+      if (zoom >= 11) step = 0.05;
+      else if (zoom >= 9) step = 0.1;
+      else if (zoom >= 7) step = 0.25;
+      else if (zoom >= 5) step = 0.5;
+      else if (zoom >= 3) step = 1.0;
+      else step = 2.0;
 
-    ctx.strokeStyle = graticuleColor;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
+      ctx.strokeStyle = graticuleColor;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
 
-    const startLng = Math.floor(west / step) * step;
-    for (let lng = startLng; lng <= east; lng += step) {
-      const p1 = map.project([lng, north]);
-      const p2 = map.project([lng, south]);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
+      const startLng = Math.floor(west / step) * step;
+      for (let lng = startLng; lng <= east; lng += step) {
+        const p1 = map.project([lng, north]);
+        const p2 = map.project([lng, south]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
 
-      ctx.fillStyle = textMuted;
-      ctx.font = '9px monospace';
-      ctx.fillText(`${lng.toFixed(2)}°`, p1.x + 4, 14);
+        ctx.fillStyle = textMuted;
+        ctx.font = '9px monospace';
+        ctx.fillText(`${lng.toFixed(2)}°`, p1.x + 4, 14);
+      }
+
+      const startLat = Math.floor(south / step) * step;
+      for (let lat = startLat; lat <= north; lat += step) {
+        const p1 = map.project([west, lat]);
+        const p2 = map.project([east, lat]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        ctx.fillStyle = textMuted;
+        ctx.font = '9px monospace';
+        ctx.fillText(`${lat.toFixed(2)}°`, 6, p1.y - 4);
+      }
+
+      ctx.setLineDash([]);
     }
-
-    const startLat = Math.floor(south / step) * step;
-    for (let lat = startLat; lat <= north; lat += step) {
-      const p1 = map.project([west, lat]);
-      const p2 = map.project([east, lat]);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-
-      ctx.fillStyle = textMuted;
-      ctx.font = '9px monospace';
-      ctx.fillText(`${lat.toFixed(2)}°`, 6, p1.y - 4);
-    }
-
-    ctx.setLineDash([]);
 
     // 2. Concentric Range Rings centered on screen/map center
     const rangeNM = [2, 5, 10, 20, 40, 80, 160, 320, 640];
@@ -932,8 +1185,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
       ctx.fillText(`${nm} NM (${km.toFixed(0)} km)`, cx + radiusPx + 4, cy - 3);
     }
 
-    // 3. Radial Bearing Lines (every 30 degrees)
-    const bearings = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+    // 3. Radial Bearing Lines (cardinal by default; full 12 radials when toggled)
+    const bearings = radarShowRadials
+      ? [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+      : [0, 90, 180, 270];
     const bearingLabels = {
       0: '000° N', 30: '030°', 60: '060°', 90: '090° E',
       120: '120°', 150: '150°', 180: '180° S', 210: '210°',
@@ -984,10 +1239,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
     ctx.textBaseline = 'bottom';
     ctx.font = 'bold 10px monospace';
     ctx.fillStyle = isDark ? 'rgba(34, 211, 238, 0.7)' : 'rgba(2, 132, 199, 0.8)';
-    ctx.fillText('RADAR 2D VECTOR BACKDROP · OFFLINE STANDBY', 14, h - 14);
+    ctx.fillText('RADAR 2D VECTOR BACKDROP · OFFLINE ZERO-NETWORK', 14, h - 14);
 
     ctx.restore();
-  }, [activeTileProvider, effectiveTheme]);
+  }, [activeTileProvider, effectiveTheme, radarShowRadials, radarShowGraticule]);
 
   // Redraw radar canvas on map events and provider switch
   useEffect(() => {
@@ -1026,10 +1281,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (!map) return;
     setActiveTileProvider(providerKey);
     activeTileProviderRef.current = providerKey;
-    setIsStyleLoaded(false);
+    // epoch: style.load will increment styleLoadEpoch when new provider loads
     if (providerKey !== 'offline-radar') {
       try {
         if (typeof window !== 'undefined' && window.sessionStorage) {
+          sessionStorage.removeItem('simuloran_offline_radar');
           sessionStorage.removeItem('loran_offline_radar');
         }
       } catch {
@@ -1039,6 +1295,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       tileErrorsRef.current = [];
     }
     setShowFallbackNotice(false);
+    currentStyleKeyRef.current = `${providerKey}:${effectiveTheme}`;
     try {
       map.setStyle(getMapLibreStyle(providerKey, effectiveTheme));
     } catch (err) {
@@ -1048,13 +1305,23 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
   return (
     <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
-      <div ref={mapContainer} className="w-full h-full" />
+      {/* Offline Radar 2D Vector Backdrop Canvas (underlay at z-index 0) */}
       <canvas
         ref={radarCanvasRef}
+        data-testid="radar-backdrop-canvas"
         className="absolute inset-0 pointer-events-none w-full h-full"
         style={{
-          zIndex: 1,
+          zIndex: 0,
           display: activeTileProvider === 'offline-radar' ? 'block' : 'none',
+        }}
+      />
+      {/* MapLibre WebGL container (overlay at z-index 1 with transparent background in radar mode) */}
+      <div
+        ref={mapContainer}
+        className="w-full h-full relative"
+        style={{
+          zIndex: 1,
+          backgroundColor: activeTileProvider === 'offline-radar' ? 'transparent' : undefined,
         }}
       />
 
@@ -1090,8 +1357,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className={`inline-block w-2 h-2 rounded-full ${isStyleLoaded ? 'animate-pulse' : ''}`}
-              style={{ background: isDesignMode ? 'var(--accent-loran-c)' : isStyleLoaded ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
+            <span className="inline-block w-2 h-2 rounded-full animate-pulse"
+              style={{ background: isDesignMode ? 'var(--accent-loran-c)' : 'var(--accent-eloran)' }}
             />
             <span className="uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-dim)' }}>
               {isDesignMode ? 'CHAIN DESIGN:' : 'MODE:'}
@@ -1153,16 +1420,20 @@ export default function MapView({ onMapClick, isELoran = false }) {
       >
         {Object.values(TILE_PROVIDERS).map((p) => {
           const isCartoUnset = p.id === 'carto-dark' && !CARTO_API_KEY;
+          const isRadar = p.id === 'offline-radar';
           return (
             <button
               key={p.id}
               onClick={() => handleSwitchProvider(p.id)}
+              data-testid={isRadar ? 'basemap-radar' : `basemap-${p.id}`}
               title={
-                isCartoUnset
+                isRadar
+                  ? 'Offline Radar: Zero-network 2D navigation backdrop with calibrated range rings and bearing radials. Operates without internet connectivity.'
+                  : isCartoUnset
                   ? 'CARTO Dark requires VITE_CARTO_API_KEY (optional commercial basemap). Click for setup details.'
                   : undefined
               }
-              className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1"
+              className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1 cursor-pointer"
               style={activeTileProvider === p.id
                 ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
                 : isCartoUnset
@@ -1182,8 +1453,51 @@ export default function MapView({ onMapClick, isELoran = false }) {
         })}
       </div>
 
+      {/* Offline Radar Declutter & Feature Toggles */}
+      {activeTileProvider === 'offline-radar' && (
+        <div
+          data-testid="radar-controls-pill"
+          className="absolute top-26 sm:top-24 left-4 z-10 backdrop-blur-md rounded-full px-2.5 py-1 text-[10px] font-mono flex items-center gap-2 shadow-lg animate-fade-in"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
+        >
+          <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: 'var(--accent-eloran)' }}>
+            Offline 2D:
+          </span>
+          <button
+            type="button"
+            onClick={() => setRadarShowRadials((v) => !v)}
+            data-testid="toggle-radar-radials"
+            title="Toggle 30° radial bearing lines (default: cardinals only to minimize clutter)"
+            className="px-2 py-0.5 rounded-full transition-colors text-[10px] cursor-pointer flex items-center gap-1"
+            style={{
+              background: radarShowRadials ? 'var(--accent-eloran-subtle)' : 'transparent',
+              color: radarShowRadials ? 'var(--accent-eloran)' : 'var(--text-dim)',
+              border: `1px solid ${radarShowRadials ? 'var(--accent-eloran-border)' : 'var(--border-subtle)'}`,
+            }}
+          >
+            <span>Radials</span>
+            <span className="font-bold">{radarShowRadials ? 'ON' : 'OFF'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRadarShowGraticule((v) => !v)}
+            data-testid="toggle-radar-graticule"
+            title="Toggle geographic coordinate grid (lat/lng)"
+            className="px-2 py-0.5 rounded-full transition-colors text-[10px] cursor-pointer flex items-center gap-1"
+            style={{
+              background: radarShowGraticule ? 'var(--accent-eloran-subtle)' : 'transparent',
+              color: radarShowGraticule ? 'var(--accent-eloran)' : 'var(--text-dim)',
+              border: `1px solid ${radarShowGraticule ? 'var(--accent-eloran-border)' : 'var(--border-subtle)'}`,
+            }}
+          >
+            <span>Grid</span>
+            <span className="font-bold">{radarShowGraticule ? 'ON' : 'OFF'}</span>
+          </button>
+        </div>
+      )}
+
       {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
-      <div className="absolute bottom-20 left-4 z-10 font-mono text-xs">
+      <div className="absolute bottom-12 left-2.5 z-10 font-mono text-xs">
         {showLegend ? (
           <div
             className="backdrop-blur-md rounded-lg p-2.5 shadow-md space-y-1.5 text-[11px] animate-fade-in"

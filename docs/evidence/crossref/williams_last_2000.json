@@ -1,0 +1,192 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          5
+        ]
+      ],
+      "date-time": "2025-12-05T12:05:17Z",
+      "timestamp": 1764936317936
+    },
+    "reference-count": 0,
+    "publisher": "Cambridge University Press (CUP)",
+    "issue": "2",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              2000,
+              5,
+              1
+            ]
+          ],
+          "date-time": "2000-05-01T00:00:00Z",
+          "timestamp": 957139200000
+        },
+        "content-version": "unspecified",
+        "delay-in-days": 0,
+        "URL": "https://www.cambridge.org/core/terms"
+      }
+    ],
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "J. Navigation"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2000,
+          5
+        ]
+      ]
+    },
+    "abstract": "<jats:p>Loran-C receivers measure time delay differences in the signals they receive, compute \ndifferences of distance, and hence determine the user's position. The conversion from time \nto distance requires knowledge of the signals' velocities, which differ when propagating over \nsea or land. Precise positioning requires the delays of land paths to be accurately mapped, \na procedure traditionally entailing expensive and time-consuming marine surveys. The \nresulting data, in the form of Additional Secondary Factors (ASFs), may be stored in \nLoran receivers. This paper introduces the concept of Loran-C Additional Secondary \nFactors, and shows how it is possible to map them efficiently. It focuses on recent \nadvances, chiefly the development of powerful software for modelling the growth of ASFs \nover mountainous terrain. This employs an implementation of an algorithm proposed \nby Monteath. The modelling capability of the algorithm is demonstrated by examining \npropagation along a route that crosses mountains and deep fjords. In addition, the ASFs \nit predicts are compared with sample measurements made around the west coast of \nScotland.</jats:p>",
+    "DOI": "10.1017/s0373463300008778",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2002,
+          7,
+          27
+        ]
+      ],
+      "date-time": "2002-07-27T13:30:22Z",
+      "timestamp": 1027776622000
+    },
+    "page": "225-235",
+    "source": "Crossref",
+    "is-referenced-by-count": 14,
+    "title": [
+      "Mapping the ASFs of the Northwest European Loran-C System"
+    ],
+    "prefix": "10.1017",
+    "volume": "53",
+    "author": [
+      {
+        "given": "Paul",
+        "family": "Williams",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "David",
+        "family": "Last",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "56",
+    "published-online": {
+      "date-parts": [
+        [
+          2000,
+          5,
+          1
+        ]
+      ]
+    },
+    "container-title": [
+      "Journal of Navigation"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/S0373463300008778",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2019,
+          4,
+          5
+        ]
+      ],
+      "date-time": "2019-04-05T23:01:35Z",
+      "timestamp": 1554505295000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://www.cambridge.org/core/product/identifier/S0373463300008778/type/journal_article"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2000,
+          5
+        ]
+      ]
+    },
+    "references-count": 0,
+    "journal-issue": {
+      "issue": "2",
+      "published-print": {
+        "date-parts": [
+          [
+            2000,
+            5
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "S0373463300008778"
+    ],
+    "URL": "https://doi.org/10.1017/s0373463300008778",
+    "relation": {},
+    "ISSN": [
+      "0373-4633",
+      "1469-7785"
+    ],
+    "issn-type": [
+      {
+        "value": "0373-4633",
+        "type": "print"
+      },
+      {
+        "value": "1469-7785",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2000,
+          5
+        ]
+      ]
+    }
+  }
+}

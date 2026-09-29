@@ -1,0 +1,254 @@
+﻿
+Running 60 tests using 1 worker
+
+  ok  1 [chromium] ΓÇ║ e2e\chain-design.spec.js:11:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ toggle between Simulation and Chain Design mode in Loran-C and eLoran (21.6s)
+  ok  2 [chromium] ΓÇ║ e2e\chain-design.spec.js:52:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ USCG 400-mile golden worked example matches theoretical baseline travel time and emission delay end-to-end (3.5s)
+  ok  3 [chromium] ΓÇ║ e2e\chain-design.spec.js:84:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ loads each preset correctly with appropriate provenance badges and station configurations (6.4s)
+  ok  4 [chromium] ΓÇ║ e2e\chain-design.spec.js:120:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ flags infeasible GRI and coding delay violations with specific warning banners (6.0s)
+  ok  5 [chromium] ΓÇ║ e2e\chain-design.spec.js:156:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ allows tuning configurable planning thresholds with real-time heuristic validation (6.1s)
+  ok  6 [chromium] ΓÇ║ e2e\chain-design.spec.js:189:3 ΓÇ║ Chain Design & Planning Mode Comprehensive E2E Suite ΓÇ║ Commit Design to Active Simulation workflow transfers stations and transitions mode (8.8s)
+  ok  7 [chromium] ΓÇ║ e2e\comprehensive-qa.spec.js:20:3 ΓÇ║ Comprehensive Functional QA & Priority Verification ΓÇ║ Priority 4 & 5: Hard-default LIGHT theme, Navbar theme toggle, and banner persistence (6.2s)
+  ok  8 [chromium] ΓÇ║ e2e\comprehensive-qa.spec.js:79:3 ΓÇ║ Comprehensive Functional QA & Priority Verification ΓÇ║ Priority 2 & 3: Radar Canvas offline mode rendering & CARTO UX (8.1s)
+  ok  9 [chromium] ΓÇ║ e2e\comprehensive-qa.spec.js:128:3 ΓÇ║ Comprehensive Functional QA & Priority Verification ΓÇ║ Priority 6: KaTeX math formulas render properly on Learn, About, and Waveforms (8.8s)
+  ok 10 [chromium] ΓÇ║ e2e\comprehensive-qa.spec.js:171:3 ΓÇ║ Comprehensive Functional QA & Priority Verification ΓÇ║ Priority 7: System-wide interactive controls (Pan, Stations, Presets, Settings, Exports) (13.4s)
+  ok 11 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:16:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Tactical Toolbar: test Pan, +Master, +Secondary, +Receiver mode buttons and map click (5.3s)
+  ok 12 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:60:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Clear All & Chain Design: test Clear All reset and Commit Design to Active Simulation (6.7s)
+  ok 13 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:99:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Export/Import Round-Trip: export CSV, clear stations, re-import and assert match (6.1s)
+  ok 14 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:162:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ PulseViewer: assert SVG polyline has non-trivial points and dynamically updates on parameter change (3.2s)
+  ok 15 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:188:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ CycleSelectionPanel: assert Rice curve path, Monte Carlo scatter points, and active inspection marker updates (2.1s)
+  ok 16 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:231:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ GDOP & LOP Contours: compute off-thread marching squares contours and verify MapLibre rendering & telemetry (5.0s)
+  ok 17 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:290:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ AsfPanel: switch between Millington, Temporal, and Formula modes with drawer state persistence (13.6s)
+  ok 18 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:341:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Scenario Presets: verify clean state switching across all 6 presets (14.6s)
+  ok 19 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:374:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Sliders & Timing Controls: verify jitter, receiver scaling, and clock reset (4.1s)
+  ok 20 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:405:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Basemap Switcher: test transitions across OpenFreeMap, OSM, CARTO, and Radar with declutter controls (1.5s)
+  ok 21 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:445:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Route & Theme QA: verify zero errors and clean theme toggling across all 6 routes (11.9s)
+  ok 22 [chromium] ΓÇ║ e2e\full-functional-audit.spec.js:481:3 ΓÇ║ Phase 4: Full Functional QA Audit Suite ΓÇ║ Trial Validation Panel: toggle Korea & Maoming datasets and inspect comparison metrics (3.1s)
+  ok 23 [chromium] ΓÇ║ e2e\geo-asf.spec.js:5:3 ΓÇ║ Geodesic GIS Real Coastline ASF E2E Suite ΓÇ║ verifies Geodesic GIS toggle, coastline segmentation readout, and manual fallback (6.9s)
+LOPs Worker Verification Result: {
+  "hasSource": true,
+  "featureCount": 71
+}
+  ok 24 [chromium] ΓÇ║ e2e\grid-worker.spec.js:10:3 ΓÇ║ Web Worker Grid Computation & CSP Suite ΓÇ║ successfully instantiates gridWorker and computes LOP contours off-thread without CSP error (7.8s)
+Rigorous Marker-to-Projection & Baseline Alignment Results:
+{
+  "results": [
+    {
+      "label": "M1-TanjungPriok",
+      "type": "master",
+      "coords": [
+        106.88,
+        -6.1
+      ],
+      "dotScreenCenter": {
+        "x": 496.118,
+        "y": 243.261
+      },
+      "expectedProjected": {
+        "x": 496.118,
+        "y": 243.261
+      },
+      "baselineProjected": {
+        "x": 496.118,
+        "y": 243.261
+      },
+      "diffMarkerProjX": 0,
+      "diffMarkerProjY": 0,
+      "diffBaselineMarkerX": 0,
+      "diffBaselineMarkerY": 0,
+      "diffBaselineProjX": 0,
+      "diffBaselineProjY": 0
+    },
+    {
+      "label": "S1-Tangerang",
+      "type": "slave",
+      "coords": [
+        106.63,
+        -6.18
+      ],
+      "dotScreenCenter": {
+        "x": 314.074,
+        "y": 301.851
+      },
+      "expectedProjected": {
+        "x": 314.074,
+        "y": 301.851
+      },
+      "baselineProjected": {
+        "x": 314.074,
+        "y": 301.851
+      },
+      "diffMarkerProjX": 0,
+      "diffMarkerProjY": 0,
+      "diffBaselineMarkerX": 0,
+      "diffBaselineMarkerY": 0,
+      "diffBaselineProjX": 0,
+      "diffBaselineProjY": 0
+    },
+    {
+      "label": "S2-Bekasi",
+      "type": "slave",
+      "coords": [
+        106.99,
+        -6.24
+      ],
+      "dotScreenCenter": {
+        "x": 576.218,
+        "y": 345.8
+      },
+      "expectedProjected": {
+        "x": 576.218,
+        "y": 345.8
+      },
+      "baselineProjected": {
+        "x": 576.218,
+        "y": 345.8
+      },
+      "diffMarkerProjX": 0,
+      "diffMarkerProjY": 0,
+      "diffBaselineMarkerX": 0,
+      "diffBaselineMarkerY": 0,
+      "diffBaselineProjX": 0,
+      "diffBaselineProjY": 0
+    },
+    {
+      "label": "R1-Vessel",
+      "type": "receiver",
+      "coords": [
+        106.82,
+        -6.15
+      ],
+      "dotScreenCenter": {
+        "x": 452.428,
+        "y": 279.879
+      },
+      "expectedProjected": {
+        "x": 452.428,
+        "y": 279.879
+      },
+      "baselineProjected": null,
+      "diffMarkerProjX": 0,
+      "diffMarkerProjY": 0,
+      "diffBaselineMarkerX": null,
+      "diffBaselineMarkerY": null,
+      "diffBaselineProjX": null,
+      "diffBaselineProjY": null
+    }
+  ],
+  "baselineFeatureCount": 2
+}
+  ok 25 [chromium] ΓÇ║ e2e\marker-alignment.spec.js:10:3 ΓÇ║ Marker to Baseline Alignment Suite ΓÇ║ station pin circle centers match true map.project geographic coordinates and baseline endpoints within 1px (7.9s)
+  ok 26 [chromium] ΓÇ║ e2e\marker-alignment.spec.js:170:3 ΓÇ║ Marker to Baseline Alignment Suite ΓÇ║ collinear degenerate stations (high_gdop) align perfectly with baseline vectors within 1px (6.7s)
+Production Bundle Alignment Results:
+ {
+  "results": [
+    {
+      "label": "M-Collinear",
+      "type": "master",
+      "coords": [
+        106.5,
+        -6.2
+      ],
+      "dotScreenCenter": {
+        "x": 248,
+        "y": 317
+      },
+      "expectedProjected": {
+        "x": 247.956,
+        "y": 316.5
+      },
+      "diffMarkerProjX": 0.044,
+      "diffMarkerProjY": 0.5
+    },
+    {
+      "label": "S1-Linear",
+      "type": "slave",
+      "coords": [
+        106.8,
+        -6.205
+      ],
+      "dotScreenCenter": {
+        "x": 357,
+        "y": 318
+      },
+      "expectedProjected": {
+        "x": 357.182,
+        "y": 318.331
+      },
+      "diffMarkerProjX": 0.182,
+      "diffMarkerProjY": 0.331
+    },
+    {
+      "label": "S2-Linear",
+      "type": "slave",
+      "coords": [
+        107.1,
+        -6.21
+      ],
+      "dotScreenCenter": {
+        "x": 466,
+        "y": 320
+      },
+      "expectedProjected": {
+        "x": 466.409,
+        "y": 320.162
+      },
+      "diffMarkerProjX": 0.409,
+      "diffMarkerProjY": 0.162
+    },
+    {
+      "label": "R-Divergent",
+      "type": "receiver",
+      "coords": [
+        106.8,
+        -6.6
+      ],
+      "dotScreenCenter": {
+        "x": 357,
+        "y": 463
+      },
+      "expectedProjected": {
+        "x": 357.182,
+        "y": 463.049
+      },
+      "diffMarkerProjX": 0.182,
+      "diffMarkerProjY": 0.049
+    }
+  ]
+}
+Saved production build alignment verification screenshot to: E:\Projects\simuloran\docs\verification\screenshots\prod_build_collinear_alignment.png
+  ok 27 [chromium] ΓÇ║ e2e\prod-marker-alignment.spec.js:13:3 ΓÇ║ Production Build Marker Alignment Verification ΓÇ║ true production build (npm run build && preview): collinear degenerate stations align within 1px (9.3s)
+  ok 28 [chromium] ΓÇ║ e2e\pulse-and-hud-verification.spec.js:4:3 ΓÇ║ HUD Map Uniformity & Canonical Loran Pulse Verification ΓÇ║ HUD Map: Tactical toolbar has no dead right margin and scale control is themed (6.5s)
+  ok 29 [chromium] ΓÇ║ e2e\pulse-and-hud-verification.spec.js:66:3 ΓÇ║ HUD Map Uniformity & Canonical Loran Pulse Verification ΓÇ║ Waveforms: Canonical Loran-C pulse envelope + carrier wave, 300 ┬╡s zoom, and uncompressed SVG export (3.9s)
+  ok 30 [chromium] ΓÇ║ e2e\radar-canvas.spec.js:4:3 ΓÇ║ Radar Canvas Map Mode ΓÇö Comprehensive Functional & Visual Verification ΓÇ║ manual selection: activates radar canvas underlay and renders markers, baselines, and LOP contours on top (8.3s)
+  ok 31 [chromium] ΓÇ║ e2e\radar-canvas.spec.js:96:3 ΓÇ║ Radar Canvas Map Mode ΓÇö Comprehensive Functional & Visual Verification ΓÇ║ declutter controls: toggles 30┬░ radial bearing lines and graticule coordinate grid (7.3s)
+  ok 32 [chromium] ΓÇ║ e2e\radar-canvas.spec.js:133:3 ΓÇ║ Radar Canvas Map Mode ΓÇö Comprehensive Functional & Visual Verification ΓÇ║ automatic fallback: triggers when tile network requests fail (5.2s)
+  ok 33 [chromium] ΓÇ║ e2e\radar-canvas.spec.js:175:3 ΓÇ║ Radar Canvas Map Mode ΓÇö Comprehensive Functional & Visual Verification ΓÇ║ switching back: user can cleanly transition from Radar back to online basemaps (7.0s)
+  ok 34 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit / (Home) - no ErrorBoundary, no exceptions, no CSP violations (1.6s)
+  ok 35 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /loran-c (Loran-C) - no ErrorBoundary, no exceptions, no CSP violations (1.5s)
+  ok 36 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /eloran (eLoran) - no ErrorBoundary, no exceptions, no CSP violations (1.6s)
+  ok 37 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /waveforms (Waveforms) - no ErrorBoundary, no exceptions, no CSP violations (1.1s)
+  ok 38 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /learn (Learn) - no ErrorBoundary, no exceptions, no CSP violations (1.0s)
+  ok 39 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /about (About) - no ErrorBoundary, no exceptions, no CSP violations (1.0s)
+  ok 40 [chromium] ΓÇ║ e2e\routes.spec.js:19:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ visit /unknown-route-test (Unknown Route) - no ErrorBoundary, no exceptions, no CSP violations (1.4s)
+  ok 41 [chromium] ΓÇ║ e2e\routes.spec.js:49:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ /eloran receives HTTP 200 from real basemap tile host within 10s and attaches map screenshot (5.3s)
+  ok 42 [chromium] ΓÇ║ e2e\routes.spec.js:49:5 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ /loran-c receives HTTP 200 from real basemap tile host within 10s and attaches map screenshot (4.8s)
+  ok 43 [chromium] ΓÇ║ e2e\routes.spec.js:138:3 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ progressive fallback chain: falls back to OpenStreetMap raster when openfreemap.org is blocked (3.8s)
+  ok 44 [chromium] ΓÇ║ e2e\routes.spec.js:176:3 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ progressive fallback chain: falls back to offline Radar Canvas when all tile hosts are blocked (3.2s)
+  ok 45 [chromium] ΓÇ║ e2e\routes.spec.js:211:3 ΓÇ║ SIMULORAN E2E Suite ΓÇ║ /loran-c handles near-degenerate / collinear geometry without triggering ErrorBoundary and silences missing sprite warnings (6.7s)
+  ok 46 [chromium] ΓÇ║ e2e\sidebar-flicker.spec.js:8:3 ΓÇ║ Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warning Verification ΓÇ║ zero MapLibre style diff warnings on Loran-C and eLoran pages (4.7s)
+  ok 47 [chromium] ΓÇ║ e2e\sidebar-flicker.spec.js:30:3 ΓÇ║ Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warning Verification ΓÇ║ sidebar expands and collapses without flicker on Loran-C page (8.0s)
+  ok 48 [chromium] ΓÇ║ e2e\sidebar-flicker.spec.js:72:3 ΓÇ║ Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warning Verification ΓÇ║ sidebar drag-resize expands leftwards and shrinks rightwards without right overflow (9.3s)
+  ok 49 [chromium] ΓÇ║ e2e\sidebar-flicker.spec.js:130:3 ΓÇ║ Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warning Verification ΓÇ║ sidebar state persists without flicker on eLoran page (3.8s)
+  ok 50 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:87:5 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ overlay layers persist across theme toggle and style swap on /loran-c (9.3s)
+  ok 51 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:149:5 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ LOP contours persist after style swap on /loran-c (10.3s)
+  ok 52 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:87:5 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ overlay layers persist across theme toggle and style swap on /eloran (8.7s)
+  ok 53 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:149:5 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ LOP contours persist after style swap on /eloran (8.4s)
+  ok 54 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:191:3 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ MapLibre listener count does not leak over 20 theme toggles (14.3s)
+  ok 55 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:234:3 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ direct map.setStyle keeps custom overlays intact without calling app helper (7.0s)
+  ok 56 [chromium] ΓÇ║ e2e\style-layers-persistence.spec.js:280:3 ΓÇ║ MapLibre setStyle & Overlay Layers Persistence Regression Suite ΓÇ║ vector style diff path: mock OpenFreeMap style and tiles via route interception (6.5s)
+  ok 57 [chromium] ΓÇ║ e2e\tooltips-verification.spec.js:12:3 ΓÇ║ Sidebar Tooltips & Decluttering Verification Suite ΓÇ║ verify all 12 provenance items, accessible tooltips, and decluttered panels (10.6s)
+  ok 58 [chromium] ΓÇ║ e2e\tooltips-verification.spec.js:193:3 ΓÇ║ Sidebar Tooltips & Decluttering Verification Suite ΓÇ║ verify CycleSelectionPanel clean UTF-8 rendering without mojibake (TB-01) (2.6s)
+  ok 59 [chromium] ΓÇ║ e2e\trial-validation.spec.js:5:3 ΓÇ║ Empirical Field Trial Validation E2E Suite ΓÇ║ verifies About page benchmark cards and AsfPanel trial validation integration (12.4s)
+  ok 60 [chromium] ΓÇ║ e2e\ui-fixes-verification.spec.js:4:3 ΓÇ║ UI & UX Fixes Verification Suite ΓÇ║ Verify all 6 UI fixes: viewport lock, sidebar toggle, scale clearance, theme toggle, and banner dismissal (17.0s)
+
+  60 passed (7.1m)

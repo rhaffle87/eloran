@@ -1,0 +1,328 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          27
+        ]
+      ],
+      "date-time": "2026-09-27T11:49:06Z",
+      "timestamp": 1790509746316,
+      "version": "4.1.0"
+    },
+    "reference-count": 22,
+    "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+    "issue": "10",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              1936,
+              10,
+              1
+            ]
+          ],
+          "date-time": "1936-10-01T00:00:00Z",
+          "timestamp": -1049328000000
+        },
+        "content-version": "vor",
+        "delay-in-days": 0,
+        "URL": "https://ieeexplore.ieee.org/Xplorehelp/downloads/license-information/IEEE.html"
+      }
+    ],
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "Proc. IRE"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          1936,
+          10
+        ]
+      ]
+    },
+    "DOI": "10.1109/jrproc.1936.227360",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2007,
+          6,
+          27
+        ]
+      ],
+      "date-time": "2007-06-27T18:24:17Z",
+      "timestamp": 1182968657000
+    },
+    "page": "1367-1387",
+    "source": "Crossref",
+    "is-referenced-by-count": 192,
+    "title": [
+      "The Propagation of Radio Waves over the Surface of the Earth and in the Upper Atmosphere"
+    ],
+    "prefix": "10.1109",
+    "volume": "24",
+    "author": [
+      {
+        "given": "K.A.",
+        "family": "Norton",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "263",
+    "reference": [
+      {
+        "key": "ref10",
+        "first-page": "624",
+        "volume": "2",
+        "year": "1935",
+        "journal-title": "Tech Physics (U S S R )"
+      },
+      {
+        "key": "ref11",
+        "year": "0"
+      },
+      {
+        "key": "ref12",
+        "doi-asserted-by": "crossref",
+        "first-page": "1150",
+        "DOI": "10.1109/JRPROC.1931.222441",
+        "article-title": "notes on radio transmission",
+        "volume": "19",
+        "author": "anderson",
+        "year": "1931",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref13",
+        "doi-asserted-by": "crossref",
+        "first-page": "1183",
+        "DOI": "10.1109/JRPROC.1935.227270",
+        "article-title": "an analysis of continuous records of field intensity at broadcast frequencies",
+        "volume": "23",
+        "author": "norton",
+        "year": "1935",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref14",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/JRPROC.1935.227941"
+      },
+      {
+        "key": "ref15",
+        "doi-asserted-by": "crossref",
+        "first-page": "823",
+        "DOI": "10.1109/JRPROC.1924.220010",
+        "article-title": "on the radiation resistance of a simple vertical antenna at wave lengths below the fundamental",
+        "volume": "12",
+        "author": "ballantine",
+        "year": "1924",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref16",
+        "first-page": "273",
+        "volume": "6",
+        "year": "1930",
+        "journal-title": "Ann der Phys"
+      },
+      {
+        "key": "ref2c",
+        "first-page": "21",
+        "volume": "22",
+        "year": "1930",
+        "journal-title": "Collected Researches of the National Physical Laboratory"
+      },
+      {
+        "key": "ref17",
+        "doi-asserted-by": "crossref",
+        "first-page": "1684",
+        "DOI": "10.1109/JRPROC.1931.222512",
+        "article-title": "the grounded condenser antenna radiation formula",
+        "volume": "19",
+        "author": "wise",
+        "year": "1931",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref18",
+        "first-page": "1135",
+        "volume": "81",
+        "year": "1926",
+        "journal-title": "Ann der Phys"
+      },
+      {
+        "key": "ref19",
+        "first-page": "519",
+        "volume": "29",
+        "year": "1897",
+        "journal-title": "Proc London Math Soc"
+      },
+      {
+        "key": "ref2a",
+        "doi-asserted-by": "crossref",
+        "first-page": "48",
+        "DOI": "10.1109/JRPROC.1936.227353",
+        "article-title": "a critical study of the characteristics of broadcast antennas as affected by antenna current distribution",
+        "volume": "24",
+        "author": "brown",
+        "year": "1936",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref2b",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1080/14786440708564315"
+      },
+      {
+        "key": "ref4",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1038/135954a0"
+      },
+      {
+        "key": "ref3",
+        "first-page": "152",
+        "volume": "37",
+        "year": "1931",
+        "journal-title": "Jahr der Draht Tel und Tel"
+      },
+      {
+        "key": "ref6",
+        "first-page": "765",
+        "volume": "21",
+        "year": "1933",
+        "journal-title": "Proc I R E"
+      },
+      {
+        "key": "ref5",
+        "doi-asserted-by": "crossref",
+        "first-page": "1447",
+        "DOI": "10.1109/JRPROC.1933.227482",
+        "article-title": "attenuation of overland radio transmission in the frequency range 1.5 to 3.5 megacycles per second",
+        "volume": "21",
+        "author": "anderson",
+        "year": "1933",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref8",
+        "doi-asserted-by": "crossref",
+        "first-page": "470",
+        "DOI": "10.1109/JRPROC.1935.225883",
+        "article-title": "radio propagation over spherical earth",
+        "volume": "23",
+        "author": "burrows",
+        "year": "1935",
+        "journal-title": "Proceedings of the IRE"
+      },
+      {
+        "key": "ref7",
+        "doi-asserted-by": "crossref",
+        "first-page": "83",
+        "DOI": "10.1098/rspa.1918.0050",
+        "volume": "95",
+        "author": "watson",
+        "year": "1918",
+        "journal-title": "Proc Roy Soc"
+      },
+      {
+        "key": "ref1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1002/andp.19093330402"
+      },
+      {
+        "key": "ref9",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/JRPROC.1932.227649"
+      },
+      {
+        "key": "ref20",
+        "first-page": "744",
+        "author": "watson",
+        "year": "1922",
+        "journal-title": "Bessel Functions"
+      }
+    ],
+    "container-title": [
+      "Proceedings of the IRE"
+    ],
+    "original-title": [],
+    "link": [
+      {
+        "URL": "http://xplorestaging.ieee.org/ielx5/5547934/35521/01686016.pdf?arnumber=1686016",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2021,
+          11,
+          29
+        ]
+      ],
+      "date-time": "2021-11-29T20:24:37Z",
+      "timestamp": 1638217477000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "http://ieeexplore.ieee.org/document/1686016/"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          1936,
+          10
+        ]
+      ]
+    },
+    "references-count": 22,
+    "journal-issue": {
+      "issue": "10"
+    },
+    "URL": "https://doi.org/10.1109/jrproc.1936.227360",
+    "relation": {},
+    "ISSN": [
+      "0096-8390"
+    ],
+    "issn-type": [
+      {
+        "value": "0096-8390",
+        "type": "print"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1936,
+          10
+        ]
+      ]
+    }
+  }
+}

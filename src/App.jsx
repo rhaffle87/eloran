@@ -66,7 +66,9 @@ export default function App() {
       >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>LORAN LAB v1</span>
+            <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>
+              SIMULORAN {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.1'}
+            </span>
             <span style={{ color: 'var(--surface-muted)' }}>·</span>
             <span className="text-[10px]">Educational simulator — not for navigation or safety-critical use</span>
           </div>
@@ -87,7 +89,7 @@ export default function App() {
               Specs
             </Link>
             <a
-              href="https://github.com/rhaffle87/eloran"
+              href="https://github.com/rhaffle87/simuloran"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[var(--text-primary)] transition flex items-center gap-1"

@@ -1,0 +1,349 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          26
+        ]
+      ],
+      "date-time": "2026-09-26T03:39:20Z",
+      "timestamp": 1790393960453,
+      "version": "4.1.0"
+    },
+    "reference-count": 25,
+    "publisher": "Wiley",
+    "issue": "4",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              2006,
+              3,
+              15
+            ]
+          ],
+          "date-time": "2006-03-15T00:00:00Z",
+          "timestamp": 1142380800000
+        },
+        "content-version": "vor",
+        "delay-in-days": 35502,
+        "URL": "http://onlinelibrary.wiley.com/termsAndConditions#vor"
+      }
+    ],
+    "content-domain": {
+      "domain": [
+        "onlinelibrary.wiley.com"
+      ],
+      "crossmark-restriction": true
+    },
+    "short-container-title": [
+      "Annalen der Physik"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          1909,
+          1
+        ]
+      ]
+    },
+    "DOI": "10.1002/andp.19093330402",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2007,
+          5,
+          29
+        ]
+      ],
+      "date-time": "2007-05-29T22:21:15Z",
+      "timestamp": 1180477275000
+    },
+    "page": "665-736",
+    "update-policy": "https://doi.org/10.1002/crossmark_policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 1024,
+    "title": [
+      "Über die Ausbreitung der Wellen in der drahtlosen Telegraphie"
+    ],
+    "prefix": "10.1002",
+    "volume": "333",
+    "author": [
+      {
+        "given": "A.",
+        "family": "Sommerfeld",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "311",
+    "published-online": {
+      "date-parts": [
+        [
+          2006,
+          3,
+          15
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "e_1_2_1_1_2",
+        "first-page": "329",
+        "volume": "2",
+        "author": "Abraham M.",
+        "year": "1901",
+        "journal-title": "Physikal. Zeitschr."
+      },
+      {
+        "key": "e_1_2_1_1_3",
+        "first-page": "34",
+        "volume": "2",
+        "journal-title": "Theorie der Elektrizität"
+      },
+      {
+        "key": "e_1_2_1_2_2",
+        "unstructured": "A.Blondel C. R. du Congrès de Nantes1898;"
+      },
+      {
+        "key": "e_1_2_1_2_3",
+        "first-page": "273",
+        "volume": "3",
+        "author": "Lecher E.",
+        "year": "1901",
+        "journal-title": "Physik. Zeitschr."
+      },
+      {
+        "key": "e_1_2_1_3_2",
+        "unstructured": "K.Uller Beiträge zur Theorie der elektromagnetischen Strahlung Rostock1903.E.Cohnhatte in seinem Lehrbuche denselben Wellentyp bereits früher mit Rücksicht auf die Theorie der Drahtwellen behandelt."
+      },
+      {
+        "key": "e_1_2_1_4_2",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1002/andp.19073281003"
+      },
+      {
+        "key": "e_1_2_1_4_3",
+        "first-page": "50",
+        "volume": "9",
+        "year": "1908",
+        "journal-title": "Physik. Zeitschr."
+      },
+      {
+        "key": "e_1_2_1_5_2",
+        "first-page": "240",
+        "volume": "67",
+        "year": "1899",
+        "journal-title": "Wied. Ann."
+      },
+      {
+        "key": "e_1_2_1_6_2",
+        "unstructured": "Man vgl.J.Zenneck Elektrische Schwingungen p.810 Nr. 420 wonach zwei vergleichbare Antennen d. h. zwei Antennen von gleicher Stromverteilung und Stromamplitude identisch wirken gleichviel ob sie geerdet sind oder nicht."
+      },
+      {
+        "key": "e_1_2_1_7_2",
+        "first-page": "13",
+        "volume": "2",
+        "author": "Voigt W.",
+        "journal-title": "Kompendium der theoretischen Physik"
+      },
+      {
+        "key": "e_1_2_1_8_2",
+        "unstructured": "Das von Abraham als „Hertzscher Vektor”︁ eingeführte Funktionstripel (Theorie der Elektrizität 2. 2. Aufl. p.276) würden wir erst bei der Behandlung der gerichteten Telegraphie (vgl. Einleitung unter Nr. 8) nötig haben. Der Hertzsche Vektor wird bei unserer Symmetrie überall derz‐Achse parallel und reduziert sich auf unsere Hertzsche Funktion. Übrigens entspricht unserIInicht genau dem Abrahamschen sondern der Ableitung/c t=i k."
+      },
+      {
+        "key": "e_1_2_1_9_2",
+        "unstructured": "Vgl. z. B.Nielsen Handbuch der Zylinderfunktionen §140."
+      },
+      {
+        "key": "e_1_2_1_10_2",
+        "unstructured": "Vgl. z. B. meine Diss.: Die willkürlichen Funktionen in der mathematischen Physik Kap. II Königsberg1892."
+      },
+      {
+        "key": "e_1_2_1_11_2",
+        "unstructured": "Vgl.Nielsen l. c.74 Gl. (1) bis (4). Sehr viel einfacher gewinnt man die fragliche Formel bei komplexemk wenn man fürJseine Integraldarstellung benutzt und die Integration in der komplexen Ebene ausführt."
+      },
+      {
+        "key": "e_1_2_1_12_2",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1002/andp.19053231305"
+      },
+      {
+        "key": "e_1_2_1_12_3",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1002/andp.19063261510"
+      },
+      {
+        "key": "e_1_2_1_12_4",
+        "first-page": "237",
+        "volume": "67",
+        "year": "1899",
+        "journal-title": "Wied. Ann."
+      },
+      {
+        "key": "e_1_2_1_13_2",
+        "unstructured": "Nielsen l. c.58."
+      },
+      {
+        "key": "e_1_2_1_14_2",
+        "unstructured": "Nielsen l. c.5Gleichung (7)."
+      },
+      {
+        "key": "e_1_2_1_15_2",
+        "first-page": "62",
+        "volume": "1",
+        "author": "Heine B. E.",
+        "journal-title": "Handb. d. Kugelfunktionen"
+      },
+      {
+        "key": "e_1_2_1_16_2",
+        "unstructured": "Selbst bei trockenem Boden (vgl. unten) ist der absolute Betrag desselben immer noch etwa 13. Der Fehler bei der Berechnung von würde also nur etwa 10 Proz. ausmachen."
+      },
+      {
+        "key": "e_1_2_1_17_2",
+        "first-page": "859",
+        "volume": "23",
+        "author": "Zenneck J.",
+        "year": "1907",
+        "journal-title": "Ann. d. Phys."
+      },
+      {
+        "key": "e_1_2_1_18_2",
+        "unstructured": "Übrigens benutzt Marconi Wellenlängen von 3–4 km so daß die oben mitl= 2 km berechnete numerische Entfernung = 1/30 noch weiter zu verkleinern wäre."
+      },
+      {
+        "key": "e_1_2_1_19_2",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1002/andp.18993030202"
+      },
+      {
+        "key": "e_1_2_1_20_2",
+        "unstructured": "Vgl. l. c. p.252 Gleichung (20)."
+      }
+    ],
+    "container-title": [
+      "Annalen der Physik"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1002%2Fandp.19093330402",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      },
+      {
+        "URL": "https://onlinelibrary.wiley.com/doi/pdf/10.1002/andp.19093330402",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2023,
+          11,
+          3
+        ]
+      ],
+      "date-time": "2023-11-03T18:05:26Z",
+      "timestamp": 1699034726000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://onlinelibrary.wiley.com/doi/10.1002/andp.19093330402"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          1909,
+          1
+        ]
+      ]
+    },
+    "references-count": 25,
+    "journal-issue": {
+      "issue": "4",
+      "published-print": {
+        "date-parts": [
+          [
+            1909,
+            1
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "10.1002/andp.19093330402"
+    ],
+    "URL": "https://doi.org/10.1002/andp.19093330402",
+    "archive": [
+      "Portico"
+    ],
+    "relation": {},
+    "ISSN": [
+      "0003-3804",
+      "1521-3889"
+    ],
+    "issn-type": [
+      {
+        "value": "0003-3804",
+        "type": "print"
+      },
+      {
+        "value": "1521-3889",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1909,
+          1
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "1909-01-15",
+        "order": 0,
+        "name": "received",
+        "label": "Received",
+        "group": {
+          "name": "publication_history",
+          "label": "Publication History"
+        }
+      },
+      {
+        "value": "2006-03-15",
+        "order": 2,
+        "name": "published",
+        "label": "Published",
+        "group": {
+          "name": "publication_history",
+          "label": "Publication History"
+        }
+      }
+    ]
+  }
+}

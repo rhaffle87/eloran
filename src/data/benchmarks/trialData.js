@@ -1,5 +1,5 @@
 /**
- * Empirical Field Trial Benchmark Datasets for LORAN LAB
+ * Empirical Field Trial Benchmark Datasets for SIMULORAN
  * 
  * Sourced directly from peer-reviewed publications with confirmed provenance:
  * 1. Korean Nationwide eLoran Testbed Campaign (Rhee et al., 2021)

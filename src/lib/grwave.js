@@ -1,11 +1,11 @@
 /**
- * LORAN LAB — ITU-R P.368 Groundwave Propagation & Millington Mixed-Path Engine
+ * SIMULORAN — ITU-R P.368 Groundwave Propagation & Millington Mixed-Path Engine
  * 
  * Implements:
  * 1. Complex surface impedance and Sommerfeld constitutive electrical parameters (ITU-R P.368-9 / ITU-R P.832).
  * 2. Sommerfeld numerical distance and groundwave phase lag relative to free space.
  * 3. Additional Secondary Factor (ASF) timing delay excess over seawater at 100 kHz.
- * 4. Multi-boundary Millington mixed-path numerical solver (ITU-R P.368-10 Annex 2).
+ * 4. Multi-boundary Millington mixed-path numerical solver (ITU-R P.368-10 Annex 1, §3).
  * 
  * Surface impedance and field strength curves validated against native ITU-R P.368 GRWAVE Fortran reference outputs;
  * Phase delay / timing delay computed via analytical Sommerfeld-Norton formulation.
@@ -174,7 +174,7 @@ export function computeHomogeneousAsfMicroseconds(distKm, sigma, epslon = 15.0, 
 
 /**
  * Computes multi-boundary inhomogeneous mixed-path ASF in microseconds
- * using the rigorous reciprocal Millington method (ITU-R P.368-10 Annex 2).
+ * using the rigorous reciprocal Millington method (ITU-R P.368-10 Annex 1, §3).
  * 
  * Evaluates the forward path across all boundary points, reverses the path
  * from Rx back to Tx, and computes the reciprocal geometric mean to guarantee

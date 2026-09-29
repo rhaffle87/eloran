@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software in academic or engineering research, please cite it as below."
+authors:
+  - family-names: "Alif"
+    given-names: "Rafli"
+title: "SIMULORAN: High-Fidelity Loran-C & eLoran Radionavigation and Physics Simulation Suite"
+version: 1.1.0
+date-released: 2026-09-29
+url: "https://simuloran.vercel.app"
+repository-code: "https://github.com/rhaffle87/simuloran"
+keywords:
+  - "loran-c"
+  - "eloran"
+  - "radionavigation"
+  - "hyperbolic positioning"
+  - "tdoa"
+  - "gdop"
+  - "additional-secondary-factor"
+  - "resilient-pnt"
+license: "MIT"

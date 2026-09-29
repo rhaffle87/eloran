@@ -9,7 +9,7 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
 
     // 1. Visit /about page
     await page.goto('/about');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verify benchmark section heading
     const heading = page.getByRole('heading', { name: 'Empirical Field Trial Benchmarks (Phase 2 Part 2)' });
@@ -61,7 +61,7 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
 
     // 3. Visit /eloran and check AsfPanel integration
     await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Open ASF Tab in the sidebar
     const asfTab = page.getByRole('button', { name: 'ASF', exact: true });
@@ -77,6 +77,24 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
 
     // Verify TrialValidationPanel rendered inside AsfPanel
     await expect(page.getByText(/Load Korea Trial Preset/i)).toBeVisible();
+
+    // Verify Korea card binds labels to exact values
+    const koreaCard = page.locator('[data-testid="korea-benchmark-card"]');
+    await expect(koreaCard).toBeVisible();
+    await expect(koreaCard.locator('[data-testid="korea-measured-mean"]')).toHaveText(/10\.17m/);
+    await expect(koreaCard.locator('[data-testid="korea-flat-simulated-mean"]')).toContainText('11.67m');
+    await expect(koreaCard.locator('[data-testid="korea-flat-simulated-mean"]')).toContainText('MAE 1.74m');
+    await expect(koreaCard.locator('[data-testid="korea-per-station-simulated-mean"]')).toContainText('9.03m');
+    await expect(koreaCard.locator('[data-testid="korea-per-station-simulated-mean"]')).toContainText('MAE 1.37m');
+
+    // Verify Maoming card binds labels and does not misattribute coastal / geo-ASF
+    const maomingCard = page.locator('[data-testid="maoming-benchmark-card"]');
+    await expect(maomingCard).toBeVisible();
+    await expect(maomingCard.locator('[data-testid="maoming-shp-rmse"]')).toContainText('417.2 m RMSE');
+    await expect(maomingCard.locator('[data-testid="maoming-epp-rmse"]')).toContainText('43.1 m RMSE');
+    await expect(maomingCard.locator('[data-testid="maoming-attribution"]')).toContainText('Inland, Gao et al. 2025 (89.7% gain via ellipsoidal model)');
+    await expect(maomingCard).not.toContainText('Coastal');
+    await expect(maomingCard).not.toContainText('GIS ASF Corr');
 
     // Click "Load Korea Trial Preset"
     const loadPresetBtn = page.getByRole('button', { name: /Load Korea Trial Preset/i });

@@ -29,11 +29,22 @@ async function run() {
       return Boolean(map && markers.length >= 3);
     }, { timeout: 20000 });
 
-    // Open Layers & Mesh tab
-    const meshTab = page.locator('button:has-text("Layers & Mesh")');
+    // Open Layers / Mesh tab
+    const meshTab = page.locator('button').filter({ hasText: /Layers|Mesh/ }).first();
     await meshTab.waitFor({ state: 'visible' });
     await meshTab.click();
     await page.waitForTimeout(500);
+
+    // Toggle on Live GDOP Coverage Overlay
+    const toggleLabel = page.locator('label').filter({ hasText: /Live GDOP Coverage Overlay/ }).first();
+    await toggleLabel.waitFor({ state: 'visible' });
+    await toggleLabel.click();
+
+    // Wait for GDOP heatmap layer to be mounted
+    await page.waitForFunction(() => {
+      const map = window.__maplibreInstance;
+      return Boolean(map && map.getSource('loran-gdop-heatmap-source') && map.getLayer('loran-gdop-heatmap-layer'));
+    }, { timeout: 20000 });
 
     // Generate LOP Contours
     const genBtn = page.locator('button:has-text("Generate LOP Contours")');
@@ -94,11 +105,22 @@ async function run() {
       return Boolean(map && markers.length >= 3);
     }, { timeout: 20000 });
 
-    // Open Mesh tab
-    const meshTab = page.locator('button:has-text("Mesh")');
+    // Open Layers / Mesh tab
+    const meshTab = page.locator('button').filter({ hasText: /Layers|Mesh/ }).first();
     await meshTab.waitFor({ state: 'visible' });
     await meshTab.click();
     await page.waitForTimeout(500);
+
+    // Toggle on Live GDOP Coverage Overlay
+    const toggleLabel = page.locator('label').filter({ hasText: /Live GDOP Coverage Overlay/ }).first();
+    await toggleLabel.waitFor({ state: 'visible' });
+    await toggleLabel.click();
+
+    // Wait for GDOP heatmap layer to be mounted
+    await page.waitForFunction(() => {
+      const map = window.__maplibreInstance;
+      return Boolean(map && map.getSource('loran-gdop-heatmap-source') && map.getLayer('loran-gdop-heatmap-layer'));
+    }, { timeout: 20000 });
 
     // Generate LOP Contours
     const genBtn = page.locator('button:has-text("Generate LOP Contours")');

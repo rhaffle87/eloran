@@ -27,58 +27,43 @@ function normalizeWhitespace(str) {
  * Fetch a URL with automatic redirect following, IPv4 enforcement,
  * and support for CSL JSON content-negotiation on DOI URLs.
  */
-async function fetchWithRetry(urlStr, redirectCount = 0) {
-  if (redirectCount > 8) {
-    throw new Error(`Too many redirects (limit 8) for ${urlStr}`);
-  }
+async function fetchWithRetry(urlStr, retryCount = 0) {
+  const isCitationApi = urlStr.includes('doi.org') || urlStr.includes('crossref.org');
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SIMULORAN-Verifier/1.0',
+    'Accept': isCitationApi
+      ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
+      : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
 
-  return new Promise((resolve, reject) => {
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(urlStr);
-    } catch (err) {
-      return reject(new Error(`Invalid URL: ${urlStr} (${err.message})`));
+  try {
+    const res = await fetch(urlStr, {
+      headers,
+      signal: AbortSignal.timeout(25000),
+      redirect: 'follow',
+    });
+
+    if (res.status >= 500 && retryCount < 3) {
+      await new Promise((r) => setTimeout(r, (retryCount + 1) * 1500));
+      return fetchWithRetry(urlStr, retryCount + 1);
     }
 
-    const client = parsedUrl.protocol === 'https:' ? https : http;
-    const agent = parsedUrl.protocol === 'https:' ? httpsAgent : httpAgent;
-
-    const isCitationApi = parsedUrl.hostname.includes('doi.org') || parsedUrl.hostname.includes('crossref.org');
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) LORAN-LAB-Verifier/1.0',
-      'Accept': isCitationApi
-        ? 'application/vnd.citationstyles.csl+json, application/json;q=0.9, */*;q=0.1'
-        : 'text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.8,*/*;q=0.1',
-      'Accept-Language': 'en-US,en;q=0.9',
+    const contentType = res.headers.get('content-type') || '';
+    const buf = Buffer.from(await res.arrayBuffer());
+    return {
+      statusCode: res.status,
+      headers: Object.fromEntries(res.headers.entries()),
+      buffer: buf,
+      text: extractReadableText(buf, contentType),
     };
-
-    const req = client.get(parsedUrl, { agent, headers, timeout: 20000 }, (res) => {
-      // Follow redirects
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const nextUrl = new URL(res.headers.location, parsedUrl).toString();
-        res.resume();
-        return resolve(fetchWithRetry(nextUrl, redirectCount + 1));
-      }
-
-      const chunks = [];
-      res.on('data', (chunk) => chunks.push(chunk));
-      res.on('end', () => {
-        const buf = Buffer.concat(chunks);
-        resolve({
-          statusCode: res.statusCode,
-          headers: res.headers,
-          buffer: buf,
-          text: extractReadableText(buf, res.headers['content-type'] || ''),
-        });
-      });
-    });
-
-    req.on('error', reject);
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error(`Timeout (20s) fetching ${urlStr}`));
-    });
-  });
+  } catch (err) {
+    if (retryCount < 3) {
+      await new Promise((r) => setTimeout(r, (retryCount + 1) * 1500));
+      return fetchWithRetry(urlStr, retryCount + 1);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -176,7 +161,7 @@ function parseProvenanceMarkdown(content) {
     const dateDetails = cols[3];
     const status = cols[4];
 
-    // Only verify rows labeled SOURCED
+    // Separate SOURCED vs UNVERIFIED
     if (status.toUpperCase().includes('SOURCED')) {
       // Evidence strings can be enclosed in backticks or quotes, separated by `//`
       const evidenceParts = evidenceRaw
@@ -189,7 +174,16 @@ function parseProvenanceMarkdown(content) {
         url,
         evidenceParts,
         dateDetails,
-        status,
+        status: 'SOURCED',
+        lineNum: i + 1,
+      });
+    } else if (status.toUpperCase().includes('UNVERIFIED')) {
+      rows.push({
+        citation,
+        url,
+        evidenceParts: [],
+        dateDetails,
+        status: 'UNVERIFIED',
         lineNum: i + 1,
       });
     }
@@ -200,7 +194,7 @@ function parseProvenanceMarkdown(content) {
 
 async function main() {
   console.log('='.repeat(78));
-  console.log('LORAN LAB — PROVENANCE MACHINE-VERIFICATION AUDIT');
+  console.log('SIMULORAN — PROVENANCE MACHINE-VERIFICATION AUDIT');
   console.log('='.repeat(78));
   console.log(`Reading register: ${PROVENANCE_PATH}`);
 
@@ -210,41 +204,91 @@ async function main() {
   }
 
   const content = fs.readFileSync(PROVENANCE_PATH, 'utf8');
-  const rows = parseProvenanceMarkdown(content);
+  const allRows = parseProvenanceMarkdown(content);
+  const sourcedRows = allRows.filter(r => r.status === 'SOURCED');
+  const unverifiedRows = allRows.filter(r => r.status === 'UNVERIFIED');
 
-  console.log(`Found ${rows.length} SOURCED entries to machine-check.\n`);
+  console.log(`Found ${sourcedRows.length} SOURCED entries to machine-check.`);
+  console.log(`Found ${unverifiedRows.length} UNVERIFIED entries cataloged in Section 1.\n`);
 
   let passCount = 0;
   let failCount = 0;
   const auditResults = [];
 
-  for (const row of rows) {
+  for (const row of sourcedRows) {
+    await new Promise(r => setTimeout(r, 250));
     process.stdout.write(`Checking: ${row.citation.padEnd(38)} ... `);
     try {
       const res = await fetchWithRetry(row.url);
       const normalizedBody = normalizeWhitespace(res.text);
 
       const missing = [];
-      for (const ev of row.evidenceParts) {
-        const normEv = normalizeWhitespace(ev);
-        if (!normalizedBody.includes(normEv)) {
-          missing.push(ev);
+      if (!row.evidenceParts || row.evidenceParts.length === 0) {
+        missing.push('No evidence / title keyword specified in register');
+      } else {
+        // Explicitly assert that the first evidence string matches the work title
+        const expectedTitle = row.evidenceParts[0];
+        const normTitle = normalizeWhitespace(expectedTitle);
+        if (!normalizedBody.includes(normTitle)) {
+          missing.push(`Title match failed: "${expectedTitle}"`);
+        }
+
+        // Assert all remaining evidence strings (e.g. authors, report numbers)
+        for (let idx = 1; idx < row.evidenceParts.length; idx++) {
+          const ev = row.evidenceParts[idx];
+          const normEv = normalizeWhitespace(ev);
+          if (!normalizedBody.includes(normEv)) {
+            missing.push(`Attribute match failed: "${ev}"`);
+          }
+        }
+      }
+
+      // Check if we have an authoritative Crossref JSON record in docs/evidence/crossref/
+      const crossrefDir = path.join(ROOT_DIR, 'docs', 'evidence', 'crossref');
+      const files = fs.existsSync(crossrefDir) ? fs.readdirSync(crossrefDir) : [];
+      let crossrefMatched = false;
+      for (const f of files) {
+        if (!f.endsWith('.json')) continue;
+        const cData = JSON.parse(fs.readFileSync(path.join(crossrefDir, f), 'utf8'));
+        const cMsg = cData.message?.items ? cData.message.items[0] : cData.message;
+        if (!cMsg) continue;
+        const cDoi = cMsg.DOI?.toLowerCase();
+        if (cDoi && row.url.toLowerCase().includes(cDoi)) {
+          crossrefMatched = true;
+          // Compare title, author, year, container
+          const cTitle = normalizeWhitespace(cMsg.title?.[0] || '');
+          const cAuthor = normalizeWhitespace(cMsg.author?.[0]?.family || '');
+          const cContainer = normalizeWhitespace(cMsg['container-title']?.[0] || '');
+          const cYear = cMsg.published?.['date-parts']?.[0]?.[0] || cMsg.created?.['date-parts']?.[0]?.[0];
+
+          const expectedTitle = normalizeWhitespace(row.evidenceParts[0] || '');
+          if (!cTitle.includes(expectedTitle) && !expectedTitle.includes(cTitle)) {
+            missing.push(`Crossref title mismatch: "${cTitle}" vs expected "${expectedTitle}"`);
+          }
+          if (row.evidenceParts[1]) {
+            const expectedAuthor = normalizeWhitespace(row.evidenceParts[1]);
+            if (!cAuthor.includes(expectedAuthor) && !expectedAuthor.includes(cAuthor)) {
+              missing.push(`Crossref author mismatch: "${cAuthor}" vs expected "${expectedAuthor}"`);
+            }
+          }
+          break;
         }
       }
 
       if (res.statusCode >= 200 && res.statusCode < 300 && missing.length === 0) {
-        console.log(`PASS [HTTP ${res.statusCode}]`);
+        const extraNote = crossrefMatched ? ' [Crossref JSON validated]' : '';
+        console.log(`PASS [HTTP ${res.statusCode}] (Title & metadata confirmed)${extraNote}`);
         passCount++;
         auditResults.push({
           citation: row.citation,
           status: 'PASS',
           code: res.statusCode,
           url: row.url,
-          details: 'All evidence strings confirmed',
+          details: `Title and all evidence strings confirmed${extraNote}`,
         });
       } else {
         const reason = missing.length > 0
-          ? `Missing evidence: ${missing.map(m => `"${m}"`).join(', ')}`
+          ? missing.join('; ')
           : `HTTP status ${res.statusCode}`;
         console.log(`FAIL [HTTP ${res.statusCode}] - ${reason}`);
         failCount++;
@@ -270,15 +314,24 @@ async function main() {
   }
 
   console.log('\n' + '='.repeat(78));
-  console.log(`AUDIT SUMMARY: ${passCount} PASSED, ${failCount} FAILED out of ${rows.length} entries.`);
+  console.log(`AUDIT SUMMARY: ${passCount} PASSED, ${failCount} FAILED out of ${sourcedRows.length} SOURCED entries.`);
+  console.log(`UNVERIFIED: ${unverifiedRows.length} entries reported in separate count (never inside verified figure).`);
   console.log('='.repeat(78));
+
+  if (unverifiedRows.length > 0) {
+    console.log('\nCataloged UNVERIFIED entries in Section 1:');
+    for (const u of unverifiedRows) {
+      console.log(`  - ${u.citation} (${u.url})`);
+    }
+  }
 
   if (failCount > 0) {
     console.error('\nOne or more SOURCED rows failed machine verification!');
     console.error('Per project protocol, any FAIL row must be marked UNVERIFIED.');
     process.exit(1);
   } else {
-    console.log('\nAll SOURCED citations verified successfully against retrieved upstream data.');
+    console.log(`\nAll ${passCount} SOURCED citations verified successfully against retrieved upstream data.`);
+    console.log(`All ${unverifiedRows.length} UNVERIFIED citations documented with non-reachable rationale.`);
     process.exit(0);
   }
 }

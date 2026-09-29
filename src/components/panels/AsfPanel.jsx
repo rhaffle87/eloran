@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database, ExternalLink, ChevronDown } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
   validateAsfExpression,
   ITU_R_P832_CONDUCTIVITIES,
   DEFAULT_MILLINGTON_SCALE,
-  computeMixedPathAsfMeters,
 } from '../../lib/asf.js';
 import {
   computeTemporalAsfMicroseconds,
@@ -123,29 +123,6 @@ export default function AsfPanel() {
 
   const engineMethod = settings.asfEngineMethod || 'grwave';
 
-  // Sample delays for monotonicity verification
-  const sample100km = computeMixedPathAsfMeters({
-    totalDistMeters: 100000,
-    landFraction: settings.asfLandFraction ?? 0.5,
-    landSigma: settings.asfLandSigma ?? 0.003,
-    scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
-    method: engineMethod,
-  });
-  const sample300km = computeMixedPathAsfMeters({
-    totalDistMeters: 300000,
-    landFraction: settings.asfLandFraction ?? 0.5,
-    landSigma: settings.asfLandSigma ?? 0.003,
-    scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
-    method: engineMethod,
-  });
-  const sample500km = computeMixedPathAsfMeters({
-    totalDistMeters: 500000,
-    landFraction: settings.asfLandFraction ?? 0.5,
-    landSigma: settings.asfLandSigma ?? 0.003,
-    scale: settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE,
-    method: engineMethod,
-  });
-
   return (
     <div className="space-y-5">
       {/* Mode Switcher Tabs */}
@@ -247,38 +224,35 @@ export default function AsfPanel() {
               </button>
             </div>
 
-            {/* Split Provenance Status Card */}
+            {/* Split Provenance Status Bar */}
             {engineMethod === 'grwave' ? (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="text-[var(--text-dim)]">Field strength / path loss:</span>
-                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
-                    SOURCED (ITU-R P.368 GRWAVE)
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="text-[var(--text-dim)] flex items-center gap-1">
-                    <span>Phase delay / timing (ASF):</span>
-                    <InfoTooltip
-                      align="center"
-                      title="Phase Delay Verification Status"
-                      text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
-                    />
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
-                    Analytical Sommerfeld-Norton
-                  </span>
-                </div>
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between gap-2">
+                <span className="text-[var(--text-dim)] flex items-center gap-1">
+                  <span>ITU-R P.368 / Sommerfeld</span>
+                  <InfoTooltip
+                    align="left"
+                    title="Phase Delay Verification Status"
+                    text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
+                  />
+                </span>
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap inline-flex items-center gap-1">
+                  SOURCED (ITU-R P.368 GRWAVE)
+                  <InfoTooltip
+                    align="right"
+                    title="Groundwave Attenuation Standard"
+                    text="Field strength and groundwave attenuation curve generation is SOURCED from local GRWAVE Fortran reference outputs; ITU-R P.368-10 is not machine-verified upstream."
+                  />
+                </span>
               </div>
             ) : (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded p-2 text-[10px] flex items-center justify-between">
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-flex items-center gap-1">
                   <ShieldAlert size={10} /> UNVERIFIED — Empirical k_asf
                 </span>
                 <InfoTooltip
                   align="right"
                   title="Empirical Model Provenance"
-                  text="Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
+                  text="UNVERIFIED - Empirical k_asf phase lag scaling factor. Heuristic linear conductivity deficit scaling (k_asf). Uncalibrated against primary physical benchmark."
                 />
               </div>
             )}
@@ -400,27 +374,36 @@ export default function AsfPanel() {
                   </div>
 
                   {/* Individual Segments Display */}
-                  <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1">
-                    <div className="text-[10px] text-[var(--text-muted)] flex justify-between">
+                  <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1.5">
+                    <div className="text-[10px] text-[var(--text-muted)] flex justify-between items-center">
                       <span>Path Segments (Tx → Rx):</span>
                       <span className="text-[var(--accent-eloran)] font-bold">
                         Calculated ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                      {geoResult.segments.map((s, idx) => (
-                        <span
-                          key={idx}
-                          className={`px-1.5 py-0.5 rounded text-[9.5px] border ${
-                            s.medium === 'land'
-                              ? 'bg-amber-950/40 border-amber-800/60 text-amber-300'
-                              : 'bg-blue-950/40 border-blue-800/60 text-blue-300'
-                          }`}
-                        >
-                          {s.medium.toUpperCase()} {s.distKm.toFixed(1)} km ({s.startKm.toFixed(0)}–{s.endKm.toFixed(0)} km)
-                        </span>
-                      ))}
-                    </div>
+                    {geoResult.segments?.length > 0 && (
+                      <details className="text-[10px] group">
+                        <summary className="text-[var(--text-dim)] hover:text-[var(--accent-eloran)] cursor-pointer select-none font-mono flex items-center justify-between">
+                          <span>Segments Detail ({geoResult.segments.length})</span>
+                          <span className="text-[9px] text-[var(--text-muted)] group-open:hidden">Show ▾</span>
+                          <span className="text-[9px] text-[var(--text-muted)] hidden group-open:inline">Hide ▴</span>
+                        </summary>
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto mt-1.5 pt-1 border-t border-[var(--border-subtle)]/40">
+                          {geoResult.segments.map((s, idx) => (
+                            <span
+                              key={idx}
+                              className={`px-1.5 py-0.5 rounded text-[9.5px] border ${
+                                s.medium === 'land'
+                                  ? 'bg-amber-950/40 border-amber-800/60 text-amber-300'
+                                  : 'bg-blue-950/40 border-blue-800/60 text-blue-300'
+                              }`}
+                            >
+                              {s.medium.toUpperCase()} {s.distKm.toFixed(1)} km ({s.startKm.toFixed(0)}–{s.endKm.toFixed(0)} km)
+                            </span>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -464,32 +447,21 @@ export default function AsfPanel() {
 
           {/* Engine Parameters / Empirical Scale Slider */}
           {engineMethod === 'grwave' ? (
-            <div className="bg-[var(--bg-subtle)] rounded-lg p-2 border border-[var(--border-subtle)]">
-              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] font-semibold">
-                <span className="flex items-center gap-1.5">
-                  <span>Constitutive Formulation:</span>
-                  <InfoTooltip
-                    align="center"
-                    title="Constitutive Formulation & Verification"
-                    content={
-                      <span className="block space-y-1.5 text-[10.5px]">
-                        <span className="block text-[var(--text-secondary)]">
-                          Sommerfeld surface impedance &amp; numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10 Annex 2.
-                        </span>
-                        <span className="block pt-1 border-t border-[var(--border-subtle)] space-y-1">
-                          <span className="block">
-                            <span className="font-semibold text-[var(--status-ok)]">• Field strength / path loss:</span> verified against compiled Fortran GRWAVE reference output.
-                          </span>
-                          <span className="block">
-                            <span className="font-semibold text-[var(--status-warn)]">• Phase delay / ASF (Millington averaging, feeds positioning):</span> analytical Sommerfeld-Norton approximation, cross-checked between Python and JS only; NOT validated against GRWAVE or empirical data.
-                          </span>
-                        </span>
-                      </span>
-                    }
-                  />
-                </span>
-                <span className="text-[var(--status-ok)] font-mono">100 kHz Groundwave</span>
-              </div>
+            <div className="bg-[var(--bg-subtle)] rounded-lg px-2.5 py-2 border border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <span>Sommerfeld Impedance</span>
+                <InfoTooltip
+                  align="center"
+                  title="Sommerfeld & Millington Theory"
+                  text="Numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington (1949) averaging. Field strength verified against GRWAVE reference; phase delay uses analytical Sommerfeld-Norton formulation."
+                />
+              </span>
+              <Link
+                to="/learn"
+                className="text-[10px] text-[var(--accent-eloran)] hover:underline flex items-center gap-1 font-semibold"
+              >
+                <span>Derivations in Theory →</span>
+              </Link>
             </div>
           ) : (
             <div className="space-y-1">
@@ -509,43 +481,6 @@ export default function AsfPanel() {
               </div>
             </div>
           )}
-
-
-          {/* Monotonicity & Physics Sanity Card */}
-          <div className="bg-[var(--bg-subtle)] rounded-lg p-3 border border-[var(--border-subtle)] space-y-2">
-            <div className="text-[11px] font-bold text-[var(--text-secondary)] flex items-center justify-between">
-              <span>Path Distance vs Predicted ASF Delay</span>
-              <span className="text-[10px] text-[var(--status-ok)] font-medium">✓ Monotonicity Guaranteed</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--border-subtle)]">
-                <div className="text-[var(--text-muted)]">100 km</div>
-                <div className="font-bold text-[var(--accent-eloran)]">{sample100km.toFixed(1)} m</div>
-                <div className="text-[var(--text-dim)] font-mono">{(sample100km / 0.299792).toFixed(2)} ns</div>
-              </div>
-              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--border-subtle)]">
-                <div className="text-[var(--text-muted)]">300 km</div>
-                <div className="font-bold text-[var(--accent-eloran)]">{sample300km.toFixed(1)} m</div>
-                <div className="text-[var(--text-dim)] font-mono">{(sample300km / 0.299792).toFixed(2)} ns</div>
-              </div>
-              <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--border-subtle)]">
-                <div className="text-[var(--text-muted)]">500 km</div>
-                <div className="font-bold text-[var(--accent-eloran)]">{sample500km.toFixed(1)} m</div>
-                <div className="text-[var(--text-dim)] font-mono">{(sample500km / 0.299792).toFixed(2)} ns</div>
-              </div>
-            </div>
-            <div className="text-[10px] text-[var(--text-dim)] leading-tight">
-              {settings.asfLandFraction === 0 ? (
-                <span className="text-[var(--accent-eloran)] font-semibold">
-                  All-Seawater Path: ASF delay is exactly 0.00 m (0.00 µs).
-                </span>
-              ) : (
-                <span>
-                  Delay increases monotonically with path distance and land fraction over non-seawater terrain.
-                </span>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
@@ -559,31 +494,29 @@ export default function AsfPanel() {
             </span>
             <InfoTooltip
               align="right"
-              text="Weather-driven propagation delay variation. Refractivity formula is SOURCED; seasonal drift magnitudes are UNVERIFIED (Song &amp; Son 2025)."
+              text="Weather-driven propagation delay variation. Refractivity formula is SOURCED (Smith & Weintraub 1953); seasonal drift magnitudes are UNVERIFIED based on 12-day Korean dataset (Song & Son 2025)."
             />
           </div>
 
-          {/* Split Provenance Badge */}
-          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded p-2 space-y-1.5 text-[10px]">
-            <div className="flex items-center justify-between gap-1.5">
-              <span className="text-[var(--text-dim)]">Refractivity formula (N = 77.6P/T + …):</span>
+          {/* Split Provenance Status Bar */}
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between gap-2">
+            <span className="text-[var(--text-dim)] flex items-center gap-1">
+              <span>Smith &amp; Weintraub 1953</span>
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
-                SOURCED (Smith &amp; Weintraub 1953)
+                SOURCED
               </span>
-            </div>
-            <div className="flex items-center justify-between gap-1.5">
-              <span className="text-[var(--text-dim)] flex items-center gap-1">
-                <span>Seasonal/weather drift:</span>
-                <InfoTooltip
-                  align="center"
-                  title="Empirical Drift Calibration"
-                  text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
-                />
-              </span>
+            </span>
+            <span className="text-[var(--text-dim)] flex items-center gap-1">
+              <span>Song &amp; Son 2025</span>
+              <InfoTooltip
+                align="right"
+                title="Empirical Drift Calibration"
+                text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
+              />
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
-                UNVERIFIED — 12-day Korean dataset
+                UNVERIFIED
               </span>
-            </div>
+            </span>
           </div>
 
           {/* Weather Inputs */}
@@ -780,19 +713,33 @@ export default function AsfPanel() {
       <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 min-w-0">
-            <Database size={13} className="text-cyan-400 shrink-0" />
+            <Database size={13} className="text-[var(--accent-eloran)] shrink-0" />
             <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] truncate">
               Field Trial Benchmarks
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/80 border border-emerald-800/60 text-emerald-400 shrink-0">
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 flex items-center gap-1 font-semibold"
+              style={{
+                background: 'var(--status-ok-subtle)',
+                borderColor: 'var(--status-ok-border)',
+                borderWidth: '1px',
+                color: 'var(--status-ok)',
+              }}
+            >
               Tier 2 SOURCED
+              <InfoTooltip
+                align="left"
+                title="Tier 2 Field Trial Validation Disclosure"
+                text="Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
+              />
             </span>
           </div>
           <button
             type="button"
             data-testid="toggle-validation-benchmarks"
             onClick={() => setShowValidation(!showValidation)}
-            className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            className="text-[11px] hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            style={{ color: 'var(--accent-eloran)' }}
           >
             {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
           </button>
@@ -802,7 +749,7 @@ export default function AsfPanel() {
         </p>
         {showValidation && (
           <div className="mt-3">
-            <TrialValidationPanel />
+            <TrialValidationPanel compact={true} />
           </div>
         )}
       </div>

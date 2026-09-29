@@ -4,11 +4,13 @@ const baseURL = process.env.BASE_URL || 'http://localhost:5173';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: process.env.RUN_CAPTURE ? [] : ['**/capture-*.spec.js'],
   timeout: 30000,
   expect: {
     timeout: 8000,
   },
   fullyParallel: false,
+  workers: 1,
   retries: 0,
   reporter: 'list',
   use: {

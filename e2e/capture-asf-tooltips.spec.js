@@ -50,9 +50,9 @@ test.describe('AsfPanel Tooltip Screenshots & Verification', () => {
       await page.waitForTimeout(250);
     }
 
-    // --- 1. Millington / GRWAVE Constitutive Formulation Tooltip ---
+    // --- 1. Millington / GRWAVE Attenuation Standard Tooltip ---
     console.log('Capturing Millington GRWAVE Tooltip...');
-    const grwaveTooltip = page.locator('span[role="tooltip"][aria-label*="Constitutive Formulation"]').first();
+    const grwaveTooltip = page.locator('span[role="tooltip"][aria-label*="ITU-R P.368"]').first();
     await capturePair(grwaveTooltip, 'asf_millington_grwave');
 
     // --- 1b. Millington Phase Delay Verification Tooltip ---

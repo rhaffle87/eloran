@@ -1,4 +1,4 @@
-# LORAN LAB – Security Architecture & Tradeoffs
+# SIMULORAN – Security Architecture & Tradeoffs
 
 ## 1. Content Security Policy (CSP)
 
@@ -32,7 +32,7 @@ Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
 
 > [!WARNING]
 > **Preload Decision Caution:**
-> While `preload` is safe on standard `*.vercel.app` preview deployments, if attaching a custom production domain (e.g., `loranlab.org`), **do NOT submit the domain to the HSTS preload list (`hstspreload.org`) without a deliberate engineering decision**. Inclusion in browser preload lists is permanent and irreversible for months, and will break any internal subdomains that lack valid public HTTPS certificates.
+> While `preload` is safe on standard `*.vercel.app` preview deployments, if attaching a custom production domain (e.g., `simuloran.org`), **do NOT submit the domain to the HSTS preload list (`hstspreload.org`) without a deliberate engineering decision**. Inclusion in browser preload lists is permanent and irreversible for months, and will break any internal subdomains that lack valid public HTTPS certificates.
 
 ---
 
@@ -42,12 +42,12 @@ To maintain a clean production namespace while supporting automated sub-pixel re
 
 - **Gating Mechanism**: Inspection hooks `window.__maplibreInstance` and `window.__baselineGeoJson` are strictly gated in `src/components/map/MapView.jsx` behind:
   ```javascript
-  if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__LORAN_E2E__)) {
+  if (typeof window !== 'undefined' && (import.meta.env.DEV || window.__SIMULORAN_E2E__ || window.__LORAN_E2E__)) {
     window.__maplibreInstance = mapInstance;
   }
   ```
-- **Production Visitor Experience**: In production builds (`npm run build`), `import.meta.env.DEV` is `false`. Normal visitors to `https://eloran-one.vercel.app` will have `window.__maplibreInstance === undefined` and `window.__baselineGeoJson === undefined`.
-- **E2E Automation Hook**: Automated test suites (Playwright) explicitly inject `window.__LORAN_E2E__ = true` via `page.addInitScript()` before page navigation to inspect map coordinate projection accuracy and worker layer readiness.
+- **Production Visitor Experience**: In production builds (`npm run build`), `import.meta.env.DEV` is `false`. Normal visitors to `https://simuloran.vercel.app` (and incoming `simuloran.com` / `simuloran.org`) will have `window.__maplibreInstance === undefined` and `window.__baselineGeoJson === undefined`.
+- **E2E Automation Hook**: Automated test suites (Playwright) explicitly inject `window.__SIMULORAN_E2E__ = true` (or legacy `window.__LORAN_E2E__ = true`) via `page.addInitScript()` before page navigation to inspect map coordinate projection accuracy and worker layer readiness.
 - **Threat Model & State Exposure**: The simulator contains no user authentication, no database, no session credentials, and no PII. All data structures represent synthetic radio navigation physics (TDOA, ECD, ASF, transmitter coords). Tampering with the MapLibre instance or GeoJSON layer via console does not expose private data or present any security privilege escalation.
-- **Tamper-Proofing Tradeoff**: Setting `window.__LORAN_E2E__ = true` manually in DevTools prior to reload is technically possible by any visitor. This is an accepted engineering tradeoff: the hook is gated to maintain a clean default window namespace, not as a security barrier, which is acceptable since no privileged or sensitive state exists.
+- **Tamper-Proofing Tradeoff**: Setting `window.__SIMULORAN_E2E__ = true` manually in DevTools prior to reload is technically possible by any visitor. This is an accepted engineering tradeoff: the hook is gated to maintain a clean default window namespace, not as a security barrier, which is acceptable since no privileged or sensitive state exists.
 

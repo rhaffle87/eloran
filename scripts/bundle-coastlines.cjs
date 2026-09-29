@@ -1,5 +1,5 @@
 /**
- * LORAN LAB — Coastline GIS Bundler
+ * SIMULORAN — Coastline GIS Bundler
  * 
  * Fetches Natural Earth 10m physical land vector dataset (Public Domain),
  * clips to the simulation's active preset regions, rounds coordinates to 4 decimals (~10m precision),

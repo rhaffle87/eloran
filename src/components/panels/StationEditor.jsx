@@ -137,7 +137,7 @@ export default function StationEditor({ isELoran = false }) {
           style={inputStyle}
         >
           {Object.entries(PRESET_SCENARIOS).map(([id, p]) => (
-            <option key={id} value={id}>{p.name}</option>
+            <option key={id} value={id}>{p.shortName || p.name}</option>
           ))}
         </select>
       </div>
@@ -241,6 +241,7 @@ export default function StationEditor({ isELoran = false }) {
                   className="p-1 rounded-md transition"
                   style={{ color: 'var(--text-muted)' }}
                   title="Delete station"
+                  aria-label={`Delete station ${st.label}`}
                   onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                 >

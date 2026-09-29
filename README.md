@@ -1,11 +1,11 @@
-# LORAN LAB
+# SIMULORAN
 
 > **High-Fidelity Loran-C & eLoran Simulation Suite**  
 > An interactive, physics-based radio-navigation engineering laboratory for hyperbolic time-difference of arrival (TDOA) positioning, pseudorange multilateration, atmospheric refraction, oscillator stability, Additional Secondary Factor (ASF) modeling, and GNSS-resilient multi-sensor fusion.
 
 > [!CAUTION]
 > **EDUCATIONAL & RESEARCH SIMULATOR ONLY**  
-> LORAN LAB is an academic and engineering research simulation tool. It is **not** certified, approved, or intended for real-world maritime navigation, aviation, or safety-critical positioning, navigation, and timing (PNT).
+> SIMULORAN is an academic and engineering research simulation tool. It is **not** certified, approved, or intended for real-world maritime navigation, aviation, or safety-critical positioning, navigation, and timing (PNT).
 
 ---
 
@@ -15,7 +15,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 **eLoran (enhanced Loran)** is the internationally standardized, terrestrial, low-frequency (100 kHz) navigation system providing high-power (hundreds of kilowatts to megawatts) signals that share no common failure modes with GNSS, delivering resilient, autonomous Positioning, Navigation, and Timing (PNT).
 
-**LORAN LAB** is a standalone, web-based engineering simulation suite designed to model, visualize, and analyze hyperbolic and pseudorange radio navigation chains with mathematical rigor.
+**SIMULORAN** is a standalone, web-based engineering simulation suite designed to model, visualize, and analyze hyperbolic and pseudorange radio navigation chains with mathematical rigor.
 
 ---
 
@@ -34,7 +34,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 ## 3. System Architecture & Features
 
 ```
-eloran/
+simuloran/
 ├── docs/
 │   ├── REFERENCES.md            # Standards, formulas, and literature compendium
 │   ├── PROVENANCE.md            # Provenance audit, citation links & unverified ledger
@@ -84,7 +84,7 @@ eloran/
   - China National Standard: $\eta = 1.000315$
 - **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known ~0.236 µs / ~71 m step discontinuity at 100 statute miles; disabled by default with a visible UI indicator `Secondary Factor: off (UNVERIFIED model)` wherever results depend on PF+SF+ASF).
 - **Additional Secondary Factor (ASF)**: Real-time spatial polynomial and raster evaluation of overland phase delays.
-- **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 2 Millington reciprocal groundwave solver.
+- **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 1, §3 Millington reciprocal groundwave solver.
 
 ### 3. Cycle Slip Modeling (Boyce 2006)
 Simulates wrong-cycle selection where degraded SNR or skywave interference shifts the tracking point away from the 3rd zero crossing, introducing integer $\pm 10\ \mu s$ ($~3\text{ km}$) step errors.

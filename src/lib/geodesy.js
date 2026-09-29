@@ -1,5 +1,5 @@
 /**
- * Geodesy and Coordinate Transformations Library for LORAN LAB
+ * Geodesy and Coordinate Transformations Library for SIMULORAN
  * All calculations use standard physical constants and WGS84 ellipsoid / sphere approximations.
  * Includes Primary Factor (PF), Secondary Factor (SF), and refractive index variations.
  */

@@ -38,7 +38,7 @@ export function EducationalDisclaimerBanner() {
         <ShieldAlert size={14} className="shrink-0" style={{ color: 'var(--banner-edu-title)' }} />
         <span className="font-semibold" style={{ color: 'var(--banner-edu-title)' }}>EDUCATIONAL NOTICE:</span>
         <span className="text-[11px] hidden sm:inline" style={{ opacity: 0.9 }}>
-          LORAN LAB is a scientific research and educational simulator. Not certified for real maritime navigation or safety-critical PNT operations.
+          SIMULORAN is a scientific research and educational simulator. Not certified for real maritime navigation or safety-critical PNT operations.
         </span>
         <span className="text-[11px] sm:hidden" style={{ opacity: 0.9 }}>
           Educational simulator. Not for real navigation.

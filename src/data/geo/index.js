@@ -1,5 +1,5 @@
 /**
- * LORAN LAB — Bundled Regional Coastline Vector Geometries
+ * SIMULORAN — Bundled Regional Coastline Vector Geometries
  * 
  * SOURCED from Natural Earth 10m Physical Land (ne_10m_land, v5.1.2).
  * License: Public Domain (CC0 equivalent).

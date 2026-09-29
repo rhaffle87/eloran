@@ -2,18 +2,18 @@
 
 ## 1. Executive Summary & Validation Hierarchy
 
-To guarantee scientific rigor and avoid circular self-validation (i.e., verifying mathematical models solely against synthetic or theoretical simulations produced by the same equations), **LORAN LAB** benchmarks its positioning engine against independent, peer-reviewed, published empirical field trial datasets.
+To guarantee scientific rigor and avoid circular self-validation (i.e., verifying mathematical models solely against synthetic or theoretical simulations produced by the same equations), **SIMULORAN** benchmarks its positioning engine against independent, peer-reviewed, published empirical field trial datasets.
 
 ### Validation Tiers Defined
 
-| Validation Tier | Definition | Availability in Public Domain | LORAN LAB Status |
+| Validation Tier | Definition | Availability in Public Domain | SIMULORAN Status |
 |---|---|---|---|
 | **Tier 1: Raw Time-Series TOA Logs** | Continuous high-rate ($<100\text{ ns}$ sample interval) pulse time-of-arrival, envelope-to-cycle difference (ECD), and carrier phase time-series recordings captured directly by hardware Loran receivers in the field. | **Unavailable**. Neither Korean nor Chinese research teams published raw streaming binary or CSV receiver logs in public repositories. | **Transparently Disclosed as Unavailable** |
 | **Tier 2: Published Empirical Summary Statistics** | Multi-point empirical field measurements published in peer-reviewed journals, reporting 95% repeatable positioning accuracy ($R_{95}$), root-mean-square errors (RMSE), measured signal strengths, and field transmitter jitters. | **Available & Retrievable**. Published in *IEEE Access* (2021) and *MDPI Sensors* (2025). | **SOURCED & Fully Integrated** |
 | **Tier 3: Analytical & Cross-Language Benchmarks** | Closed-form spherical and ellipsoidal test cases, reciprocal path checks, and cross-language floating-point verification (e.g. Fortran GRWAVE CCIR/ITU-R P.368). | **Available & Fully Verified**. | **SOURCED & Fully Integrated** |
 
 > [!IMPORTANT]
-> **Open Data Transparency Notice**: LORAN LAB strictly refuses to synthesize fake "raw logs" to simulate Tier 1 verification. The project operates under an honest **Tier 2 Empirical Benchmark** regime based strictly on real published empirical measurements.
+> **Open Data Transparency Notice**: SIMULORAN strictly refuses to synthesize fake "raw logs" to simulate Tier 1 verification. The project operates under an honest **Tier 2 Empirical Benchmark** regime based strictly on real published empirical measurements.
 
 ---
 
@@ -109,8 +109,8 @@ In inland long-baseline Loran-C navigation (500–1000 km), conventional spheric
    - Positioning RMSE: **$43.1\text{ m}$**
    - **$89.7\%$ error reduction** achieved by replacing spherical arcs with rigorous WGS84 ellipsoidal geodesics and solving for receiver clock bias as an explicit fourth state variable.
 
-### 3.3 Geodesic Baseline Error Analysis in LORAN LAB
-LORAN LAB evaluates distance using Vincenty's (1975) inverse ellipsoidal geodesic formula against spherical Haversine ($R = 6371\text{ km}$):
+### 3.3 Geodesic Baseline Error Analysis in SIMULORAN
+SIMULORAN evaluates distance using Vincenty's (1975) inverse ellipsoidal geodesic formula against spherical Haversine ($R = 6371\text{ km}$):
 
 | Transmitter | Range (km) | Ellipsoidal Distance ($s$, m) | Spherical Haversine ($d$, m) | Geometric Distortion ($\Delta s$, m) | Equivalent Timing Bias ($\Delta t = \Delta s / c$) |
 |---|---|---|---|---|---|
@@ -125,7 +125,7 @@ In hyperbolic navigation, a timing error of $\Delta t \approx 1\ \mu\text{s}$ sh
 
 ## 4. Continuous Integration & Automated Vitest Suite
 
-Both benchmarks are continuously verified via the automated test suite in [`src/lib/__tests__/trialValidation.test.js`](file:///e:/Projects/lmao/eloran/src/lib/__tests__/trialValidation.test.js):
+Both benchmarks are continuously verified via the automated test suite in [`src/lib/__tests__/trialValidation.test.js`](file:///E:/Projects/simuloran/src/lib/__tests__/trialValidation.test.js):
 
 ```bash
 npm test
@@ -143,7 +143,7 @@ npm test
 
 ## 5. Summary of Open Data Gaps & Protocol
 
-LORAN LAB maintains an uncompromising standard for empirical verification:
+SIMULORAN maintains an uncompromising standard for empirical verification:
 - **No Fictitious High-Precision Claims**: We do not claim sub-meter accuracy where the underlying empirical physics report 8–15 m 95% repeatable bounds.
 - **Transparent Tier Classification**: Whenever citing external trials, the tier of data (raw time-series vs. published summary statistics) is prominently stated in the UI and documentation.
-- **Future Work**: Should an organization release open-access raw TOA time-series logs (e.g. from an active eLoran monitor station in the UK, Korea, or Saudi Arabia), LORAN LAB provides the software architecture to ingest and replay those logs directly into the receiver filter.
+- **Future Work**: Should an organization release open-access raw TOA time-series logs (e.g. from an active eLoran monitor station in the UK, Korea, or Saudi Arabia), SIMULORAN provides the software architecture to ingest and replay those logs directly into the receiver filter.

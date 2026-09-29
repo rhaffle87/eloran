@@ -8,7 +8,7 @@ test.describe('Geodesic GIS Real Coastline ASF E2E Suite', () => {
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
     await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 1. Open ASF Tab in the sidebar
     const asfTab = page.getByRole('button', { name: 'ASF', exact: true });

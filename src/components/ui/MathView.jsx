@@ -3,7 +3,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 /**
- * High-performance, theme-safe KaTeX math renderer for LORAN LAB formulas.
+ * High-performance, theme-safe KaTeX math renderer for SIMULORAN formulas.
  * Supports inline or display (block) mode.
  */
 export default function MathView({ math, block = false, className = '' }) {

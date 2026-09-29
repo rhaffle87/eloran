@@ -1,0 +1,44 @@
+================================================================
+MAPLIBRE EVENT LOG: (a) initial, (b) full-replace, (c) diffed
+================================================================
+
+--- (A) INITIAL LOAD ---
+[MAP_EVENT] [INITIAL] +11826.00ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [INITIAL] +12330.20ms: load (isStyleLoaded=true)
+[MAP_EVENT] [INITIAL] +12800.50ms: idle (isStyleLoaded=true)
+[MAP_EVENT] [INITIAL] +12847.00ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [INITIAL] +13169.60ms: idle (isStyleLoaded=true)
+[MAP_EVENT] [INITIAL] +13201.90ms: styledata (isStyleLoaded=false)
+
+--- (B) FULL-REPLACE setStyle ({ diff: false }) ---
+[MAP_EVENT] [FULL-REPLACE] +0.10ms: BEFORE setStyle({ diff: false }) (isStyleLoaded=false) 
+[MAP_EVENT] [FULL-REPLACE] +3.10ms: AFTER setStyle synchronous return (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +13251.20ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [FULL-REPLACE] +9.30ms: styledata (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +13251.90ms: style.load (isStyleLoaded=false)
+[MAP_EVENT] [FULL-REPLACE] +9.70ms: style.load (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +13264.40ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [FULL-REPLACE] +22.50ms: styledata (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +13577.30ms: idle (isStyleLoaded=true)
+[MAP_EVENT] [FULL-REPLACE] +335.30ms: idle (isStyleLoaded=true) 
+[MAP_EVENT] [FULL-REPLACE] +337.20ms: IDLE RESOLVED (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +13614.30ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [INITIAL] +13950.50ms: idle (isStyleLoaded=true)
+[MAP_EVENT] [INITIAL] +13989.20ms: styledata (isStyleLoaded=false)
+
+--- (C) DIFFED setStyle ({ diff: true }) ---
+[MAP_EVENT] [DIFFED] +0.00ms: BEFORE setStyle({ diff: true }) (isStyleLoaded=true) 
+[MAP_EVENT] [INITIAL] +14221.60ms: style.load (isStyleLoaded=true)
+[MAP_EVENT] [DIFFED] +5.90ms: style.load (isStyleLoaded=true) 
+[MAP_EVENT] [DIFFED] +6.20ms: AFTER setStyle synchronous return (isStyleLoaded=true) 
+[MAP_EVENT] [INITIAL] +14225.10ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [DIFFED] +8.90ms: styledata (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +14267.20ms: styledata (isStyleLoaded=false)
+[MAP_EVENT] [DIFFED] +50.80ms: styledata (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +14866.40ms: idle (isStyleLoaded=true)
+[MAP_EVENT] [DIFFED] +650.60ms: idle (isStyleLoaded=true) 
+[MAP_EVENT] [DIFFED] +652.60ms: IDLE RESOLVED (isStyleLoaded=false) 
+[MAP_EVENT] [INITIAL] +14916.80ms: styledata (isStyleLoaded=false)
+================================================================
+END OF MAPLIBRE EVENT LOG
+================================================================

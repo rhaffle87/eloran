@@ -35,6 +35,7 @@ import {
 import { parseStationsCsv, exportStationsCsv } from '../stations.js';
 import { simulateClockOffset, createMulberry32 } from '../clocks.js';
 import {
+  NOMINAL_PULSE_DURATION,
   evaluatePulse,
   evaluateStandardLoranPulseMicroseconds,
   evaluateCarrierMicroseconds,
@@ -317,11 +318,36 @@ receiver,-6.250000,106.820000,R1,0,0,0,false,1000,0,0,0,gps-disciplined`;
 });
 
 describe('RF Pulse Synthesis & Clocks', () => {
-  it('evaluates pulse envelope peak at t = 0 and decay at pulse end', () => {
-    const peak = evaluatePulse(0, 0.0001, false);
-    expect(peak).toBeCloseTo(1.0, 5);
-    const end = evaluatePulse(0.0001, 0.0001, false);
-    expect(end).toBeCloseTo(0.0, 5);
+  it('evaluates standard Loran-C pulse envelope with zero onset, peak at 65 µs, and decay at pulse end', () => {
+    // At t = 0, envelope is 0
+    const onset = evaluatePulse(0, NOMINAL_PULSE_DURATION, false);
+    expect(onset).toBe(0);
+
+    // At t = 65 µs (65e-6 s), envelope reaches normalized peak of 1.0
+    const peak = evaluatePulse(65e-6, NOMINAL_PULSE_DURATION, false);
+    expect(peak).toBeCloseTo(1.0, 4);
+
+    // At t = 30 µs (SZC), envelope is ~0.626
+    const szc = evaluatePulse(30e-6, NOMINAL_PULSE_DURATION, false);
+    expect(szc).toBeCloseTo(0.626, 2);
+
+    // At t = NOMINAL_PULSE_DURATION (300 µs), envelope has decayed (< 0.02)
+    const end = evaluatePulse(NOMINAL_PULSE_DURATION, NOMINAL_PULSE_DURATION, false);
+    expect(end).toBeLessThan(0.02);
+
+    // Beyond pulse duration, amplitude is 0
+    const beyond = evaluatePulse(NOMINAL_PULSE_DURATION + 1e-6, NOMINAL_PULSE_DURATION, false);
+    expect(beyond).toBe(0);
+  });
+
+  it('modulates pulse envelope with 100 kHz carrier having standard zero-crossing at 30 µs', () => {
+    // At t = 30 µs, carrier sin(2*pi*100000*30e-6) = sin(6*pi) = 0
+    const szcWave = evaluatePulse(30e-6, NOMINAL_PULSE_DURATION, true);
+    expect(szcWave).toBeCloseTo(0.0, 5);
+
+    // At t = 62.5 µs (6.25 cycles: quarter-cycle before 65 µs peak), carrier sin(12.5*pi) = 1.0
+    const wavePeak = evaluatePulse(62.5e-6, NOMINAL_PULSE_DURATION, true);
+    expect(wavePeak).toBeGreaterThan(0.9);
   });
 
   it('simulates clock bias and drift linearly', () => {
@@ -765,6 +791,31 @@ describe("Mixed-Path Groundwave ASF (Millington's Method)", () => {
       });
       expect(asf).toBeGreaterThan(prevAsf);
       prevAsf = asf;
+    }
+  });
+
+  it('asserts groundwave phase delay increases monotonically with land path distance (d1 < d2 => dt(d1) <= dt(d2))', () => {
+    const sigma = 0.003; // Agricultural land
+    const distancesKm = [10, 25, 50, 100, 150, 200, 300, 500];
+    let prevDelayUs = 0;
+
+    for (const dKm of distancesKm) {
+      const delayUs = computeHomogeneousAsfMicroseconds(dKm, sigma);
+      expect(delayUs).toBeGreaterThanOrEqual(prevDelayUs);
+      expect(delayUs).toBeGreaterThan(0);
+      prevDelayUs = delayUs;
+    }
+
+    // Also assert on mixed path distance
+    let prevMixedMeters = 0;
+    for (const dKm of distancesKm) {
+      const asfMeters = computeMixedPathAsfMeters({
+        totalDistMeters: dKm * 1000,
+        landFraction: 0.8,
+        landSigma: sigma,
+      });
+      expect(asfMeters).toBeGreaterThanOrEqual(prevMixedMeters);
+      prevMixedMeters = asfMeters;
     }
   });
 

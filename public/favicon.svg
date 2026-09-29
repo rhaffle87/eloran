@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#090a0c" stroke="#1e293b" stroke-width="2"/>
+  <!-- Primary antenna mast -->
+  <path d="M32 50V26" stroke="#06b6d4" stroke-width="3" stroke-linecap="round"/>
+  <!-- Radiating hyperbolic wave pulses (100 kHz LF) -->
+  <path d="M22 38C22 32.477 26.477 28 32 28C37.523 28 42 32.477 42 38" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M14 44C14 34.059 22.059 20 32 20C41.941 20 50 34.059 50 44" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M7 49C7 35.193 18.193 12 32 12C45.807 12 57 35.193 57 49" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.7"/>
+  <!-- Base node and transmitter beacon -->
+  <circle cx="32" cy="50" r="3" fill="#06b6d4"/>
+  <circle cx="32" cy="24" r="2.5" fill="#38bdf8"/>
+  <circle cx="32" cy="24" r="5" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.4"/>
+</svg>

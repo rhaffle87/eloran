@@ -144,7 +144,7 @@ export default function FusionPanel() {
           </span>
           <InfoTooltip
             align="right"
-            text="Active physics layers: PF atmospheric refraction (RTCM), TOA noise injection (Rhee), Millington mixed-path ASF (ITU-R P.832), and Boyce cycle slip monitoring."
+            text="Active physics layers: PF atmospheric refraction (RTCM), TOA noise injection (Rhee), Millington mixed-path ASF (Turf.js Great-Circle coastline segmentation, Natural Earth vector polygons, ITU-R P.368 conductivities), and Boyce cycle slip monitoring."
           />
         </div>
       </div>

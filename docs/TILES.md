@@ -62,7 +62,7 @@ flowchart TD
 
 1. **Tier 1 — OpenStreetMap Raster Fallback**: If OpenFreeMap vector styles, tile endpoints, or sprite servers fail to respond, the map automatically promotes OpenStreetMap standard raster tiles and displays a dismissible warning notice.
 2. **Tier 2 — Offline Radar Canvas Fallback**: If external internet connectivity is completely lost, or if OSM tiles are also blocked, the map automatically transitions to the zero-network Radar Canvas.
-3. **Session Persistence**: When Radar Canvas is activated by network failure, the state is persisted in `sessionStorage` (`loran_offline_radar = 'true'`) to avoid repeated network failures during subsequent route navigation.
+3. **Session Persistence**: When Radar Canvas is activated by network failure, the state is persisted in `sessionStorage` (`simuloran_offline_radar = 'true'`, with backward-compatible fallback to `loran_offline_radar = 'true'`) to avoid repeated network failures during subsequent route navigation.
 
 ---
 

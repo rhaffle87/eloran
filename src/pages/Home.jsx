@@ -164,7 +164,7 @@ export default function Home() {
 
           <h1 className="animate-fade-up mt-6 text-5xl sm:text-7xl font-black tracking-tight font-mono"
             style={{ color: 'var(--text-primary)' }}>
-            LORAN<span style={{ color: 'var(--color-eloran)' }}>&nbsp;LAB</span>
+            SIMU<span style={{ color: 'var(--color-eloran)' }}>LORAN</span>
           </h1>
 
           <p className="animate-fade-up-delay-1 mt-5 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"

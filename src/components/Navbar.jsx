@@ -30,7 +30,7 @@ function BrandLogo() {
         <div className="font-mono font-bold text-xs tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
           SIMULORAN
           <span className="text-[9px] px-1 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--accent-eloran)] font-semibold tracking-wider">
-            v1.1
+            {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v1.1'}
           </span>
         </div>
         <div className="text-xs text-[var(--text-secondary)] font-mono hidden sm:block">

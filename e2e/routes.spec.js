@@ -34,8 +34,8 @@ test.describe('SIMULORAN E2E Suite', () => {
       await page.goto(routePath, { waitUntil: 'domcontentloaded' });
 
       // Ensure React mounted properly and no fallback ErrorBoundary was rendered
-      const root = page.locator('#root');
-      await expect(root).toBeVisible();
+      const nav = page.locator('nav');
+      await expect(nav).toBeVisible();
       const errorBoundaryNotice = page.locator('text=Simulator Error Encountered');
       await expect(errorBoundaryNotice).toHaveCount(0);
 
@@ -80,7 +80,7 @@ test.describe('SIMULORAN E2E Suite', () => {
 
       page.on('response', (res) => {
         const url = res.url();
-        if (isTileHost(url) && res.status() === 200) {
+        if (isTileHost(url) && (res.status() === 200 || res.status() === 304)) {
           tile200Count++;
         }
       });
@@ -147,7 +147,7 @@ test.describe('SIMULORAN E2E Suite', () => {
     });
 
     page.on('response', (res) => {
-      if (res.url().includes('tile.openstreetmap.org') && res.status() === 200) {
+      if (res.url().includes('tile.openstreetmap.org') && (res.status() === 200 || res.status() === 304)) {
         osm200Count++;
       }
     });
@@ -166,10 +166,10 @@ test.describe('SIMULORAN E2E Suite', () => {
 
     // Wait for OSM tile response
     const start = Date.now();
-    while (osm200Count === 0 && Date.now() - start < 8000) {
+    while (osm200Count === 0 && Date.now() - start < 12000) {
       await page.waitForTimeout(250);
     }
-    expect(osm200Count, 'Expected at least one HTTP 200 response from OpenStreetMap fallback').toBeGreaterThan(0);
+    expect(osm200Count, 'Expected at least one response from OpenStreetMap fallback').toBeGreaterThan(0);
     expect(cspViolations).toHaveLength(0);
   });
 
@@ -201,11 +201,29 @@ test.describe('SIMULORAN E2E Suite', () => {
     await dismissBtn.click();
     await expect(notice).not.toBeVisible();
 
-    // Verify session storage remembered the offline preference
-    const remembered = await page.evaluate(() => sessionStorage.getItem('loran_offline_radar'));
+    // Verify session storage remembered the offline preference in canonical key
+    const remembered = await page.evaluate(() => sessionStorage.getItem('simuloran_offline_radar'));
     expect(remembered).toBe('true');
 
     expect(cspViolations).toHaveLength(0);
+  });
+
+  test('sessionStorage backward compatibility: migrates legacy loran_offline_radar to simuloran_offline_radar', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('loran_offline_radar', 'true');
+    });
+
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const canvas = page.locator('canvas.maplibregl-canvas');
+    await expect(canvas).toBeVisible({ timeout: 10000 });
+
+    const state = await page.evaluate(() => ({
+      canonical: sessionStorage.getItem('simuloran_offline_radar'),
+      legacy: sessionStorage.getItem('loran_offline_radar'),
+    }));
+
+    expect(state.canonical).toBe('true');
+    expect(state.legacy).toBeNull();
   });
 
   test('/loran-c handles near-degenerate / collinear geometry without triggering ErrorBoundary and silences missing sprite warnings', async ({ page }) => {

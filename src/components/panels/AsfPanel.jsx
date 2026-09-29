@@ -711,11 +711,11 @@ export default function AsfPanel() {
 
       {/* Empirical Field Trial Validation Benchmarks */}
       <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Database size={13} className="text-[var(--accent-eloran)] shrink-0" />
-            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] truncate">
-              Field Trial Benchmarks
+            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] shrink-0">
+              Field Benchmarks
             </span>
             <span
               className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 flex items-center gap-1 font-semibold"
@@ -738,7 +738,7 @@ export default function AsfPanel() {
             type="button"
             data-testid="toggle-validation-benchmarks"
             onClick={() => setShowValidation(!showValidation)}
-            className="text-[11px] hover:underline font-semibold cursor-pointer shrink-0 ml-2"
+            className="text-[11px] hover:underline font-semibold cursor-pointer shrink-0 ml-auto"
             style={{ color: 'var(--accent-eloran)' }}
           >
             {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}

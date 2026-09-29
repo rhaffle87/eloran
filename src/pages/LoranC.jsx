@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Radio, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
@@ -37,6 +37,18 @@ export default function LoranC() {
     () => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
   );
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
+  const [windowWidth, setWindowWidth] = useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth : 1280)
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 640;
+  const effectiveSidebarWidth = isMobile ? windowWidth : sidebarWidth;
   const [isDragging, setIsDragging] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isDraggingRef = useRef(false);
@@ -215,10 +227,11 @@ export default function LoranC() {
             }
           }
         }}
-        className="relative z-30 flex flex-col flex-shrink-0 h-full"
+        className="relative z-30 flex flex-col flex-shrink-0 h-full max-w-full"
         style={{
-          width: sidebarOpen ? sidebarWidth : 0,
+          width: sidebarOpen ? effectiveSidebarWidth : 0,
           minWidth: 0,
+          maxWidth: '100vw',
           transition: isDragging ? 'none' : 'width 220ms cubic-bezier(0.4, 0, 0.2, 1)',
           borderLeft: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
           background: 'var(--bg-surface)',
@@ -230,7 +243,7 @@ export default function LoranC() {
           <div
             data-testid="sidebar-drag-handle"
             onMouseDown={handleDragStart}
-            className="absolute left-0 top-0 bottom-0 w-2 z-40 cursor-col-resize select-none transition-colors"
+            className="absolute left-0 top-0 bottom-0 w-2 z-40 cursor-col-resize select-none transition-colors hidden sm:block"
             style={{
               background: isDragging ? 'var(--accent-loran-c-border)' : 'transparent',
             }}
@@ -245,8 +258,8 @@ export default function LoranC() {
         )}
         <div
           data-testid="sidebar-content"
-          className="absolute right-0 top-0 bottom-0 flex flex-col h-full overflow-hidden"
-          style={{ visibility: (sidebarOpen || isTransitioning) ? 'visible' : 'hidden', width: sidebarWidth }}
+          className="absolute right-0 top-0 bottom-0 flex flex-col h-full overflow-hidden w-full"
+          style={{ visibility: (sidebarOpen || isTransitioning) ? 'visible' : 'hidden', width: effectiveSidebarWidth, maxWidth: '100%' }}
         >
           {/* Console header */}
           <div

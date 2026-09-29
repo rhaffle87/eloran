@@ -65,7 +65,7 @@ function SimStatusBadge({ isSimRunning, simTimeSec, activePreset }) {
 
 export default function Navbar() {
   const { activePresetId, simTimeSec, isSimRunning } = useSimulationStore();
-  const { theme, setTheme, effectiveTheme, toggleTheme } = useThemeStore();
+  const { theme, setTheme, effectiveTheme } = useThemeStore();
   const activePreset = PRESET_SCENARIOS[activePresetId];
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -107,20 +107,9 @@ export default function Navbar() {
               activePreset={activePreset}
             />
 
-            {/* Theme Quick Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-8 h-8 flex items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition cursor-pointer"
-              title={`Switch to ${effectiveTheme === 'dark' ? 'Light' : 'Dark'} mode`}
-              aria-label={effectiveTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            >
-              {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
-
             {/* 3-Way Theme Switcher (Light / Dark / Auto) */}
             <div
-              className="hidden sm:flex items-center p-0.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)]"
+              className="flex items-center p-0.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)]"
               role="radiogroup"
               aria-label="Theme mode selection"
               onKeyDown={(e) => {
@@ -148,8 +137,8 @@ export default function Navbar() {
                     ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
-                title="Light mode"
-                aria-label="Light mode"
+                title={effectiveTheme === 'light' ? 'Light mode (active)' : 'Switch to light theme'}
+                aria-label={effectiveTheme === 'light' ? 'Light mode (active)' : 'Switch to light theme'}
               >
                 <Sun size={13} />
               </button>
@@ -164,8 +153,8 @@ export default function Navbar() {
                     ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
-                title="Dark mode"
-                aria-label="Dark mode"
+                title={effectiveTheme === 'dark' ? 'Dark mode (active)' : 'Switch to dark theme'}
+                aria-label={effectiveTheme === 'dark' ? 'Dark mode (active)' : 'Switch to dark theme'}
               >
                 <Moon size={13} />
               </button>
@@ -181,7 +170,7 @@ export default function Navbar() {
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Auto / System mode"
-                aria-label="Auto / System mode"
+                aria-label="Auto system mode"
               >
                 <Monitor size={13} />
               </button>
@@ -224,41 +213,6 @@ export default function Navbar() {
               {label}
             </NavLink>
           ))}
-          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs font-mono px-1">
-            <span className="text-[var(--text-dim)]">Theme</span>
-            <div className="flex items-center gap-1 p-0.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
-              <button
-                type="button"
-                onClick={() => setTheme('light')}
-                className={`px-2 py-1 rounded text-[11px] font-mono flex items-center gap-1 transition ${
-                  theme === 'light' ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] font-semibold shadow-xs' : 'text-[var(--text-muted)]'
-                }`}
-                aria-label="Light theme"
-              >
-                <Sun size={12} /> Light
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme('dark')}
-                className={`px-2 py-1 rounded text-[11px] font-mono flex items-center gap-1 transition ${
-                  theme === 'dark' ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] font-semibold shadow-xs' : 'text-[var(--text-muted)]'
-                }`}
-                aria-label="Dark theme"
-              >
-                <Moon size={12} /> Dark
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme('system')}
-                className={`px-2 py-1 rounded text-[11px] font-mono flex items-center gap-1 transition ${
-                  theme === 'system' ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] font-semibold shadow-xs' : 'text-[var(--text-muted)]'
-                }`}
-                aria-label="Auto / System theme"
-              >
-                <Monitor size={12} /> Auto
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </nav>

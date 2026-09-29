@@ -137,7 +137,7 @@ export default function CycleSelectionPanel() {
                 onChange={(e) => setShowTheoretical(e.target.checked)}
                 className="accent-cyan-400"
               />
-              <span className="w-3 h-0.5 bg-cyan-400 inline-block"></span> Theoretical Rician Ratio
+              <span className="w-3 h-0.5 inline-block" style={{ background: 'var(--accent-eloran)' }}></span> Theoretical Rician Ratio
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer" style={{ color: 'var(--status-ok)' }}>
               <input
@@ -146,7 +146,7 @@ export default function CycleSelectionPanel() {
                 onChange={(e) => setShowAustronNew(e.target.checked)}
                 className="accent-emerald-400"
               />
-              <span className="w-3 h-0.5 bg-emerald-400 border-b border-dashed inline-block"></span> Austron New (28 µs)
+              <span className="w-3 h-0.5 border-b border-dashed inline-block" style={{ background: 'var(--status-ok)' }}></span> Austron New (28 µs)
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer text-[var(--status-warn)]">
               <input
@@ -155,16 +155,16 @@ export default function CycleSelectionPanel() {
                 onChange={(e) => setShowAustronOld(e.target.checked)}
                 className="accent-amber-400"
               />
-              <span className="w-3 h-0.5 bg-amber-400 border-b border-dotted inline-block"></span> Austron Old (42 µs)
+              <span className="w-3 h-0.5 border-b border-dotted inline-block" style={{ background: 'var(--status-warn)' }}></span> Austron Old (42 µs)
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer text-fuchsia-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-fuchsia-700 dark:text-fuchsia-300">
               <input
                 type="checkbox"
                 checked={showMonteCarlo}
                 onChange={(e) => setShowMonteCarlo(e.target.checked)}
                 className="accent-fuchsia-400"
               />
-              <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 inline-block"></span> Monte Carlo ({numTrials} trials)
+              <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-600 dark:bg-fuchsia-400 inline-block"></span> Monte Carlo ({numTrials} trials)
             </label>
           </div>
         </div>
@@ -173,15 +173,15 @@ export default function CycleSelectionPanel() {
         <div className="relative bg-[var(--bg-canvas)] rounded-xl border border-[var(--border-subtle)]/90 p-2 overflow-hidden shadow-inner">
           <svg viewBox="0 0 800 380" className="w-full h-72">
             {/* Grid background */}
-            <rect x="60" y="40" width="700" height="300" fill="#09090b" rx="4" />
+            <rect x="60" y="40" width="700" height="300" fill="var(--bg-surface)" stroke="var(--border-subtle)" strokeWidth="1" rx="4" />
 
             {/* Horizontal logarithmic gridlines (10^0, 10^-1, 10^-2, 10^-3, 10^-4) */}
             {[-4, -3, -2, -1, 0].map((exp) => {
               const y = mapY(Math.pow(10, exp));
               return (
                 <g key={`ygrid-${exp}`}>
-                  <line x1="60" y1={y} x2="760" y2={y} stroke="#27272a" strokeWidth="0.8" strokeDasharray={exp === 0 ? 'none' : '3 3'} />
-                  <text x="52" y={y + 3} fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="end">
+                  <line x1="60" y1={y} x2="760" y2={y} stroke="var(--border-subtle)" strokeWidth="0.8" strokeDasharray={exp === 0 ? 'none' : '3 3'} />
+                  <text x="52" y={y + 3} fill="var(--text-secondary)" fontSize="10" fontFamily="monospace" textAnchor="end">
                     10{exp === 0 ? '\u2070' : exp === -1 ? '\u207B\u00B9' : exp === -2 ? '\u207B\u00B2' : exp === -3 ? '\u207B\u00B3' : '\u207B\u2074'}
                   </text>
                 </g>
@@ -193,8 +193,8 @@ export default function CycleSelectionPanel() {
               const x = mapX(db);
               return (
                 <g key={`xgrid-${db}`}>
-                  <line x1={x} y1="40" x2={x} y2="340" stroke="#27272a" strokeWidth="0.8" strokeDasharray="3 3" />
-                  <text x={x} y="358" fill="#71717a" fontSize="10" fontFamily="monospace" textAnchor="middle">
+                  <line x1={x} y1="40" x2={x} y2="340" stroke="var(--border-subtle)" strokeWidth="0.8" strokeDasharray="3 3" />
+                  <text x={x} y="358" fill="var(--text-secondary)" fontSize="10" fontFamily="monospace" textAnchor="middle">
                     {db} dB
                   </text>
                 </g>
@@ -202,22 +202,22 @@ export default function CycleSelectionPanel() {
             })}
 
             {/* Axis labels */}
-            <text x="410" y="375" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle">
+            <text x="410" y="375" fill="var(--text-primary)" fontSize="11" fontFamily="monospace" textAnchor="middle">
               {"Total SNR [dB] = 10 \u00B7 log\u2081\u2080(N \u00B7 SNR)"}
             </text>
-            <text x="18" y="190" fill="#a1a1aa" fontSize="11" fontFamily="monospace" textAnchor="middle" transform="rotate(-90 18 190)">
+            <text x="18" y="190" fill="var(--text-primary)" fontSize="11" fontFamily="monospace" textAnchor="middle" transform="rotate(-90 18 190)">
               P[Wrong Cycle Selection]
             </text>
 
             {/* Curves */}
             {showAustronOld && (
-              <path d={austronOldPath} fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeDasharray="4 4" opacity="0.9" />
+              <path d={austronOldPath} fill="none" stroke="var(--status-warn)" strokeWidth="1.8" strokeDasharray="4 4" opacity="0.9" />
             )}
             {showAustronNew && (
-              <path d={austronNewPath} fill="none" stroke="#10b981" strokeWidth="1.8" strokeDasharray="6 3" opacity="0.9" />
+              <path d={austronNewPath} fill="none" stroke="var(--status-ok)" strokeWidth="1.8" strokeDasharray="6 3" opacity="0.9" />
             )}
             {showTheoretical && (
-              <path d={ricePath} fill="none" stroke="#06b6d4" strokeWidth="2.2" opacity="0.95" />
+              <path d={ricePath} fill="none" stroke="var(--accent-eloran)" strokeWidth="2.2" opacity="0.95" />
             )}
 
             {/* Monte Carlo scatter markers */}

@@ -59,7 +59,7 @@ export default function ClockPanel() {
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition"
             style={isSimRunning
               ? { background: 'var(--status-warn-subtle)', border: '1px solid var(--status-warn-border)', color: 'var(--status-warn)' }
-              : { background: 'var(--accent-eloran)', color: 'var(--bg-canvas)', border: '1px solid transparent' }}
+              : { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', border: '1px solid transparent' }}
           >
             {isSimRunning ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Run Clock</>}
           </button>

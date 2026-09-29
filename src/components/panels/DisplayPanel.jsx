@@ -262,7 +262,7 @@ export default function DisplayPanel({ isELoran = false }) {
         <button
           onClick={handleComputeContours}
           disabled={isComputing}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-black font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg transition mt-2 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-[var(--btn-eloran-text)] font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg transition mt-2 cursor-pointer"
         >
           <Activity size={15} className={isComputing ? 'animate-spin' : ''} />
           {isComputing ? 'Computing Grid Off-Thread...' : 'Generate LOP Contours'}

@@ -293,7 +293,7 @@ export default function ChainDesignPanel() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 font-bold text-[11px]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#06b6d4] inline-block border border-white shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: 'var(--accent-eloran)' }} />
             <span style={{ color: 'var(--accent-eloran)' }}>Master Station ({master.label})</span>
           </div>
           <span className="text-[10px]" style={{ color: 'var(--text-dim)' }}>Pulse Group 0 µs</span>
@@ -354,7 +354,7 @@ export default function ChainDesignPanel() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 font-bold text-[11px]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] inline-block border border-white shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: 'var(--accent-loran-c)' }} />
                 <span style={{ color: 'var(--accent-loran-c)' }}>Secondary {sec.label}</span>
                 <span className="text-[10px] font-normal" style={{ color: 'var(--text-dim)' }}>
                   ({sec.name || `Station ${sec.label}`})
@@ -362,7 +362,7 @@ export default function ChainDesignPanel() {
               </div>
               <button
                 onClick={() => removeDesignSecondary(idx)}
-                className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                className="p-1 rounded-md transition" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                 title={`Remove secondary ${sec.label}`}
               >
                 <Trash2 size={13} aria-hidden="true" />

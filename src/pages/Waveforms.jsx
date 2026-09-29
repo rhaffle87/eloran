@@ -69,7 +69,7 @@ export default function Waveforms() {
                 onClick={() => setActiveTab(tab)}
                 className="px-3 py-1.5 rounded transition"
                 style={activeTab === tab
-                  ? { background: 'var(--accent-eloran)', color: 'var(--bg-canvas)', fontWeight: 700 }
+                  ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
                   : { color: 'var(--text-dim)' }
                 }
               >

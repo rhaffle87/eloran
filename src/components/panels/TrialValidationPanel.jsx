@@ -105,7 +105,7 @@ export function TrialValidationPanel({ compact = false }) {
               }
             : {
                 background: 'var(--accent-eloran)',
-                color: '#ffffff',
+                color: 'var(--btn-eloran-text)',
                 border: '1px solid transparent',
               }}
         >
@@ -317,7 +317,7 @@ export function TrialValidationPanel({ compact = false }) {
                   }
                 : {
                     background: 'var(--accent-eloran)',
-                    color: '#ffffff',
+                color: 'var(--btn-eloran-text)',
                     border: '1px solid transparent',
                   }}
             >

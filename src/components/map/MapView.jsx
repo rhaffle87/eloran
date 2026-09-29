@@ -784,8 +784,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
           const content = `
             <div class="font-mono text-xs">
               <div class="font-bold text-amber-500 mb-1">Baseline Extension Hazard Zone</div>
-              <div class="text-[11px] text-zinc-300">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
-              <div class="text-[10px] text-zinc-400 mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
+              <div class="text-[11px] text-[var(--text-secondary)]">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
+              <div class="text-[10px] text-[var(--text-muted)] mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
             </div>
           `;
           new maplibregl.Popup({ offset: 10 }).setLngLat(e.lngLat).setHTML(content).addTo(map);

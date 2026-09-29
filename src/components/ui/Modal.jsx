@@ -68,7 +68,7 @@ export default function Modal({
           <button
             onClick={() => onConfirm?.(value)}
             className="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition font-mono"
-            style={{ background: 'var(--accent-eloran)', color: 'var(--bg-canvas)', border: '1px solid transparent' }}
+            style={{ background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', border: '1px solid transparent' }}
           >
             Confirm
           </button>

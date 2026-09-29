@@ -253,10 +253,10 @@ export default function PulseViewer() {
     URL.revokeObjectURL(url);
   };
 
-  const clrEloran = '#06b6d4';
-  const clrLoranC = '#f59e0b';
-  const clrGrid   = '#1e293b';
-  const clrGri    = '#d97706';
+  const clrEloran = 'var(--accent-eloran)';
+  const clrLoranC = 'var(--accent-loran-c)';
+  const clrGrid   = 'var(--border-subtle)';
+  const clrGri    = 'var(--accent-loran-c)';
 
   return (
     <div className="space-y-6">
@@ -389,7 +389,7 @@ export default function PulseViewer() {
           </div>
           <div className="flex items-center gap-3 text-[11px]" style={{ color: 'var(--text-dim)' }}>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-0.5 inline-block rounded" style={{ background: '#ef4444' }} />
+              <span className="w-3 h-0.5 inline-block rounded" style={{ background: 'var(--status-danger)' }} />
               Pulse Envelope E(t)
             </span>
             <span className="flex items-center gap-1.5">
@@ -468,7 +468,7 @@ export default function PulseViewer() {
               <polyline
                 points={envelopePoints}
                 fill="none"
-                stroke="#ef4444"
+                stroke="var(--status-danger)"
                 strokeWidth="2"
                 strokeLinejoin="round"
                 opacity="0.95"

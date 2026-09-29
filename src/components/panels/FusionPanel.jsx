@@ -117,19 +117,25 @@ export default function FusionPanel() {
         </div>
 
         {fix?.lat !== undefined && (
-          <div className="text-[11px] space-y-0.5 pt-1" style={{ color: 'var(--text-muted)' }}>
-            <div>
-              Estimated Coords: <span style={{ color: 'var(--text-primary)' }}>{fix.lat.toFixed(5)}°, {fix.lng.toFixed(5)}°</span>
+          <div className="text-[11px] space-y-1 pt-1" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex justify-between items-center">
+              <span>Estimated Coords:</span>
+              <span className="font-mono text-right" style={{ color: 'var(--text-primary)' }}>
+                {fix.lat.toFixed(5)}°, {fix.lng.toFixed(5)}°
+              </span>
             </div>
             {rx && (
-              <div>
-                Ground Truth: <span style={{ color: 'var(--text-secondary)' }}>{rx.lat.toFixed(5)}°, {rx.lng.toFixed(5)}°</span>
+              <div className="flex justify-between items-center">
+                <span>Ground Truth:</span>
+                <span className="font-mono text-right" style={{ color: 'var(--text-secondary)' }}>
+                  {rx.lat.toFixed(5)}°, {rx.lng.toFixed(5)}°
+                </span>
               </div>
             )}
             {fix.toaNoiseStdDevMeters !== undefined && (
-              <div className="flex justify-between items-center pt-1 text-[10px]">
+              <div className="flex justify-between items-center pt-1 text-[10px]" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                 <span className="text-[var(--text-muted)]">TOA Measurement Noise σ_i:</span>
-                <span className="text-[var(--accent-eloran)] font-bold">
+                <span className="text-[var(--accent-eloran)] font-bold font-mono text-right">
                   {fix.toaNoiseStdDevMeters.toFixed(2)} m ({(fix.toaNoiseStdDevMeters / 0.299792).toFixed(1)} ns)
                 </span>
               </div>

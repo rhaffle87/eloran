@@ -439,7 +439,7 @@ export function TrialValidationPanel({ compact = false }) {
               className="p-3.5 rounded-lg border"
               style={{
                 background: 'var(--status-danger-subtle)',
-                borderColor: 'var(--status-danger-border, rgba(220, 38, 38, 0.2))',
+                borderColor: 'var(--status-danger-border)',
               }}
             >
               <span className="text-[11px] font-mono block" style={{ color: 'var(--status-danger)' }}>Spherical Model (SHP)</span>

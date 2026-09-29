@@ -18,7 +18,7 @@ const statusMeta = {
 
 function HeroBadge({ children }) {
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-mono font-semibold tracking-wider">
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-eloran-subtle)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] text-[11px] font-mono font-semibold tracking-wider">
       {children}
     </div>
   );
@@ -35,8 +35,8 @@ function SpecRow({ label, value, accent }) {
 
 function ModuleCard({ icon: CardIcon, title, description, features, to, accent, badge }) {
   const accentColor = accent === 'eloran' ? 'var(--color-eloran)' : 'var(--color-loran-c)';
-  const accentBg = accent === 'eloran' ? 'rgba(6,182,212,0.07)' : 'rgba(245,158,11,0.07)';
-  const accentBorder = accent === 'eloran' ? 'rgba(6,182,212,0.2)' : 'rgba(245,158,11,0.2)';
+  const accentBg = accent === 'eloran' ? 'var(--accent-eloran-subtle)' : 'var(--accent-loran-c-subtle)';
+  const accentBorder = accent === 'eloran' ? 'var(--accent-eloran-border)' : 'var(--accent-loran-c-border)';
 
   return (
     <article className="panel-card flex flex-col justify-between p-6 hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
@@ -87,7 +87,7 @@ function PresetCard({ preset, isCurrent, onLaunchEloran, onLaunchLoranC }) {
   const meta = statusMeta[preset.status] || statusMeta.synthetic;
   return (
     <article
-      className={`panel-card flex flex-col p-4 transition-all duration-200 ${isCurrent ? 'shadow-[0_0_20px_var(--glow-eloran)] border-cyan-500/60' : 'hover:border-[var(--surface-muted)]'
+      className={`panel-card flex flex-col p-4 transition-all duration-200 ${isCurrent ? 'shadow-[0_0_20px_var(--glow-eloran)] border-[var(--accent-eloran)]' : 'hover:border-[var(--surface-muted)]'
         }`}
       aria-current={isCurrent ? 'true' : undefined}
     >
@@ -110,7 +110,7 @@ function PresetCard({ preset, isCurrent, onLaunchEloran, onLaunchLoranC }) {
         <button
           onClick={onLaunchEloran}
           className="py-1.5 px-2 rounded text-xs font-mono font-semibold transition text-center border"
-          style={{ background: 'rgba(6,182,212,0.08)', color: 'var(--color-eloran)', borderColor: 'rgba(6,182,212,0.25)' }}
+          style={{ background: 'var(--accent-eloran-subtle)', color: 'var(--color-eloran)', borderColor: 'var(--accent-eloran-border)' }}
         >
           eLoran
         </button>
@@ -186,7 +186,7 @@ export default function Home() {
             <Link
               to="/loran-c"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-mono font-semibold text-sm transition-all border"
-              style={{ background: 'var(--surface-card)', color: 'var(--color-loran-c)', borderColor: 'rgba(245,158,11,0.35)' }}
+              style={{ background: 'var(--surface-card)', color: 'var(--color-loran-c)', borderColor: 'var(--accent-loran-c-border)' }}
             >
               <Radio size={17} aria-hidden="true" /> Loran-C LOPs
             </Link>

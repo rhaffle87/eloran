@@ -348,7 +348,7 @@ export default function AsfPanel() {
 
                   {/* Segment Proportion Bar */}
                   <div className="space-y-1">
-                    <div className="h-2 w-full rounded-full bg-blue-900/40 overflow-hidden flex">
+                    <div className="h-2 w-full rounded-full bg-[var(--bg-muted)] overflow-hidden flex">
                       <div
                         className="bg-amber-600 h-full transition-all duration-300"
                         style={{ width: `${(geoResult.landFraction * 100).toFixed(1)}%` }}
@@ -361,13 +361,13 @@ export default function AsfPanel() {
                       />
                     </div>
                     <div className="flex justify-between text-[10px] text-[var(--text-dim)] font-mono">
-                      <span className="text-amber-500 font-medium">
+                      <span className="text-[var(--accent-loran-c)] font-medium">
                         Land: {geoResult.landDistKm.toFixed(1)} km ({(geoResult.landFraction * 100).toFixed(1)}%)
                       </span>
                       <span className="text-[var(--text-muted)]">
                         {geoResult.transitions} boundary crossing{geoResult.transitions === 1 ? '' : 's'}
                       </span>
-                      <span className="text-blue-400 font-medium">
+                      <span className="text-[var(--accent-eloran)] font-medium">
                         Sea: {geoResult.seaDistKm.toFixed(1)} km ({(geoResult.seaFraction * 100).toFixed(1)}%)
                       </span>
                     </div>
@@ -394,8 +394,8 @@ export default function AsfPanel() {
                               key={idx}
                               className={`px-1.5 py-0.5 rounded text-[9.5px] border ${
                                 s.medium === 'land'
-                                  ? 'bg-amber-950/40 border-amber-800/60 text-amber-300'
-                                  : 'bg-blue-950/40 border-blue-800/60 text-blue-300'
+                                  ? 'bg-[var(--accent-loran-c-subtle)] border-[var(--accent-loran-c-border)] text-[var(--accent-loran-c)]'
+                                  : 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
                               }`}
                             >
                               {s.medium.toUpperCase()} {s.distKm.toFixed(1)} km ({s.startKm.toFixed(0)}–{s.endKm.toFixed(0)} km)

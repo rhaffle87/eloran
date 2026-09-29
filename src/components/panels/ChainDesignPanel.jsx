@@ -123,7 +123,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>USCG 400-mi</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
                   Textbook Benchmark
                 </span>
               </div>
@@ -140,7 +140,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Jakarta Coastal</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/10 text-purple-500 border border-purple-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">
                   Synthetic / Proposal
                 </span>
               </div>
@@ -157,7 +157,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
                   Illustrative — unverified this session
                 </span>
               </div>
@@ -170,16 +170,16 @@ export default function ChainDesignPanel() {
       <div
         className="p-3 rounded-lg border"
         style={{
-          background: plan.isFeasible ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-          borderColor: plan.isFeasible ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+          background: plan.isFeasible ? 'var(--status-ok-subtle)' : 'var(--status-danger-subtle)',
+          borderColor: plan.isFeasible ? 'var(--status-ok-border)' : 'var(--status-danger-border)',
         }}
       >
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
             {plan.isFeasible ? (
-              <CheckCircle2 size={16} className="text-emerald-500 shrink-0" aria-hidden="true" />
+              <CheckCircle2 size={16} className="shrink-0" style={{ color: 'var(--status-ok)' }} aria-hidden="true" />
             ) : (
-              <AlertTriangle size={16} className="text-rose-500 shrink-0" aria-hidden="true" />
+              <AlertTriangle size={16} className="shrink-0" style={{ color: 'var(--status-danger)' }} aria-hidden="true" />
             )}
             <span
               className="font-bold uppercase tracking-wider text-[11px]"
@@ -191,7 +191,7 @@ export default function ChainDesignPanel() {
           <span
             className="text-[10px] px-1.5 py-0.5 rounded font-bold"
             style={{
-              background: plan.isFeasible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              background: plan.isFeasible ? 'var(--status-ok-subtle)' : 'var(--status-danger-subtle)',
               color: plan.isFeasible ? 'var(--status-ok)' : 'var(--status-danger)',
             }}
           >
@@ -202,8 +202,8 @@ export default function ChainDesignPanel() {
         {plan.violations.length > 0 && (
           <div className="mt-2 space-y-1.5">
             {plan.violations.map((v, i) => (
-              <div key={i} className="text-[11px] leading-snug p-2 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300">
-                <span className="font-bold uppercase text-[9px] block text-rose-400 mb-0.5">[{v.code}]</span>
+              <div key={i} className="text-[11px] leading-snug p-2 rounded bg-[var(--status-danger-subtle)] border border-[var(--status-danger-border)] text-[var(--status-danger)]">
+                <span className="font-bold uppercase text-[9px] block text-[var(--status-danger)] mb-0.5">[{v.code}]</span>
                 {v.message}
               </div>
             ))}
@@ -213,7 +213,7 @@ export default function ChainDesignPanel() {
         {plan.warnings.length > 0 && (
           <div className="mt-2 space-y-1">
             {plan.warnings.map((w, i) => (
-              <div key={i} className="text-[10px] leading-tight text-amber-400/90 flex items-start gap-1">
+              <div key={i} className="text-[10px] leading-tight text-[var(--status-warn)] flex items-start gap-1">
                 <span>⚠</span>
                 <span>{w.message}</span>
               </div>
@@ -349,7 +349,7 @@ export default function ChainDesignPanel() {
             className="p-3 rounded-lg border space-y-2.5 transition"
             style={{
               background: 'var(--bg-surface)',
-              borderColor: sec.codingDelayUs < USCG_MIN_CODING_DELAY_US ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-subtle)',
+              borderColor: sec.codingDelayUs < USCG_MIN_CODING_DELAY_US ? 'var(--status-danger-border)' : 'var(--border-subtle)',
             }}
           >
             <div className="flex items-center justify-between">
@@ -449,7 +449,7 @@ export default function ChainDesignPanel() {
               text="Tunable geometric and timing rules of thumb used in chain feasibility validation. Illustrative default, not a regulatory limit — unverified against operational station licensing guidelines."
             />
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/30">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
             Illustrative default, not a regulatory limit
           </span>
         </div>

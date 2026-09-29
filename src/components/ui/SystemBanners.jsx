@@ -107,12 +107,21 @@ export function SystemCapabilityBanner() {
   if (dismissed || issues.length === 0) return null;
 
   return (
-    <div className="bg-red-950/80 border-b border-red-500/50 text-red-200 px-4 py-2 text-xs font-mono flex items-center justify-between z-30">
+    <div
+      role="region"
+      aria-label="System Capability Degraded Warning"
+      className="border-b px-4 py-2 text-xs font-mono flex items-center justify-between z-30 select-none"
+      style={{
+        background: 'var(--status-danger-subtle)',
+        borderColor: 'var(--status-danger-border)',
+        color: 'var(--status-danger)',
+      }}
+    >
       <div className="flex items-start gap-2 max-w-7xl mx-auto flex-1">
-        <AlertTriangle size={15} className="text-red-400 shrink-0 mt-0.5" />
+        <AlertTriangle size={15} className="shrink-0 mt-0.5" style={{ color: 'var(--status-danger)' }} />
         <div>
-          <span className="font-bold text-red-300">SYSTEM CAPABILITY DEGRADED:</span>
-          <ul className="list-disc list-inside text-[11px] text-red-300/90 mt-0.5 space-y-0.5">
+          <span className="font-bold" style={{ color: 'var(--status-danger)' }}>SYSTEM CAPABILITY DEGRADED:</span>
+          <ul className="list-disc list-inside text-[11px] mt-0.5 space-y-0.5" style={{ opacity: 0.9 }}>
             {issues.map((issue, idx) => (
               <li key={idx}>{issue}</li>
             ))}
@@ -121,7 +130,7 @@ export function SystemCapabilityBanner() {
       </div>
       <button
         onClick={handleDismiss}
-        className="text-red-400 hover:text-red-200 p-1 rounded cursor-pointer"
+        className="p-1 rounded cursor-pointer transition hover:opacity-75" style={{ color: 'var(--status-danger)' }}
         title="Dismiss warning"
         aria-label="Dismiss warning"
       >
@@ -154,17 +163,26 @@ export function MultiMasterWarningBanner({ masterCount }) {
   if (dismissed || masterCount <= 1) return null;
 
   return (
-    <div className="bg-amber-950/90 border-b border-amber-500/50 text-amber-200 px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30">
+    <div
+      role="region"
+      aria-label="Multi-Master Warning"
+      className="border-b px-4 py-1.5 text-xs font-mono flex items-center justify-between z-30 select-none"
+      style={{
+        background: 'var(--banner-edu-bg)',
+        borderColor: 'var(--banner-edu-border)',
+        color: 'var(--banner-edu-text)',
+      }}
+    >
       <div className="flex items-center gap-2 max-w-7xl mx-auto flex-1">
-        <AlertTriangle size={14} className="text-amber-400 shrink-0" />
-        <span className="font-semibold text-amber-300">MULTI-MASTER LIMITATION:</span>
+        <AlertTriangle size={14} className="shrink-0" style={{ color: 'var(--banner-edu-title)' }} />
+        <span className="font-semibold" style={{ color: 'var(--banner-edu-title)' }}>MULTI-MASTER LIMITATION:</span>
         <span className="text-[11px]">
           Scenario defines {masterCount} masters; only the first is used. Multi-chain scenarios are not yet supported.
         </span>
       </div>
       <button
         onClick={handleDismiss}
-        className="text-amber-400 hover:text-amber-200 p-0.5 rounded cursor-pointer"
+        className="p-0.5 rounded cursor-pointer transition hover:opacity-75" style={{ color: 'var(--banner-edu-title)' }}
         title="Dismiss warning"
         aria-label="Dismiss warning"
       >

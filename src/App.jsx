@@ -32,7 +32,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200 ${
+      className={`min-h-screen flex flex-col selection:bg-[var(--accent-eloran-subtle)] selection:text-[var(--accent-eloran)] ${
         isSimulation ? 'h-screen overflow-hidden' : ''
       }`}
       style={{ background: 'var(--surface-base)', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}

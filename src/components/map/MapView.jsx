@@ -783,7 +783,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
           const p = feat.properties;
           const content = `
             <div class="font-mono text-xs">
-              <div class="font-bold text-amber-500 mb-1">Baseline Extension Hazard Zone</div>
+              <div class="font-bold text-[var(--status-warn)] mb-1">Baseline Extension Hazard Zone</div>
               <div class="text-[11px] text-[var(--text-secondary)]">Station: ${p.stationId || ''} (${p.stationRole || ''})</div>
               <div class="text-[10px] text-[var(--text-muted)] mt-1">${p.description || 'Ambiguous hyperbolic gradient.'}</div>
             </div>
@@ -887,10 +887,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
           const p = feat.properties;
           const content = `
             <div class="font-mono text-xs">
-              <div class="font-bold text-cyan-400 mb-1">Hyperbolic Line of Position (LOP)</div>
-              <div>Master index: ${p.masterIndex} | Secondary: ${p.slaveIndex}</div>
-              <div>Delay offset: ${(p.levelMeters || 0).toFixed(0)} m</div>
-              <div>TDOA: ${(p.levelSeconds || 0).toExponential(3)} s</div>
+              <div class="font-bold text-[var(--accent-eloran)] mb-1">Hyperbolic Line of Position (LOP)</div>
+              <div class="text-[var(--text-secondary)]">Master index: ${p.masterIndex} | Secondary: ${p.slaveIndex}</div>
+              <div class="text-[var(--text-secondary)]">Delay offset: ${(p.levelMeters || 0).toFixed(0)} m</div>
+              <div class="text-[var(--text-secondary)]">TDOA: ${(p.levelSeconds || 0).toExponential(3)} s</div>
             </div>
           `;
           new maplibregl.Popup().setLngLat(e.lngLat).setHTML(content).addTo(map);
@@ -1536,7 +1536,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
             )}
             {(showBaselineExtensions || isDesignMode) && (
               <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <span className="w-2.5 h-2.5 rounded-sm border border-rose-500 bg-amber-500/30 shrink-0" /> Baseline Extension (Hazard)
+                <span className="w-2.5 h-2.5 rounded-sm border shrink-0" style={{ borderColor: 'var(--status-danger)', background: 'var(--status-warn-subtle)' }} /> Baseline Extension (Hazard)
               </div>
             )}
           </div>

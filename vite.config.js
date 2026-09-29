@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       fs: {
-        allow: ['..', 'e:/Projects/simuloran', 'e:/Projects/lmao'],
+        allow: ['..', 'e:/Projects/simuloran'],
       },
     },
     preview: {

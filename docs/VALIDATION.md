@@ -125,7 +125,7 @@ In hyperbolic navigation, a timing error of $\Delta t \approx 1\ \mu\text{s}$ sh
 
 ## 4. Continuous Integration & Automated Vitest Suite
 
-Both benchmarks are continuously verified via the automated test suite in [`src/lib/__tests__/trialValidation.test.js`](file:///e:/Projects/lmao/eloran/src/lib/__tests__/trialValidation.test.js):
+Both benchmarks are continuously verified via the automated test suite in [`src/lib/__tests__/trialValidation.test.js`](file:///E:/Projects/simuloran/src/lib/__tests__/trialValidation.test.js):
 
 ```bash
 npm test

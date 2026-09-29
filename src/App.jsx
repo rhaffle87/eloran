@@ -89,7 +89,7 @@ export default function App() {
               Specs
             </Link>
             <a
-              href="https://github.com/rhaffle87/eloran"
+              href="https://github.com/rhaffle87/simuloran"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[var(--text-primary)] transition flex items-center gap-1"

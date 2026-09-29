@@ -33,7 +33,7 @@ const routes = [
   for (const vp of viewports) {
     for (const route of routes) {
       const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-      const url = `https://eloran-one.vercel.app${route.path}`;
+      const url = `https://simuloran.vercel.app${route.path}`;
       console.log(`Navigating to ${url} at ${vp.name}...`);
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('canvas.maplibregl-canvas', { timeout: 15000 });

@@ -1,4 +1,4 @@
 # SIMULORAN robots.txt
 User-agent: *
 Allow: /
-Sitemap: https://eloran.vercel.app/sitemap.xml
+Sitemap: https://simuloran.vercel.app/sitemap.xml

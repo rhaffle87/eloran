@@ -56,7 +56,7 @@ async function run() {
   await targetTt.hover();
   await page.waitForTimeout(200);
 
-  const outPath = 'E:/Projects/lmao/eloran/docs/verification/screenshots/tooltip_edge_check.png';
+  const outPath = 'E:/Projects/simuloran/docs/verification/screenshots/tooltip_edge_check.png';
   await page.screenshot({ path: outPath });
   console.log('Screenshot saved to ' + outPath);
 

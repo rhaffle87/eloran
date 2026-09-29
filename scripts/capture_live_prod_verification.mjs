@@ -16,22 +16,22 @@ async function capture() {
     window.__LORAN_E2E__ = true;
   });
 
-  console.log('1. Capturing /eloran from https://eloran-one.vercel.app ...');
-  await page.goto('https://eloran-one.vercel.app/eloran', { waitUntil: 'networkidle' });
+  console.log('1. Capturing /eloran from https://simuloran.vercel.app ...');
+  await page.goto('https://simuloran.vercel.app/eloran', { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
   const eloranShot = path.join(outDir, 'live_prod_eloran_alignment.png');
   await page.screenshot({ path: eloranShot });
   console.log(`Saved: ${eloranShot}`);
 
-  console.log('2. Capturing /loran-c from https://eloran-one.vercel.app ...');
-  await page.goto('https://eloran-one.vercel.app/loran-c', { waitUntil: 'networkidle' });
+  console.log('2. Capturing /loran-c from https://simuloran.vercel.app ...');
+  await page.goto('https://simuloran.vercel.app/loran-c', { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
   const loranCShot = path.join(outDir, 'live_prod_loran_c_alignment.png');
   await page.screenshot({ path: loranCShot });
   console.log(`Saved: ${loranCShot}`);
 
   console.log('3. Capturing collinear scenario on live production ...');
-  await page.goto('https://eloran-one.vercel.app/eloran', { waitUntil: 'networkidle' });
+  await page.goto('https://simuloran.vercel.app/eloran', { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
   const presetSelect = page.locator('#scenario-preset-select');
   await presetSelect.selectOption('high_gdop');

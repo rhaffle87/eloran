@@ -88,7 +88,7 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
     await expect(mtbsLabel).toBeVisible();
 
     // Move Input SNR slider and verify real-time reticle & MTBS updates
-    const snrSlider = page.locator('[data-testid="slider-receiver-rf-input-snr"]');
+    const snrSlider = page.locator('input[aria-label="Carrier SNR (SNR_c)"]');
     await expect(snrSlider).toBeVisible();
     await snrSlider.fill('12');
     await page.waitForTimeout(200);

@@ -148,12 +148,12 @@ export default function PulseViewer() {
   const handleExportSvg = () => {
     if (!waveform.length) return;
     const exportWidth = 1200;
-    const exportHeight = 600;
+    const exportHeight = 560;
     const padX = 85;
     const padRight = 45;
     const chartW = exportWidth - padX - padRight;
     const topY = 115;
-    const chartH = 390;
+    const chartH = 360;
     const midY = topY + chartH / 2;
     const botY = topY + chartH;
 
@@ -260,7 +260,7 @@ export default function PulseViewer() {
       : `${windowDurationMs.toFixed(1)} ms`;
 
     const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${exportWidth} ${exportHeight}" width="${exportWidth}" height="${exportHeight}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${exportWidth} ${exportHeight}" width="${exportWidth}" height="${exportHeight}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#080c14" />
@@ -284,8 +284,7 @@ export default function PulseViewer() {
     <rect width="395" height="66" fill="#0f172a" stroke="#334155" stroke-width="1" rx="6" />
     <text x="14" y="22" fill="#38bdf8" font-size="11" font-family="ui-monospace, monospace" font-weight="bold">SCOPE HUD TELEMETRY</text>
     <text x="14" y="42" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">Vpk: ${(vPeak * 1000).toFixed(1)} mV  |  Vpp: ${(vPp * 1000).toFixed(1)} mV  |  fc: 100.0 kHz</text>
-    <text x="14" y="58" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>
-  </g>
+    <text x="14" y="54" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>\n    <text x="14" y="68" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">Traces: Pulse Envelope E(t) (Red) · Pulse Wave (100 kHz) (Cyan)</text>\n  </g>
 
   <!-- Grid and Ticks -->
   ${gridLinesSvg}
@@ -785,8 +784,7 @@ export default function PulseViewer() {
               <polyline
                 points={polylinePoints}
                 fill="none"
-                stroke={clrEloran}
-                strokeWidth={settings.includeCarrier ? '1.2' : '2'}
+                stroke="#06b6d4" strokeWidth={settings.includeCarrier ? "1.2" : "2"}
                 strokeLinejoin="round"
               />
             )}
@@ -796,10 +794,7 @@ export default function PulseViewer() {
               <polyline
                 points={envelopePoints}
                 fill="none"
-                stroke="var(--status-danger)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-                opacity="0.95"
+                stroke="#ef4444" strokeWidth="2" strokeLinejoin="round" opacity="0.95"
               />
             )}
           </svg>

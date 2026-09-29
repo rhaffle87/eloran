@@ -276,7 +276,7 @@ export default function CycleSelectionPanel() {
               <path d={austronNewPath} fill="none" stroke="var(--status-ok)" strokeWidth="2.0" strokeDasharray="6 3" opacity="0.9" />
             )}
             {showTheoretical && (
-              <path d={ricePath} fill="none" stroke="var(--accent-eloran)" strokeWidth="2.4" opacity="0.95" />
+              <path d={ricePath} fill="none" stroke="#06b6d4" strokeWidth="2.4" opacity="0.95" />
             )}
 
             {/* Monte Carlo scatter markers */}
@@ -314,14 +314,7 @@ export default function CycleSelectionPanel() {
                 strokeWidth="1.5"
                 opacity="0.6"
               />
-              <circle
-                cx={reticleX}
-                cy={reticleY}
-                r="4.5"
-                fill="#f43f5e"
-                stroke="#ffffff"
-                strokeWidth="1.5"
-              />
+              <circle cx={reticleX} cy={reticleY} r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5" />
 
               {/* Dynamic Callout HUD Badge */}
               <g transform={`translate(${reticleX > 680 ? reticleX - 165 : reticleX + 12}, ${Math.max(45, Math.min(330, reticleY - 18))})`}>
@@ -356,7 +349,7 @@ export default function CycleSelectionPanel() {
           </div>
 
           <Slider
-            label="Receiver RF Input SNR"
+            label="Carrier SNR (SNR_c)"
             value={inspectionSnrDb}
             min={-5}
             max={25}

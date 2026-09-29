@@ -206,7 +206,7 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     expect(sliderCount).toBeGreaterThanOrEqual(1);
 
     // Find Carrier SNR slider and set to 10
-    const carrierSlider = page.locator('div:has-text("Carrier SNR (SNR_c)") input[type="range"]').first();
+    const carrierSlider = page.locator('input[aria-label="Carrier SNR (SNR_c)"]').first();
     if (await carrierSlider.isVisible()) {
       await carrierSlider.fill('10');
       await page.waitForTimeout(300);

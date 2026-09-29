@@ -4,7 +4,7 @@ test.describe('HUD Map Uniformity & Canonical Loran Pulse Verification', () => {
   test('HUD Map: Tactical toolbar has no dead right margin and scale control is themed', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 1. Tactical Toolbar positioning with sidebar open
     const toolbar = page.locator('div.backdrop-blur-md:has-text("+Receiver")');
@@ -66,7 +66,7 @@ test.describe('HUD Map Uniformity & Canonical Loran Pulse Verification', () => {
   test('Waveforms: Canonical Loran-C pulse envelope + carrier wave, 300 µs zoom, and uncompressed SVG export', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 850 });
     await page.goto('/waveforms');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 1. Dual-trace: Pulse envelope (red) and Pulse wave (cyan)
     const cyanWave = page.locator('polyline[stroke="#06b6d4"]');

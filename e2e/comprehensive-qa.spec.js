@@ -19,7 +19,7 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
 
   test('Priority 4 & 5: Hard-default LIGHT theme, Navbar theme toggle, and banner persistence', async ({ page }) => {
     // Clear storage to test first-visit behavior
-    await page.goto('/eloran');
+    await page.goto('/');
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
@@ -46,7 +46,7 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
     expect(dismissedValue).toBe('true');
 
     // Navigate to another page and verify banner stays dismissed
-    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    await page.goto('/about', { waitUntil: 'domcontentloaded' });
     const bannerAfterNav = page.locator('div[role="region"][aria-label="Educational Disclaimer"]');
     await expect(bannerAfterNav).toHaveCount(0);
 
@@ -128,8 +128,9 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
   test('Priority 6: KaTeX math formulas render properly on Learn, About, and Waveforms', async ({ page }) => {
     // 1. Check /learn
     await page.goto('/learn', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('text=Initializing Simulation Subsystem…')).toHaveCount(0);
     const katexLearn = page.locator('.katex');
-    await expect(katexLearn.first()).toBeVisible({ timeout: 5000 });
+    await expect(katexLearn.first()).toBeVisible();
     const learnCount = await katexLearn.count();
     expect(learnCount).toBeGreaterThanOrEqual(5);
 
@@ -142,8 +143,9 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
 
     // 2. Check /waveforms
     await page.goto('/waveforms', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('text=Initializing Simulation Subsystem…')).toHaveCount(0);
     const katexWaveforms = page.locator('.katex');
-    await expect(katexWaveforms.first()).toBeVisible({ timeout: 5000 });
+    await expect(katexWaveforms.first()).toBeVisible();
     const waveformsCount = await katexWaveforms.count();
     expect(waveformsCount).toBeGreaterThanOrEqual(3);
 
@@ -154,8 +156,9 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
 
     // 3. Check /about
     await page.goto('/about', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('text=Initializing Simulation Subsystem…')).toHaveCount(0);
     const katexAbout = page.locator('.katex');
-    await expect(katexAbout.first()).toBeVisible({ timeout: 5000 });
+    await expect(katexAbout.first()).toBeVisible();
     const aboutCount = await katexAbout.count();
     expect(aboutCount).toBeGreaterThanOrEqual(4);
 

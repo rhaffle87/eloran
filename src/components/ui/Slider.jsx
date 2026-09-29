@@ -30,6 +30,8 @@ export default function Slider({
       </div>
       <input
         type="range"
+        aria-label={label}
+        data-testid={`slider-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
         min={min}
         max={max}
         step={step}

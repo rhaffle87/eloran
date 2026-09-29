@@ -6,6 +6,7 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       window.__LORAN_E2E__ = true;
+      sessionStorage.setItem('loran_offline_radar', 'true');
     });
   });
 
@@ -13,8 +14,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 1: Tactical Mode Toolbar (+Master, +Secondary, +Receiver, Pan) & Map Placement
   // ---------------------------------------------------------------------------
   test('Tactical Toolbar: test Pan, +Master, +Secondary, +Receiver mode buttons and map click', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Pan button (P)
     const panBtn = page.locator('button[title*="Pan & Inspect"]');
@@ -39,9 +40,9 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     // Initial station marker count
     const initialMarkers = await page.locator('.maplibregl-marker').count();
 
-    // Click on empty map canvas area (top left corner) to place secondary station
+    // Click on empty map canvas area (away from HUD) to place secondary station
     const mapCanvas = page.locator('.maplibregl-canvas');
-    await mapCanvas.click({ position: { x: 120, y: 120 }, force: true });
+    await mapCanvas.click({ position: { x: 450, y: 350 }, force: true });
     await page.waitForTimeout(500);
 
     // Verify station marker was added
@@ -57,8 +58,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 2: Clear All & Commit Design to Simulation Workflow
   // ---------------------------------------------------------------------------
   test('Clear All & Chain Design: test Clear All reset and Commit Design to Active Simulation', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // 1. Verify Clear All button removes all stations
     const clearAllBtn = page.locator('button:has-text("Clear all")');
@@ -96,8 +97,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 3: Real Export -> Clear -> Import CSV Round-Trip
   // ---------------------------------------------------------------------------
   test('Export/Import Round-Trip: export CSV, clear stations, re-import and assert match', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Record initial station count via delete buttons
     const deleteButtonsBefore = page.locator('button[aria-label*="Delete station"]');
@@ -125,7 +126,9 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     expect(csvData).toContain('S1-Tangerang');
 
     // 2. Clear all stations
-    await page.locator('button:has-text("Clear all")').click();
+    const clearAllBtn = page.locator('button:has-text("Clear all")');
+    await expect(clearAllBtn).toBeVisible();
+    await clearAllBtn.click();
     await page.waitForTimeout(300);
     await expect(page.locator('text=Active Stations (0)')).toBeVisible();
     expect(await page.locator('button[aria-label*="Delete station"]').count()).toBe(0);
@@ -157,8 +160,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 4: Chart Verification 1 — PulseViewer Oscilloscope Dynamic Waveform
   // ---------------------------------------------------------------------------
   test('PulseViewer: assert SVG polyline has non-trivial points and dynamically updates on parameter change', async ({ page }) => {
-    await page.goto('/waveforms');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/waveforms', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Locate primary RF waveform polyline
     const polyline = page.locator('svg polyline').first();
@@ -183,8 +186,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 5: Chart Verification 2 — CycleSelectionPanel Monte Carlo & Rice Curve
   // ---------------------------------------------------------------------------
   test('CycleSelectionPanel: assert Rice curve path, Monte Carlo scatter points, and active inspection marker updates', async ({ page }) => {
-    await page.goto('/waveforms');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/waveforms', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Locate theoretical Rice path
     const riceCurve = page.locator('svg path[stroke="#06b6d4"]').first();
@@ -227,8 +230,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // ---------------------------------------------------------------------------
   test('GDOP & LOP Contours: compute off-thread marching squares contours and verify MapLibre rendering & telemetry', async ({ page }) => {
     test.setTimeout(45000);
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for MapLibre map and style to be fully ready
     await page.waitForFunction(() => {
@@ -285,8 +288,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 7: AsfPanel Mode Switching & Persistence Across Drawer Navigation
   // ---------------------------------------------------------------------------
   test('AsfPanel: switch between Millington, Temporal, and Formula modes with drawer state persistence', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Open ASF panel
     const asfTab = page.getByRole('button', { name: /^ASF$/i });
@@ -336,8 +339,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 8: Scenario Presets Switching (All 6 Scenarios)
   // ---------------------------------------------------------------------------
   test('Scenario Presets: verify clean state switching across all 6 presets', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     const presetSelect = page.locator('#scenario-preset-select');
     await expect(presetSelect).toBeVisible();
@@ -369,22 +372,20 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 9: Sliders & Timing Controls
   // ---------------------------------------------------------------------------
   test('Sliders & Timing Controls: verify jitter, receiver scaling, and clock reset', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     const layersTab = page.getByRole('button', { name: /^Layers$/i });
     if (await layersTab.isVisible()) {
       await layersTab.click();
       await page.waitForTimeout(200);
 
-      const sliders = page.locator('input[type="range"]');
-      const sliderCount = await sliders.count();
-      expect(sliderCount).toBeGreaterThanOrEqual(1);
-
-      const firstSlider = sliders.first();
-      const initialVal = await firstSlider.inputValue();
-      await firstSlider.fill('15');
-      const updatedVal = await firstSlider.inputValue();
+      const jitterSlider = page.getByRole('slider', { name: /Transmitter Jitter/i });
+      await expect(jitterSlider).toBeVisible();
+      const initialVal = await jitterSlider.inputValue();
+      await jitterSlider.fill('15');
+      const updatedVal = await jitterSlider.inputValue();
+      expect(updatedVal).toBe('15');
       expect(updatedVal).not.toBe(initialVal);
     }
 
@@ -402,8 +403,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 10: Basemap Switcher & Radar Canvas Compositing
   // ---------------------------------------------------------------------------
   test('Basemap Switcher: test transitions across OpenFreeMap, OSM, CARTO, and Radar with declutter controls', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     const providers = [
       { id: 'basemap-osm', testid: 'basemap-osm' },
@@ -442,26 +443,34 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 11: Route & Theme Traversal (6 Routes x Light & Dark)
   // ---------------------------------------------------------------------------
   test('Route & Theme QA: verify zero errors and clean theme toggling across all 6 routes', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('loran_offline_radar', 'true');
+    });
+
     const routes = ['/', '/loran-c', '/eloran', '/waveforms', '/learn', '/about'];
 
     for (const route of routes) {
-      await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('domcontentloaded');
 
       const root = page.locator('#root');
       await expect(root).toBeVisible();
+
+      if (route === '/loran-c' || route === '/eloran') {
+        await page.waitForSelector('.maplibregl-map', { state: 'visible' });
+      }
 
       const themeBtn = page.locator('button[aria-label*="theme"]').first();
       if (await themeBtn.isVisible()) {
         const initialTheme = await page.locator('html').getAttribute('data-theme');
         await themeBtn.click();
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(100);
 
         const newTheme = await page.locator('html').getAttribute('data-theme');
         expect(newTheme).not.toBe(initialTheme);
 
         await themeBtn.click();
-        await page.waitForTimeout(200);
+        await page.waitForTimeout(100);
       }
     }
   });
@@ -470,8 +479,12 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 12: Trial Validation Panel State Switching
   // ---------------------------------------------------------------------------
   test('Trial Validation Panel: toggle Korea & Maoming datasets and inspect comparison metrics', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.addInitScript(() => {
+      sessionStorage.setItem('loran_offline_radar', 'true');
+    });
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('.maplibregl-map', { state: 'visible' });
 
     const trialTab = page.getByRole('button', { name: /Trial Validation|Validation/i });
     if (await trialTab.isVisible()) {

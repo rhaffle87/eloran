@@ -5,12 +5,13 @@ test.describe('Sidebar Tooltips & Decluttering Verification Suite', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       window.__LORAN_E2E__ = true;
+      sessionStorage.setItem('loran_offline_radar', 'true');
     });
   });
 
   test('verify all 12 provenance items, accessible tooltips, and decluttered panels', async ({ page }) => {
     await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // -------------------------------------------------------------------------
     // 1. STATIONS TAB: Scenario Presets & Delete Station Accessibility
@@ -191,7 +192,7 @@ test.describe('Sidebar Tooltips & Decluttering Verification Suite', () => {
 
   test('verify CycleSelectionPanel clean UTF-8 rendering without mojibake (TB-01)', async ({ page }) => {
     await page.goto('/waveforms');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Item 12: Verify SOURCED Model badge in CycleSelectionPanel
     const modelBadgeTooltip = page.locator('span[role="tooltip"][aria-label*="Sourced Excerpt: Boyce, Lo, Powell, & Enge"]').first();

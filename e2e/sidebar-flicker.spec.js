@@ -14,22 +14,22 @@ test.describe('Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warn
       }
     });
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     expect(consoleWarnings).toEqual([]);
 
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 
     expect(consoleWarnings).toEqual([]);
   });
 
   test('sidebar expands and collapses without flicker on Loran-C page', async ({ page }) => {
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     // 1. Initial State: Sidebar container and content visible
@@ -71,8 +71,8 @@ test.describe('Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warn
 
   test('sidebar drag-resize expands leftwards and shrinks rightwards without right overflow', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     const sidebar = page.getByTestId('sidebar-container');
@@ -128,8 +128,8 @@ test.describe('Sidebar Collapse/Expand, Resize Direction, and No Style Diff Warn
   });
 
   test('sidebar state persists without flicker on eLoran page', async ({ page }) => {
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     const sidebar = page.getByTestId('sidebar-container');

@@ -4,8 +4,8 @@ test.describe('UI & UX Fixes Verification Suite', () => {
   test('Verify all 6 UI fixes: viewport lock, sidebar toggle, scale clearance, theme toggle, and banner dismissal', async ({ page }) => {
     test.setTimeout(60000);
     // 1. Visit Loran-C page
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // FIX 5: Viewport Lock — No page vertical scrollbar
     const isScrollLocked = await page.evaluate(() => {
@@ -92,8 +92,8 @@ test.describe('UI & UX Fixes Verification Suite', () => {
       await expect(page.locator('text=EDUCATIONAL NOTICE:')).not.toBeVisible();
 
       // Navigate to /eloran and verify banner stays dismissed
-      await page.goto('/eloran');
-      await page.waitForLoadState('networkidle');
+      await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('domcontentloaded');
       await expect(page.locator('text=EDUCATIONAL NOTICE:')).not.toBeVisible();
     }
 

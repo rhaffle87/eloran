@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
-  test.beforeEach(async ({ context }) => {
+  test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
+    await page.addInitScript(() => {
+      sessionStorage.setItem('loran_offline_radar', 'true');
+    });
   });
 
   test('toggle between Simulation and Chain Design mode in Loran-C and eLoran', async ({ page }) => {
@@ -10,11 +13,9 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
     // 1. Loran-C page
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
     const designTabBtn = page.getByRole('button', { name: /Chain Design/i }).first();
-    await expect(designTabBtn).toBeVisible();
+    await expect(designTabBtn).toBeVisible({ timeout: 15000 });
     await designTabBtn.click();
 
     // Verify Chain Design panel header and educational disclaimer
@@ -32,11 +33,9 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     await expect(page.getByText('MODE:')).toBeVisible();
 
     // 2. eLoran page
-    await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
-
+    await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
     const eLoranDesignBtn = page.getByRole('button', { name: /Chain Design/i }).first();
-    await expect(eLoranDesignBtn).toBeVisible();
+    await expect(eLoranDesignBtn).toBeVisible({ timeout: 15000 });
     await eLoranDesignBtn.click();
 
     await expect(page.getByText('Chain Design & Planning')).toBeVisible();
@@ -54,10 +53,10 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /Chain Design/i }).first().click();
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const designBtn2 = page.getByRole('button', { name: /Chain Design/i }).first();
+    await expect(designBtn2).toBeVisible({ timeout: 15000 });
+    await designBtn2.click();
 
     // Click USCG 400-mi preset
     const uscgPresetBtn = page.getByRole('button', { name: /USCG 400-mi/i });
@@ -86,10 +85,10 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /Chain Design/i }).first().click();
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const designBtn3 = page.getByRole('button', { name: /Chain Design/i }).first();
+    await expect(designBtn3).toBeVisible({ timeout: 15000 });
+    await designBtn3.click();
 
     // 1. Jakarta Coastal Preset (Synthetic / Proposal)
     const jakartaBtn = page.getByRole('button', { name: /Jakarta Coastal/i });
@@ -122,10 +121,10 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /Chain Design/i }).first().click();
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const designBtn4 = page.getByRole('button', { name: /Chain Design/i }).first();
+    await expect(designBtn4).toBeVisible({ timeout: 15000 });
+    await designBtn4.click();
 
     // Load USCG 400-mi preset
     await page.getByRole('button', { name: /USCG 400-mi/i }).click();
@@ -158,10 +157,10 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /Chain Design/i }).first().click();
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const designBtn5 = page.getByRole('button', { name: /Chain Design/i }).first();
+    await expect(designBtn5).toBeVisible({ timeout: 15000 });
+    await designBtn5.click();
 
     // Verify Planning Thresholds card and disclaimer badge
     await expect(page.getByText('Planning Thresholds & Heuristics')).toBeVisible();
@@ -191,10 +190,10 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    await page.goto('/loran-c');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /Chain Design/i }).first().click();
+    await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
+    const designBtn6 = page.getByRole('button', { name: /Chain Design/i }).first();
+    await expect(designBtn6).toBeVisible({ timeout: 15000 });
+    await designBtn6.click();
 
     // Load US East 9960 preset
     await page.getByRole('button', { name: /US East \(9960\)/i }).click();

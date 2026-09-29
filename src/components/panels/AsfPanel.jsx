@@ -240,7 +240,7 @@ export default function AsfPanel() {
                   <InfoTooltip
                     align="right"
                     title="Groundwave Attenuation Standard"
-                    text="Field strength and groundwave attenuation curve generation is SOURCED from ITU-R P.368-10 / GRWAVE."
+                    text="Field strength and groundwave attenuation curve generation is SOURCED from local GRWAVE Fortran reference outputs; ITU-R P.368-10 is not machine-verified upstream."
                   />
                 </span>
               </div>
@@ -376,9 +376,9 @@ export default function AsfPanel() {
                   {/* Individual Segments Display */}
                   <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1.5">
                     <div className="text-[10px] text-[var(--text-muted)] flex justify-between items-center">
-                      <span>Calculated ASF:</span>
+                      <span>Path Segments (Tx → Rx):</span>
                       <span className="text-[var(--accent-eloran)] font-bold">
-                        {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
+                        Calculated ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
                       </span>
                     </div>
                     {geoResult.segments?.length > 0 && (
@@ -453,7 +453,7 @@ export default function AsfPanel() {
                 <InfoTooltip
                   align="center"
                   title="Sommerfeld & Millington Theory"
-                  text="Numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington averaging per ITU-R P.368-10. Field strength verified against GRWAVE; phase delay uses analytical Sommerfeld-Norton formulation."
+                  text="Numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington (1949) averaging. Field strength verified against GRWAVE reference; phase delay uses analytical Sommerfeld-Norton formulation."
                 />
               </span>
               <Link

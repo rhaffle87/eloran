@@ -9,7 +9,7 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
 
     // 1. Visit /about page
     await page.goto('/about');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verify benchmark section heading
     const heading = page.getByRole('heading', { name: 'Empirical Field Trial Benchmarks (Phase 2 Part 2)' });
@@ -61,7 +61,7 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
 
     // 3. Visit /eloran and check AsfPanel integration
     await page.goto('/eloran');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Open ASF Tab in the sidebar
     const asfTab = page.getByRole('button', { name: 'ASF', exact: true });

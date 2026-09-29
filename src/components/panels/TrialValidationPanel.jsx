@@ -365,7 +365,7 @@ export function TrialValidationPanel({ compact = false }) {
                         {site.measured95m.toFixed(2)} m
                       </td>
                       <td className="py-2.5 px-2 text-right font-semibold" style={{ color: 'var(--accent-eloran)' }}>
-                        {(site.simuloran95m ?? site.loranLab95m).toFixed(2)} m
+                        {site.simuloran95m.toFixed(2)} m
                       </td>
                       <td className="py-2.5 px-2 text-right font-semibold text-violet-600 dark:text-violet-400">
                         {site.perStationR95m !== null ? `${site.perStationR95m.toFixed(2)} m` : '—'}

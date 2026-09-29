@@ -1,32 +1,8 @@
 import React from 'react';
-import { Activity, Info, Radio, Zap } from 'lucide-react';
+import { Activity, BookOpen } from 'lucide-react';
 import PulseViewer from '../components/charts/PulseViewer.jsx';
 import CycleSelectionPanel from '../components/charts/CycleSelectionPanel.jsx';
 import MathView from '../components/ui/MathView.jsx';
-
-const INFO_CARDS = [
-  {
-    icon: Radio,
-    accentVar: '--accent-eloran',
-    title: '100 kHz Standard Pulse',
-    body: 'Every Loran pulse is transmitted on a centre frequency of 100 kHz with 99% of its spectral energy confined within 90–110 kHz. USCG COMDTINST M16562.4A standard pulse envelope with peak at τ = 65 µs:',
-    formula: 'E(t) = A\\left(\\frac{t}{\\tau}\\right)^2 e^{-2(t-\\tau)/\\tau}',
-  },
-  {
-    icon: Zap,
-    accentVar: '--accent-loran-c',
-    title: 'GRI Timing Structure',
-    body: 'The Group Repetition Interval (GRI) defines the period in tens of microseconds between consecutive pulse groups emitted by the chain:',
-    formula: 'T_{\\text{GRI}} = \\text{GRI} \\times 10\\,\\mu\\text{s}',
-  },
-  {
-    icon: Info,
-    accentVar: '--status-ok',
-    title: 'Skywave Discrimination',
-    body: 'Loran receivers sample the groundwave at the standard 3rd cycle (30 µs from onset) prior to the arrival of skywaves:',
-    formula: 't_{\\text{sample}} = 3 \\cdot T_{\\text{carrier}} = 30\\,\\mu\\text{s} < t_{\\text{skywave}}',
-  },
-];
 
 export default function Waveforms() {
   const [activeTab, setActiveTab] = React.useState('all'); // 'all' | 'oscilloscope' | 'cycle-selection'
@@ -44,7 +20,7 @@ export default function Waveforms() {
               className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider mb-1"
               style={{ color: 'var(--accent-eloran)' }}
             >
-              <Activity size={14} aria-hidden="true" /> Oscilloscope Subsystem &amp; Physics Lab
+              <Activity size={14} aria-hidden="true" /> Oscilloscope Subsystem &amp; RF Physics Lab
             </div>
             <h1
               className="text-3xl font-bold tracking-tight font-mono"
@@ -53,8 +29,8 @@ export default function Waveforms() {
               100 kHz RF Waveform &amp; Cycle Selection Lab
             </h1>
             <p className="text-sm mt-1 max-w-3xl" style={{ color: 'var(--text-secondary)' }}>
-              Inspect instantaneous antenna voltages, envelope pulse shapes, ionospheric skywave multi-path,
-              and Boyce et al. (ILA 2006) envelope ratio wrong-cycle selection Monte Carlo distributions.
+              Interactive oscilloscope telemetry, USCG standard pulse synthesis, ionospheric skywave multi-path separation,
+              and real-time Boyce (2006) envelope ratio wrong-cycle selection risk modeling.
             </p>
           </div>
 
@@ -63,14 +39,19 @@ export default function Waveforms() {
             className="flex rounded-lg p-1 text-xs font-mono"
             style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
           >
-            {[['all', 'All Views'], ['oscilloscope', 'Oscilloscope'], ['cycle-selection', 'Boyce Monte Carlo']].map(([tab, label]) => (
+            {[
+              ['all', 'All Views'],
+              ['oscilloscope', 'Oscilloscope'],
+              ['cycle-selection', 'Boyce Monte Carlo'],
+            ].map(([tab, label]) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="px-3 py-1.5 rounded transition"
-                style={activeTab === tab
-                  ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
-                  : { color: 'var(--text-dim)' }
+                className="px-3 py-1.5 rounded transition cursor-pointer"
+                style={
+                  activeTab === tab
+                    ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
+                    : { color: 'var(--text-dim)' }
                 }
               >
                 {label}
@@ -84,35 +65,70 @@ export default function Waveforms() {
       {(activeTab === 'all' || activeTab === 'oscilloscope') && <PulseViewer />}
       {(activeTab === 'all' || activeTab === 'cycle-selection') && <CycleSelectionPanel />}
 
-      {/* Physics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 font-mono text-xs">
-        {INFO_CARDS.map(({ icon: Icon, accentVar, title, body, formula }) => (
+      {/* RF Standards Quick Reference Strip with Compact KaTeX Formula Badges */}
+      <div
+        className="rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 font-mono text-xs shadow-sm"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+          {/* USCG M16562.4A Standard Pulse Envelope */}
           <div
-            key={title}
-            className="p-4 rounded-xl space-y-2 flex flex-col justify-between"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+            className="p-2.5 rounded-lg space-y-1"
+            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
           >
-            <div className="space-y-2">
-              <div
-                className="flex items-center gap-2 font-bold"
-                style={{ color: `var(${accentVar})` }}
-              >
-                <Icon size={14} aria-hidden="true" /> {title}
-              </div>
-              <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                {body}
-              </p>
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="font-bold text-[var(--accent-eloran)]">Standard Pulse Envelope</span>
+              <span className="text-[10px] text-[var(--text-dim)]">τ = 65 µs</span>
             </div>
-            {formula && (
-              <div
-                className="mt-2 px-3 py-1.5 rounded-lg overflow-x-auto"
-                style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
-              >
-                <MathView math={formula} />
-              </div>
-            )}
+            <div className="overflow-x-auto py-0.5 text-xs text-[var(--text-primary)]">
+              <MathView math="E(t) = A\left(\frac{t}{\tau}\right)^2 e^{-2(t-\tau)/\tau}" />
+            </div>
           </div>
-        ))}
+
+          {/* GRI Timing Structure */}
+          <div
+            className="p-2.5 rounded-lg space-y-1"
+            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
+          >
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="font-bold text-[var(--accent-loran-c)]">GRI Timing Structure</span>
+              <span className="text-[10px] text-[var(--text-dim)]">10 µs increments</span>
+            </div>
+            <div className="overflow-x-auto py-0.5 text-xs text-[var(--text-primary)]">
+              <MathView math="T_{\text{GRI}} = \text{GRI} \times 10\,\mu\text{s}" />
+            </div>
+          </div>
+
+          {/* Skywave Separation & SZC Groundwave Sampling */}
+          <div
+            className="p-2.5 rounded-lg space-y-1"
+            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
+          >
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="font-bold text-[var(--status-ok)]">Groundwave SZC Sampling</span>
+              <span className="text-[10px] text-[var(--text-dim)]">3rd Zero Crossing</span>
+            </div>
+            <div className="overflow-x-auto py-0.5 text-xs text-[var(--text-primary)]">
+              <MathView math="t_{\text{sample}} = 3 \cdot T_{\text{carrier}} = 30\,\mu\text{s} < t_{\text{skywave}}" />
+            </div>
+          </div>
+        </div>
+
+        {/* Link to Theory / Documentation */}
+        <div className="flex md:flex-col justify-end items-end shrink-0 pl-2">
+          <a
+            href="/learn#uscg-pulse"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition hover:opacity-90 cursor-pointer"
+            style={{
+              background: 'var(--accent-eloran-subtle)',
+              border: '1px solid var(--accent-eloran-border)',
+              color: 'var(--accent-eloran)',
+            }}
+            title="Open comprehensive theoretical proofs and mathematical formulas in Theory & Documentation"
+          >
+            <BookOpen size={13} /> Full Theory &amp; Equations in Docs &rarr;
+          </a>
+        </div>
       </div>
     </div>
   );

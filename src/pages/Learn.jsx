@@ -78,6 +78,48 @@ const concepts = [
     targetRoute: '/eloran',
     buttonLabel: 'Test GNSS-Denied Outage',
   },
+  {
+    id: 'uscg-pulse',
+    title: '100 kHz Standard Pulse & USCG Envelope Specification',
+    icon: Radio,
+    accentVar: '--accent-eloran',
+    summary:
+      'USCG Specification COMDTINST M16562.4A definition of the standard Loran 100 kHz RF pulse waveform and mathematical envelope.',
+    math: 'E(t) = A \\left( \\frac{t}{\\tau} \\right)^2 e^{-2(t - \\tau)/\\tau}, \\quad \\tau = 65\\,\\mu\\text{s}, \\quad f_0 = 100\\,\\text{kHz}',
+    explanation:
+      'Every Loran-C and eLoran pulse is transmitted on a carrier center frequency of 100 kHz with 99% of its spectral radiated energy strictly confined within the 90–110 kHz band. The standard pulse envelope exhibits an asymmetric exponential rise peaking at tau = 65 µs from virtual start, followed by an exponential tail decaying through 300 µs. This steep rise is engineered to maximize dE/dt at early cycles while complying with international CCIR Rec. 589 spectrum limits.',
+    presetId: 'jakarta_baseline',
+    targetRoute: '/waveforms',
+    buttonLabel: 'Inspect 100 kHz Waveform in Oscilloscope',
+  },
+  {
+    id: 'skywave-discrimination',
+    title: 'Groundwave Sampling & Skywave Multi-path Discrimination',
+    icon: Activity,
+    accentVar: '--status-ok',
+    summary:
+      'How Loran receivers eliminate ionospheric multi-path delay distortion by sampling the 3rd zero crossing before skywaves arrive.',
+    math: 't_{\\text{sample}} = 3 \\cdot T_{\\text{carrier}} = 30\\,\\mu\\text{s} < t_{\\text{skywave}} = t_{\\text{ground}} + \\frac{\\Delta D_{\\text{extra}}}{c}',
+    explanation:
+      'Groundwaves propagate along the curvature of the Earth, while skywaves bounce off the ionospheric D-layer (daytime: 70–90 km) or E-layer (nighttime: 100–110 km). Due to the extra geometrical path length delta-D = 2*sqrt(h^2 + (d/2)^2) - d, skywaves arrive 35 to 70 µs after the groundwave leading edge. Loran receivers lock tracking loops to the Standard Zero Crossing (SZC) at the positive-going 3rd zero crossing (exactly 30 µs from onset), completely immune to ionospheric fading and delay variation.',
+    presetId: 'jakarta_baseline',
+    targetRoute: '/waveforms',
+    buttonLabel: 'Simulate Skywave in Oscilloscope',
+  },
+  {
+    id: 'cycle-selection',
+    title: 'Cycle Selection, Envelope Ratio Tests & Boyce (2006) Model',
+    icon: ShieldCheck,
+    accentVar: '--accent-loran-c',
+    summary:
+      'Mathematical mechanics of envelope ratio testing to prevent catastrophic 10 µs carrier cycle slips under low SNR.',
+    math: '\\text{Ratio}(\\tau) = \\frac{E(\\tau - 15\\,\\mu\\text{s})}{E(\\tau)}, \\quad \\text{SZC: } \\text{Ratio}(30) \\approx 0.3966',
+    explanation:
+      'Because each 100 kHz carrier cycle spans 10 µs (corresponding to approximately 3,000 metres in hyperbolic range difference), mistaking the 3rd cycle for the 2nd or 4th causes a severe 3 km fix error. Sourced from Boyce, Lo, Powell, & Enge (ILA 2006, Section II-D), receivers test the ratio of envelope samples spaced 15 µs apart: Ratio(tau) = E(tau - 15)/E(tau). Validating that Ratio(30) lies within [Ratio(25), Ratio(35)] (bounds ~0.2538 to ~0.5180) ensures cycle lock within a +/- 5 µs safety margin. Wrong-cycle probability follows P[Wrong Cycle] = erfc(5 / (sigma_ECD * sqrt(2))), with historical Austron sigma = 42/sqrt(N*SNR) µs and modern Peterson sigma = 28/sqrt(N*SNR) µs.',
+    presetId: 'jakarta_baseline',
+    targetRoute: '/waveforms',
+    buttonLabel: 'Launch Boyce Monte Carlo Simulator',
+  },
 ];
 
 export default function Learn() {

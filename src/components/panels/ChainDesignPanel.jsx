@@ -62,29 +62,10 @@ export default function ChainDesignPanel() {
 
   return (
     <div className="space-y-4 font-mono text-xs pb-6">
-      {/* Educational Simulator Disclaimer Banner */}
-      <div
-        className="px-2.5 py-1.5 rounded-lg border flex items-center justify-between gap-2"
-        style={{
-          background: 'rgba(245, 158, 11, 0.08)',
-          borderColor: 'rgba(245, 158, 11, 0.35)',
-        }}
-      >
-        <div className="flex items-center gap-1.5">
-          <AlertTriangle size={13} className="text-amber-500 shrink-0" aria-hidden="true" />
-          <span className="font-bold uppercase tracking-wider text-amber-500 text-[10px]">
-            Educational Simulator Disclaimer
-          </span>
-        </div>
-        <InfoTooltip
-          align="right"
-          text="Educational chain-design simulator — not validated for real regulatory chain planning, station licensing, or operational deployment."
-        />
-      </div>
 
       {/* Header Banner & Mode State */}
       <div
-        className="p-3 rounded-lg border backdrop-blur-md"
+        className="p-3 rounded-lg border"
         style={{
           background: 'var(--bg-subtle)',
           borderColor: 'var(--border-subtle)',
@@ -114,7 +95,7 @@ export default function ChainDesignPanel() {
         {/* Quick Presets with Provenance Badges */}
         <div className="space-y-1.5 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold" style={{ color: 'var(--text-dim)' }}>Presets & Scenarios</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-dim)' }}>PRESETS & SCENARIOS</span>
             <button
               onClick={syncDesignFromActiveStations}
               className="px-2 py-0.5 rounded text-[10px] transition border cursor-pointer flex items-center gap-1 hover:bg-[var(--bg-muted)]"

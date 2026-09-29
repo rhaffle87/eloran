@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React, { useState } from 'react';
 import { Database, CheckCircle2, ExternalLink, Globe, Navigation, Info } from 'lucide-react';
 import { evaluateKoreaTrialBenchmark, evaluateMaomingTrialBenchmark } from '../../lib/trialValidation.js';
@@ -115,13 +116,13 @@ export function TrialValidationPanel({ compact = false }) {
 
         {/* Link to Full About Page Section */}
         <div className="pt-1 text-center">
-          <a
-            href="/about"
+          <Link
+            to="/about"
             className="text-[11px] text-[var(--accent-eloran)] hover:underline inline-flex items-center gap-1 font-semibold"
           >
             <span>Full comparative tables & error plots on About page</span>
             <ExternalLink size={11} />
-          </a>
+          </Link>
         </div>
       </div>
     );

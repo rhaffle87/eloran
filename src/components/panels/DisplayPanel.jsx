@@ -324,7 +324,7 @@ export default function DisplayPanel({ isELoran = false }) {
               <span className={`font-mono ${settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-semibold' : 'text-[var(--text-dim)]'}`}>
                 {settings.enableSecondaryFactor
                   ? 'PF + SF + ASF (SF active)'
-                  : 'Secondary Factor: off (UNVERIFIED model)'}
+                  : 'PF + ASF (SF off)'}
               </span>
             </div>
           </div>
@@ -394,22 +394,12 @@ export default function DisplayPanel({ isELoran = false }) {
 
         <Toggle
           label="Secondary Factor (SF) Seawater Delay"
-          description="Brunavs empirical seawater propagation model (sigma = 5 S/m)"
+          description={settings.enableSecondaryFactor
+            ? 'Secondary Factor is ON (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook).'
+            : 'Secondary Factor is OFF (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook). Only Primary Factor (PF) atmospheric refraction is modeled.'}
           checked={settings.enableSecondaryFactor}
           onChange={(checked) => updateSettings({ enableSecondaryFactor: checked })}
         />
-        <div className="text-[10px] font-mono px-2 py-1 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between">
-          <span className="text-[var(--text-muted)]">Status:</span>
-          <span className={settings.enableSecondaryFactor ? 'text-[var(--accent-loran-c)] font-bold flex items-center gap-1' : 'text-[var(--text-dim)] flex items-center gap-1'}>
-            {settings.enableSecondaryFactor ? 'SF Active (Brunavs 5 S/m)' : 'SF Disabled'}
-            <InfoTooltip
-              content={settings.enableSecondaryFactor
-                ? 'Secondary Factor is ON (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook).'
-                : 'Secondary Factor is OFF (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook). Only Primary Factor (PF) atmospheric refraction is modeled.'}
-              align="right"
-            />
-          </span>
-        </div>
       </div>
 
       {/* Cycle Slip & TOA Noise Model (Boyce 2006 / Rhee 2021) */}
@@ -428,7 +418,7 @@ export default function DisplayPanel({ isELoran = false }) {
         {/* Status Pills */}
         <div className="flex items-center justify-between text-[10px]">
           <span className="px-1.5 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] inline-flex items-center gap-1 font-mono">
-            <CheckCircle2 size={10} /> Model: Boyce (SOURCED) · Noise: Rhee (SOURCED)
+            <CheckCircle2 size={10} /> Sourced Models (Boyce / Rhee)
           </span>
           <InfoTooltip
             align="right"

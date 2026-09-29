@@ -140,7 +140,7 @@ export default function ChainDesignPanel() {
             >
               <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Jakarta Coastal</div>
               <div className="flex items-center gap-1 mt-1">
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
                   Synthetic / Proposal
                 </span>
               </div>
@@ -442,14 +442,14 @@ export default function ChainDesignPanel() {
         className="p-3 rounded-lg border space-y-2.5"
         style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
             <span>Planning Thresholds & Heuristics</span>
             <InfoTooltip
               text="Tunable geometric and timing rules of thumb used in chain feasibility validation. Illustrative default, not a regulatory limit — unverified against operational station licensing guidelines."
             />
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] self-start sm:self-auto">
             Illustrative default, not a regulatory limit
           </span>
         </div>

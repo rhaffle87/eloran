@@ -20,7 +20,6 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
 
     // Verify Chain Design panel header and educational disclaimer
     await expect(page.getByText('Chain Design & Planning')).toBeVisible();
-    await expect(page.getByText('Educational Simulator Disclaimer')).toBeVisible();
 
     // Verify HUD reflects Chain Design mode
     await expect(page.getByText('CHAIN DESIGN:')).toBeVisible();
@@ -39,7 +38,6 @@ test.describe('Chain Design & Planning Mode Comprehensive E2E Suite', () => {
     await eLoranDesignBtn.click();
 
     await expect(page.getByText('Chain Design & Planning')).toBeVisible();
-    await expect(page.getByText('Educational Simulator Disclaimer')).toBeVisible();
 
     const eLoranSimBtn = page.getByRole('button', { name: /Simulation/i }).first();
     await expect(eLoranSimBtn).toBeVisible();

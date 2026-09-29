@@ -127,54 +127,55 @@ export default function AsfPanel() {
     <div className="space-y-5">
       {/* Mode Switcher Tabs */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-          ASF Propagation Model Mode
-        </label>
-        <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => updateSettings({ asfModelMode: 'millington' })}
-              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
-                asfMode === 'millington'
-                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-              }`}
-            >
-              <Waves size={13} className="text-[var(--accent-eloran)] shrink-0" />
-              <span className="font-bold text-[11px] truncate">Millington</span>
-            </button>
-            <InfoTooltip text="Physical mixed-path delay model based on ITU-R P.832 ground conductivity mapping." />
-          </div>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+            ASF Propagation Model Mode
+          </label>
+          <InfoTooltip
+            title="ASF Propagation Models"
+            text="Choose between Millington mixed-path physical groundwave (ITU-R P.368), Temporal atmospheric refractivity drift (Song & Son), or sandboxed mathematical Formula."
+            align="right"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
+          <button
+            onClick={() => updateSettings({ asfModelMode: 'millington' })}
+            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              asfMode === 'millington'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+            title="Physical mixed-path delay model based on ITU-R P.832 ground conductivity mapping."
+          >
+            <Waves size={13} className="text-[var(--accent-eloran)] shrink-0" />
+            <span className="text-[11px] truncate">Millington</span>
+          </button>
 
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => updateSettings({ asfModelMode: 'temporal' })}
-              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
-                asfMode === 'temporal'
-                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-              }`}
-            >
-              <Thermometer size={13} className="text-[var(--accent-eloran)] shrink-0" />
-              <span className="font-bold text-[11px] truncate">Temporal</span>
-            </button>
-            <InfoTooltip text="Atmospheric refractivity model with seasonal drift calibrated from Song &amp; Son (2025). ILLUSTRATIVE." />
-          </div>
+          <button
+            onClick={() => updateSettings({ asfModelMode: 'temporal' })}
+            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              asfMode === 'temporal'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+            title="Atmospheric refractivity model with seasonal drift calibrated from Song & Son (2025)."
+          >
+            <Thermometer size={13} className="text-[var(--accent-eloran)] shrink-0" />
+            <span className="text-[11px] truncate">Temporal</span>
+          </button>
 
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => updateSettings({ asfModelMode: 'formula' })}
-              className={`flex-1 p-2 rounded border text-left transition flex items-center gap-1.5 cursor-pointer ${
-                asfMode === 'formula'
-                  ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
-                  : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
-              }`}
-            >
-              <Sparkles size={13} className="text-[var(--accent-loran-c)] shrink-0" />
-              <span className="font-bold text-[11px] truncate">Formula</span>
-            </button>
-            <InfoTooltip text="Manual sandboxed mathematical formula evaluation for synthetic delay profiles." />
-          </div>
+          <button
+            onClick={() => updateSettings({ asfModelMode: 'formula' })}
+            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              asfMode === 'formula'
+                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+            }`}
+            title="Manual sandboxed mathematical formula evaluation for synthetic delay profiles."
+          >
+            <Sparkles size={13} className="text-[var(--accent-loran-c)] shrink-0" />
+            <span className="text-[11px] truncate">Formula</span>
+          </button>
         </div>
       </div>
 
@@ -408,14 +409,21 @@ export default function AsfPanel() {
                 </div>
               ) : (
                 <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded-lg p-2.5 space-y-2">
-                  <div className="text-[10.5px] text-[var(--status-warn)] leading-relaxed">
-                    ⚠️ Current path ({master?.label || 'Tx'} → {rx?.label || 'Rx'}) is outside bundled coastline regions ({Object.values(COASTLINE_MANIFEST).map((m) => m.name.split('—')[0].trim()).join(', ')}).
-                    <div className="text-[var(--text-dim)] mt-0.5">
-                      Falling back to manual land-fraction ratio below ({Math.round((settings.asfLandFraction ?? 0.5) * 100)}%).
-                    </div>
+                  <div className="flex items-center justify-between text-[11px] text-[var(--status-warn)]">
+                    <span className="font-semibold flex items-center gap-1 font-mono">
+                      ⚠️ Outside Bundled Coastlines
+                    </span>
+                    <InfoTooltip
+                      title="Geodesic Path Fallback"
+                      text={`Path (${master?.label || 'Tx'} → ${rx?.label || 'Rx'}) is outside bundled coastline regions (${Object.values(COASTLINE_MANIFEST).map((m) => m.name.split('—')[0].trim()).join(', ')}). Falling back to manual land fraction.`}
+                      align="right"
+                    />
+                  </div>
+                  <div className="text-[10px] text-[var(--text-dim)] font-mono">
+                    Using manual fallback ratio ({Math.round((settings.asfLandFraction ?? 0.5) * 100)}%).
                   </div>
                   <Slider
-                    label="Manual Land Fraction (Illustrative Fallback)"
+                    label="Manual Land Fraction"
                     value={settings.asfLandFraction ?? 0.5}
                     min={0.0}
                     max={1.0}
@@ -438,9 +446,7 @@ export default function AsfPanel() {
                   tooltip="Uniform land fraction applied to any geometry regardless of coastline vector data"
                   onChange={(val) => updateSettings({ asfLandFraction: val })}
                 />
-                <div className="text-[10px] text-[var(--text-muted)] italic">
-                  Illustrative uniform ratio applied along the entire path.
-                </div>
+                
               </div>
             )}
           </div>
@@ -718,7 +724,7 @@ export default function AsfPanel() {
               Field Benchmarks
             </span>
             <span
-              className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 flex items-center gap-1 font-semibold"
+              className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 font-semibold"
               style={{
                 background: 'var(--status-ok-subtle)',
                 borderColor: 'var(--status-ok-border)',
@@ -727,12 +733,12 @@ export default function AsfPanel() {
               }}
             >
               Tier 2 SOURCED
-              <InfoTooltip
-                align="left"
-                title="Tier 2 Field Trial Validation Disclosure"
-                text="Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
-              />
             </span>
+            <InfoTooltip
+              align="left"
+              title="Tier 2 Field Trial Validation Disclosure"
+              text="Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
+            />
           </div>
           <button
             type="button"

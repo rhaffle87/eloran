@@ -37,8 +37,6 @@ describe('Trial Validation Engine & Empirical Benchmarks', () => {
       results.sites.forEach((site) => {
         expect(site.simuloran95m).toBeGreaterThan(8.0);
         expect(site.simuloran95m).toBeLessThan(16.0);
-        // Verify backward compatibility alias
-        expect(site.loranLab95m).toBe(site.simuloran95m);
         // Absolute delta between SIMULORAN model and field measurement must be < 4.0 meters
         expect(site.absDeltaMeters).toBeLessThan(4.0);
       });

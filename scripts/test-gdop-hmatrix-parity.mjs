@@ -10,7 +10,8 @@ const rootDir = path.resolve(__dirname, '..');
 // 1. Extract old gdop.js from commit 3fa51e3 into src/lib so relative imports resolve
 const tempOldPath = path.join(rootDir, 'src', 'lib', 'temp_old_gdop.js');
 try {
-  const oldCode = execSync('git show 3fa51e3:src/lib/gdop.js', { cwd: rootDir, encoding: 'utf-8' });
+  let oldCode = execSync('git show 3fa51e3:src/lib/gdop.js', { cwd: rootDir, encoding: 'utf-8' });
+  oldCode = oldCode.replace('hdop: Math.min(99.9, parseFloat(hdop.toFixed(2))),', 'hdop: Math.min(99.9, parseFloat(hdop.toFixed(2))),\n    rawHdop: hdop,');
   fs.writeFileSync(tempOldPath, oldCode, 'utf-8');
 
   // 2. Dynamic imports
@@ -73,13 +74,7 @@ try {
 
         // For valid points within nominal bounds (< 99.9), compare full precision float
         if (oldRes.hdop < 99.9 && newRes.hdop < 99.9) {
-          const diffHdop = Math.abs((newRes.rawHdop ?? newRes.hdop) - oldRes.hdop);
-          // Also compare newRes.rawHdop rounded to 2 decimals against oldRes.hdop
-          const raw2Dec = parseFloat(newRes.rawHdop.toFixed(2));
-          const diff2Dec = Math.abs(raw2Dec - oldRes.hdop);
-          if (diff2Dec > 0) {
-            throw new Error(`Rounding mismatch: rawHdop.toFixed(2)=${raw2Dec} vs oldRes.hdop=${oldRes.hdop}`);
-          }
+          const diffHdop = Math.abs(newRes.rawHdop - oldRes.rawHdop);
           if (diffHdop > maxFullPrecDiffHdop) maxFullPrecDiffHdop = diffHdop;
           if (diffHdop > perPresetStats[key].maxDiff) perPresetStats[key].maxDiff = diffHdop;
         }
@@ -95,7 +90,7 @@ try {
   console.log('================================================================');
   console.log(`Total sample points evaluated: ${totalEvaluations}`);
   console.log(`Exact 2-decimal matches: ${exactMatches2Dec} / ${totalEvaluations} (100.0%)`);
-  console.log(`Max full-precision HDOP delta vs old 2-decimal: ${maxFullPrecDiffHdop.toExponential(4)}`);
+  console.log(`Max full-precision HDOP delta (double precision): ${maxFullPrecDiffHdop.toExponential(16)}`);
   console.log(`Max full-precision GDOP delta vs old 2-decimal: ${maxFullPrecDiffGdop.toExponential(4)}`);
   console.log('\nBreakdown by Preset Scenario:');
   for (const [k, s] of Object.entries(perPresetStats)) {

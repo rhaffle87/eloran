@@ -1,0 +1,564 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message-version": "1.0.0",
+  "message": {
+    "facets": {},
+    "total-results": 2429,
+    "items": [
+      {
+        "indexed": {
+          "date-parts": [
+            [
+              2026,
+              9,
+              21
+            ]
+          ],
+          "date-time": "2026-09-21T15:45:45Z",
+          "timestamp": 1790005545813,
+          "version": "4.0.1"
+        },
+        "reference-count": 61,
+        "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+        "license": [
+          {
+            "start": {
+              "date-parts": [
+                [
+                  2021,
+                  1,
+                  1
+                ]
+              ],
+              "date-time": "2021-01-01T00:00:00Z",
+              "timestamp": 1609459200000
+            },
+            "content-version": "vor",
+            "delay-in-days": 0,
+            "URL": "https://creativecommons.org/licenses/by/4.0/legalcode"
+          }
+        ],
+        "funder": [
+          {
+            "DOI": "10.13039/501100003566",
+            "name": "National Research and Development Project “Development of integrated R-Mode navigation system” funded by the Ministry of Oceans and Fisheries, Korea",
+            "doi-asserted-by": "publisher",
+            "id": [
+              {
+                "id": "10.13039/501100003566",
+                "id-type": "DOI",
+                "asserted-by": "publisher"
+              }
+            ]
+          }
+        ],
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "IEEE Access"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2021
+            ]
+          ]
+        },
+        "DOI": "10.1109/access.2021.3105063",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2021,
+              8,
+              16
+            ]
+          ],
+          "date-time": "2021-08-16T16:21:44Z",
+          "timestamp": 1629130904000
+        },
+        "page": "115042-115052",
+        "source": "Crossref",
+        "is-referenced-by-count": 36,
+        "title": [
+          "Enhanced Accuracy Simulator for a Future Korean Nationwide eLoran System"
+        ],
+        "prefix": "10.1109",
+        "volume": "9",
+        "author": [
+          {
+            "given": "Joon Hyo",
+            "family": "Rhee",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Sanghyun",
+            "family": "Kim",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Pyo-Woong",
+            "family": "Son",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Jiwon",
+            "family": "Seo",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          }
+        ],
+        "member": "263",
+        "reference": [
+          {
+            "key": "ref39",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1002/j.2161-4296.2009.tb00440.x"
+          },
+          {
+            "key": "ref38",
+            "first-page": "1",
+            "article-title": "Analysis of the effects of ASF variations for Loran RNP 0.3",
+            "author": "lo",
+            "year": "2003",
+            "journal-title": "Proc 32th Annu Conv Tech Symp Int Loran Assoc"
+          },
+          {
+            "key": "ref33",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s101211369"
+          },
+          {
+            "key": "ref32",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s20164535"
+          },
+          {
+            "key": "ref31",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/LAWP.2021.3057942"
+          },
+          {
+            "key": "ref30",
+            "first-page": "507",
+            "article-title": "PTTI capabilities of the modernized Loran system",
+            "author": "montgomery",
+            "year": "2008",
+            "journal-title": "Proc 40th Annu Precise Time Time Int Syst Appl Meeting (PTTI)"
+          },
+          {
+            "key": "ref37",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/ICCE-ASIA.2018.8552129"
+          },
+          {
+            "key": "ref36",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1017/S0373463300008778"
+          },
+          {
+            "key": "ref35",
+            "first-page": "1169",
+            "article-title": "ASF quality assurance for eLoran",
+            "author": "hargreaves",
+            "year": "2012",
+            "journal-title": "Proc IEEE/ION PLANS"
+          },
+          {
+            "key": "ref34",
+            "first-page": "27",
+            "article-title": "eLoran initial operational capability in the United Kingdom&#x2013;first results",
+            "author": "offermans",
+            "year": "2015",
+            "journal-title": "Proc Int Tech Meeting Inst Navigat"
+          },
+          {
+            "key": "ref60",
+            "first-page": "824",
+            "article-title": "Effect of outlier removal from temporal ASF corrections on multichain Loran positioning accuracy",
+            "author": "park",
+            "year": "2020",
+            "journal-title": "Proc Int Conf Control Autom Syst (ICCAS)"
+          },
+          {
+            "key": "ref61",
+            "first-page": "796",
+            "article-title": "Development of record and management software for GPS/Loran measurements",
+            "author": "kim",
+            "year": "2020",
+            "journal-title": "Proc Int Conf Control Autom Syst (ICCAS)"
+          },
+          {
+            "key": "ref28",
+            "first-page": "23",
+            "article-title": "eLoran in Korea&#x2013;current status and future plans",
+            "author": "seo",
+            "year": "2013",
+            "journal-title": "Proc Eur Navigat Conf (ENC)"
+          },
+          {
+            "key": "ref27",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s20226518"
+          },
+          {
+            "key": "ref29",
+            "year": "2007",
+            "journal-title": "Enhanced Loran (eLoran) Definition"
+          },
+          {
+            "key": "ref2",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1002/2015RS005719"
+          },
+          {
+            "key": "ref1",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/5.736341"
+          },
+          {
+            "key": "ref20",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TAES.2020.3034025"
+          },
+          {
+            "key": "ref22",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s110908966"
+          },
+          {
+            "key": "ref21",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1016/j.ast.2018.04.029"
+          },
+          {
+            "key": "ref24",
+            "article-title": "New potential of low-frequency radionavigation in the 21st century",
+            "author": "pelgrum",
+            "year": "2006"
+          },
+          {
+            "key": "ref23",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TAES.2017.2762438"
+          },
+          {
+            "key": "ref26",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TAES.2018.2876587"
+          },
+          {
+            "key": "ref25",
+            "first-page": "392",
+            "article-title": "UK eLoran-initial operational capability at the Port of Dover",
+            "author": "williams",
+            "year": "2013",
+            "journal-title": "Proc ITM"
+          },
+          {
+            "key": "ref50",
+            "article-title": "Radio wave propagation",
+            "author": "barringer",
+            "year": "1999",
+            "journal-title": "NAB Engineering Handbook"
+          },
+          {
+            "key": "ref51",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.11003/JKGS.2013.2.2.101"
+          },
+          {
+            "key": "ref59",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1016/j.jesp.2013.03.013"
+          },
+          {
+            "key": "ref58",
+            "article-title": "Gaussian kernel smoothing",
+            "author": "chung",
+            "year": "2020",
+            "journal-title": "arXiv 2007 09539"
+          },
+          {
+            "key": "ref57",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1002/j.2161-4296.1998.tb02381.x"
+          },
+          {
+            "key": "ref56",
+            "author": "misra",
+            "year": "2006",
+            "journal-title": "Global Positioning System Signals Measurements and Performance"
+          },
+          {
+            "key": "ref55",
+            "year": "2021",
+            "journal-title": "Environmental Geographic Information Service of Korea"
+          },
+          {
+            "key": "ref54",
+            "first-page": "28",
+            "article-title": "Jitter&#x2014;Understanding it, measuring it, eliminating it: Part 3: Causes of Jitter",
+            "volume": "3",
+            "author": "hancock",
+            "year": "2004",
+            "journal-title": "High Freq Electron"
+          },
+          {
+            "key": "ref53",
+            "year": "2013",
+            "journal-title": "Radio noise"
+          },
+          {
+            "key": "ref52",
+            "article-title": "Atmospheric noise mitigation for Loran",
+            "author": "boyce",
+            "year": "2007"
+          },
+          {
+            "key": "ref10",
+            "author": "curry",
+            "year": "2014",
+            "journal-title": "SENTINEL Project Report on GNSS Vulnerabilities"
+          },
+          {
+            "key": "ref11",
+            "year": "2021",
+            "journal-title": "OSCE SMM Spot Report 13/2021 Emergency Landing of Long-Range Unmanned Aerial Vehicle Due to Dual GPS Signal Interference"
+          },
+          {
+            "key": "ref40",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TAES.2013.6558016"
+          },
+          {
+            "key": "ref12",
+            "author": "gertz",
+            "year": "2021",
+            "journal-title": "Air Force Gen John W Raymond Chinese Lasers Jammers Threaten GPS Satellites"
+          },
+          {
+            "key": "ref13",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1007/s10291-011-0224-x"
+          },
+          {
+            "key": "ref14",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/ITC-CSCC.2019.8793441"
+          },
+          {
+            "key": "ref15",
+            "first-page": "1932",
+            "article-title": "Real-time software receiver for GPS controlled reception pattern antenna array processing",
+            "author": "chen",
+            "year": "2010",
+            "journal-title": "Proc 23rd Int Tech Meeting Satell Div Inst Navigat"
+          },
+          {
+            "key": "ref16",
+            "first-page": "767",
+            "article-title": "Real-time dual-frequency (L1/L5) GPS/WAAS software receiver",
+            "author": "chen",
+            "year": "2011",
+            "journal-title": "Proc 24th Int Tech Meeting Satell Div Inst Navigat (ION GNSS)"
+          },
+          {
+            "key": "ref17",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1016/j.ast.2017.07.018"
+          },
+          {
+            "key": "ref18",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s19061389"
+          },
+          {
+            "key": "ref19",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.3390/s121013417"
+          },
+          {
+            "key": "ref4",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TITS.2014.2311590"
+          },
+          {
+            "key": "ref3",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/TAES.2011.5937276"
+          },
+          {
+            "key": "ref6",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.33012/2020.17184"
+          },
+          {
+            "key": "ref5",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/MSP.2017.2716406"
+          },
+          {
+            "key": "ref8",
+            "first-page": "485",
+            "article-title": "Global positioning system timing criticality assessment&#x2013;preliminary performance results",
+            "author": "carroll",
+            "year": "2008",
+            "journal-title": "Proc 40th Annu Precise Time Time Int Syst Appl Meeting (PTTI)"
+          },
+          {
+            "key": "ref7",
+            "author": "rooker",
+            "year": "2008",
+            "journal-title": "Satellite Vulnerabilities"
+          },
+          {
+            "key": "ref49",
+            "author": "garcía",
+            "year": "2009",
+            "journal-title": "Calculation of Radio Electrical Coverage in Medium-Wave Frequencies"
+          },
+          {
+            "key": "ref9",
+            "year": "2011",
+            "journal-title": "GPS Privacy Jammers and RFI at Newark Navigation Team AJP-652 Results"
+          },
+          {
+            "key": "ref46",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1049/ip-f-1.1981.0046"
+          },
+          {
+            "key": "ref45",
+            "year": "1992",
+            "journal-title": "World Atlas of Ground Conductivities"
+          },
+          {
+            "key": "ref48",
+            "year": "2007",
+            "journal-title": "Ground-wave propagation curves for frequencies between 10 kHz and 30 MHz"
+          },
+          {
+            "key": "ref47",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1049/ip-f-1.1981.0047"
+          },
+          {
+            "key": "ref42",
+            "first-page": "1",
+            "article-title": "Development of the Korean eLoran testbed and analysis of its expected positioning accuracy",
+            "author": "son",
+            "year": "2018",
+            "journal-title": "Proc IALA Conf"
+          },
+          {
+            "key": "ref41",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/ACCESS.2020.3033215"
+          },
+          {
+            "key": "ref44",
+            "doi-asserted-by": "publisher",
+            "DOI": "10.1109/IAIN.2015.7352222"
+          },
+          {
+            "key": "ref43",
+            "first-page": "2595",
+            "article-title": "Loran coverage availability simulation tool",
+            "author": "lo",
+            "year": "2008",
+            "journal-title": "Proc ION GNSS"
+          }
+        ],
+        "container-title": [
+          "IEEE Access"
+        ],
+        "link": [
+          {
+            "URL": "http://xplorestaging.ieee.org/ielx7/6287639/9312710/09514800.pdf?arnumber=9514800",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2021,
+              12,
+              17
+            ]
+          ],
+          "date-time": "2021-12-17T14:57:31Z",
+          "timestamp": 1639753051000
+        },
+        "score": 69.346794,
+        "resource": {
+          "primary": {
+            "URL": "https://ieeexplore.ieee.org/document/9514800/"
+          }
+        },
+        "issued": {
+          "date-parts": [
+            [
+              2021
+            ]
+          ]
+        },
+        "references-count": 61,
+        "URL": "https://doi.org/10.1109/access.2021.3105063",
+        "ISSN": [
+          "2169-3536"
+        ],
+        "issn-type": [
+          {
+            "value": "2169-3536",
+            "type": "electronic"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2021
+            ]
+          ]
+        }
+      }
+    ],
+    "items-per-page": 1,
+    "query": {
+      "start-index": 0,
+      "search-terms": null
+    }
+  }
+}

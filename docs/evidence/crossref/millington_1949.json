@@ -1,0 +1,143 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          1,
+          23
+        ]
+      ],
+      "date-time": "2026-01-23T09:22:38Z",
+      "timestamp": 1769160158293,
+      "version": "3.49.0"
+    },
+    "reference-count": 0,
+    "publisher": "Institution of Engineering and Technology (IET)",
+    "issue": "39",
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [],
+    "published-print": {
+      "date-parts": [
+        [
+          1949,
+          1
+        ]
+      ]
+    },
+    "DOI": "10.1049/pi-3.1949.0013",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2014,
+          1,
+          22
+        ]
+      ],
+      "date-time": "2014-01-22T06:28:58Z",
+      "timestamp": 1390372138000
+    },
+    "page": "53-64",
+    "source": "Crossref",
+    "is-referenced-by-count": 57,
+    "title": [
+      "Ground-wave propagation over an inhomogeneous smooth earth"
+    ],
+    "prefix": "10.1049",
+    "volume": "96",
+    "author": [
+      {
+        "given": "G.",
+        "family": "Millington",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "265",
+    "container-title": [
+      "Proceedings of the IEE - Part III: Radio and Communication Engineering"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://digital-library.theiet.org/content/journals/10.1049/pi-3.1949.0013?crawler=true&mimetype=application/pdf",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2021,
+          1,
+          1
+        ]
+      ],
+      "date-time": "2021-01-01T13:33:50Z",
+      "timestamp": 1609508030000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://digital-library.theiet.org/content/journals/10.1049/pi-3.1949.0013"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          1949,
+          1
+        ]
+      ]
+    },
+    "references-count": 0,
+    "journal-issue": {
+      "issue": "39",
+      "published-print": {
+        "date-parts": [
+          [
+            1949,
+            1
+          ]
+        ]
+      }
+    },
+    "URL": "https://doi.org/10.1049/pi-3.1949.0013",
+    "relation": {},
+    "ISSN": [
+      "2054-0442"
+    ],
+    "issn-type": [
+      {
+        "value": "2054-0442",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1949,
+          1
+        ]
+      ]
+    }
+  }
+}

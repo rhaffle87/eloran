@@ -5,7 +5,7 @@
     "frequency_khz": 100.0,
     "frequency_mhz": 0.1,
     "tx_power_watt": 1000.0,
-    "provenance": "Generated via space-physics/grwave engine implementing CCIR / ITU-R P.368 Annex 2 and Sommerfeld-Norton numerical groundwave equations",
+    "provenance": "Generated via space-physics/grwave engine implementing CCIR / ITU-R P.368 and Sommerfeld-Norton numerical groundwave equations",
     "description": "Ground truth curves for field strength attenuation and Sommerfeld/Millington phase lag / ASF delay at 100 kHz LF Loran band."
   },
   "homogeneous": {

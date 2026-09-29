@@ -208,7 +208,7 @@ export default function Learn() {
                 1. Sommerfeld Numerical Distance & Surface Impedance
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
-                ITU-R P.368-10
+                Sommerfeld (1909) / Norton (1936)
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
@@ -220,7 +220,7 @@ export default function Learn() {
             <div className="text-[10px] leading-normal text-[var(--text-muted)] space-y-0.5 font-mono bg-[var(--bg-subtle)]/50 p-2 rounded border border-[var(--border-subtle)]">
               <div><strong>SI Units:</strong> <span className="text-[var(--text-primary)]">d</span> in meters [m], <span className="text-[var(--text-primary)]">λ = c/f₀</span> ≈ 2997.9 m [m], <span className="text-[var(--text-primary)]">σ</span> in Siemens per meter [S·m⁻¹], <span className="text-[var(--text-primary)]">ω = 2πf₀</span> ≈ 6.283×10⁵ [rad·s⁻¹], <span className="text-[var(--text-primary)]">ε₀</span> ≈ 8.854×10⁻¹² [F·m⁻¹], <span className="text-[var(--text-primary)]">εᵣ, η, p</span> dimensionless [-].</div>
               <div className="text-[9px] pt-1 border-t border-[var(--border-subtle)] text-[var(--text-dim)]">
-                <strong>Citations:</strong> Sommerfeld (1909), <em>Ann. Phys.</em> 333(4); Norton (1936), <em>Proc. IRE</em> 24(10); ITU-R Recommendation P.368-10 (2022).
+                <strong>Citations:</strong> Sommerfeld (1909), <em>Ann. Phys.</em> 333(4); Norton (1936), <em>Proc. IRE</em> 24(10); ITU-R Recommendation P.368-10 (not machine-verified upstream).
               </div>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
@@ -238,7 +238,7 @@ export default function Learn() {
                 2. Millington's Reciprocal Mixed-Path Method
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
-                ITU-R P.368-10 (Millington)
+                Millington (1949)
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
@@ -250,7 +250,7 @@ export default function Learn() {
             <div className="text-[10px] leading-normal text-[var(--text-muted)] space-y-0.5 font-mono bg-[var(--bg-subtle)]/50 p-2 rounded border border-[var(--border-subtle)]">
               <div><strong>SI Units & Terms:</strong> <span className="text-[var(--text-primary)]">x_k = \sum d_i</span> cumulative distance [km], <span className="text-[var(--text-primary)]">Δt_k(x)</span> homogeneous delay over medium <span className="text-[var(--text-primary)]">k</span> [µs], <span className="text-[var(--text-primary)]">ASF</span> total delay [µs] or [m] via <span className="text-[var(--text-primary)]">c·Δt</span>.</div>
               <div className="text-[9px] pt-1 border-t border-[var(--border-subtle)] text-[var(--text-dim)]">
-                <strong>Citations:</strong> Millington, G. (1949), <em>Proc. IEE</em> 96(39), 53–64; ITU-R Recommendation P.368-10, Annex 1, §3.
+                <strong>Citations:</strong> Millington, G. (1949), <em>Proc. IEE</em> 96(39), 53–64; ITU-R Recommendation P.368-10 (not machine-verified upstream).
               </div>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
@@ -296,12 +296,12 @@ export default function Learn() {
               <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                 4. Atmospheric Refractivity & Seasonal Drift
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
-                ITU-R P.453 & Smith-Weintraub
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
+                Smith &amp; Weintraub (1953)
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
-              The radio refractive index <span className="font-mono text-[var(--text-primary)]">n</span> of tropospheric air alters groundwave phase velocity <span className="font-mono text-[var(--text-primary)]">v = c / n</span> per ITU-R Recommendation P.453-14 and Smith & Weintraub (1953):
+              The radio refractive index <span className="font-mono text-[var(--text-primary)]">n</span> of tropospheric air alters groundwave phase velocity <span className="font-mono text-[var(--text-primary)]">v = c / n</span> per Smith &amp; Weintraub (1953):
             </p>
             <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] overflow-x-auto text-xs">
               <MathView math="N = (n - 1) \times 10^6 = 77.6 \frac{P}{T} + 3.73 \times 10^5 \frac{e}{T^2}" />
@@ -309,7 +309,7 @@ export default function Learn() {
             <div className="text-[10px] leading-normal text-[var(--text-muted)] space-y-0.5 font-mono bg-[var(--bg-subtle)]/50 p-2 rounded border border-[var(--border-subtle)]">
               <div><strong>SI Units:</strong> Total pressure <span className="text-[var(--text-primary)]">P</span> in hectopascals [hPa = 100 Pa], absolute temperature <span className="text-[var(--text-primary)]">T</span> in Kelvin [K], water vapor partial pressure <span className="text-[var(--text-primary)]">e</span> in hectopascals [hPa], refractivity <span className="text-[var(--text-primary)]">N</span> in N-units (dimensionless, ppm).</div>
               <div className="text-[9px] pt-1 border-t border-[var(--border-subtle)] text-[var(--text-dim)]">
-                <strong>Citations:</strong> ITU-R Rec. P.453-14 (2019); Smith, E. K. & Weintraub, S. (1953), <em>Proc. IRE</em> 41(8); Song, J. & Son, P.-W. (2025).
+                <strong>Citations:</strong> Smith, E. K. &amp; Weintraub, S. (1953), <em>Proc. IRE</em> 41(8); Song, J. &amp; Son, P.-W. (2025).
               </div>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">

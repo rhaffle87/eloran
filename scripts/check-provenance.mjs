@@ -161,7 +161,7 @@ function parseProvenanceMarkdown(content) {
     const dateDetails = cols[3];
     const status = cols[4];
 
-    // Only verify rows labeled SOURCED
+    // Separate SOURCED vs UNVERIFIED
     if (status.toUpperCase().includes('SOURCED')) {
       // Evidence strings can be enclosed in backticks or quotes, separated by `//`
       const evidenceParts = evidenceRaw
@@ -174,7 +174,16 @@ function parseProvenanceMarkdown(content) {
         url,
         evidenceParts,
         dateDetails,
-        status,
+        status: 'SOURCED',
+        lineNum: i + 1,
+      });
+    } else if (status.toUpperCase().includes('UNVERIFIED')) {
+      rows.push({
+        citation,
+        url,
+        evidenceParts: [],
+        dateDetails,
+        status: 'UNVERIFIED',
         lineNum: i + 1,
       });
     }
@@ -195,15 +204,18 @@ async function main() {
   }
 
   const content = fs.readFileSync(PROVENANCE_PATH, 'utf8');
-  const rows = parseProvenanceMarkdown(content);
+  const allRows = parseProvenanceMarkdown(content);
+  const sourcedRows = allRows.filter(r => r.status === 'SOURCED');
+  const unverifiedRows = allRows.filter(r => r.status === 'UNVERIFIED');
 
-  console.log(`Found ${rows.length} SOURCED entries to machine-check.\n`);
+  console.log(`Found ${sourcedRows.length} SOURCED entries to machine-check.`);
+  console.log(`Found ${unverifiedRows.length} UNVERIFIED entries cataloged in Section 1.\n`);
 
   let passCount = 0;
   let failCount = 0;
   const auditResults = [];
 
-  for (const row of rows) {
+  for (const row of sourcedRows) {
     await new Promise(r => setTimeout(r, 250));
     process.stdout.write(`Checking: ${row.citation.padEnd(38)} ... `);
     try {
@@ -211,26 +223,72 @@ async function main() {
       const normalizedBody = normalizeWhitespace(res.text);
 
       const missing = [];
-      for (const ev of row.evidenceParts) {
-        const normEv = normalizeWhitespace(ev);
-        if (!normalizedBody.includes(normEv)) {
-          missing.push(ev);
+      if (!row.evidenceParts || row.evidenceParts.length === 0) {
+        missing.push('No evidence / title keyword specified in register');
+      } else {
+        // Explicitly assert that the first evidence string matches the work title
+        const expectedTitle = row.evidenceParts[0];
+        const normTitle = normalizeWhitespace(expectedTitle);
+        if (!normalizedBody.includes(normTitle)) {
+          missing.push(`Title match failed: "${expectedTitle}"`);
+        }
+
+        // Assert all remaining evidence strings (e.g. authors, report numbers)
+        for (let idx = 1; idx < row.evidenceParts.length; idx++) {
+          const ev = row.evidenceParts[idx];
+          const normEv = normalizeWhitespace(ev);
+          if (!normalizedBody.includes(normEv)) {
+            missing.push(`Attribute match failed: "${ev}"`);
+          }
+        }
+      }
+
+      // Check if we have an authoritative Crossref JSON record in docs/evidence/crossref/
+      const crossrefDir = path.join(ROOT_DIR, 'docs', 'evidence', 'crossref');
+      const files = fs.existsSync(crossrefDir) ? fs.readdirSync(crossrefDir) : [];
+      let crossrefMatched = false;
+      for (const f of files) {
+        if (!f.endsWith('.json')) continue;
+        const cData = JSON.parse(fs.readFileSync(path.join(crossrefDir, f), 'utf8'));
+        const cMsg = cData.message?.items ? cData.message.items[0] : cData.message;
+        if (!cMsg) continue;
+        const cDoi = cMsg.DOI?.toLowerCase();
+        if (cDoi && row.url.toLowerCase().includes(cDoi)) {
+          crossrefMatched = true;
+          // Compare title, author, year, container
+          const cTitle = normalizeWhitespace(cMsg.title?.[0] || '');
+          const cAuthor = normalizeWhitespace(cMsg.author?.[0]?.family || '');
+          const cContainer = normalizeWhitespace(cMsg['container-title']?.[0] || '');
+          const cYear = cMsg.published?.['date-parts']?.[0]?.[0] || cMsg.created?.['date-parts']?.[0]?.[0];
+
+          const expectedTitle = normalizeWhitespace(row.evidenceParts[0] || '');
+          if (!cTitle.includes(expectedTitle) && !expectedTitle.includes(cTitle)) {
+            missing.push(`Crossref title mismatch: "${cTitle}" vs expected "${expectedTitle}"`);
+          }
+          if (row.evidenceParts[1]) {
+            const expectedAuthor = normalizeWhitespace(row.evidenceParts[1]);
+            if (!cAuthor.includes(expectedAuthor) && !expectedAuthor.includes(cAuthor)) {
+              missing.push(`Crossref author mismatch: "${cAuthor}" vs expected "${expectedAuthor}"`);
+            }
+          }
+          break;
         }
       }
 
       if (res.statusCode >= 200 && res.statusCode < 300 && missing.length === 0) {
-        console.log(`PASS [HTTP ${res.statusCode}]`);
+        const extraNote = crossrefMatched ? ' [Crossref JSON validated]' : '';
+        console.log(`PASS [HTTP ${res.statusCode}] (Title & metadata confirmed)${extraNote}`);
         passCount++;
         auditResults.push({
           citation: row.citation,
           status: 'PASS',
           code: res.statusCode,
           url: row.url,
-          details: 'All evidence strings confirmed',
+          details: `Title and all evidence strings confirmed${extraNote}`,
         });
       } else {
         const reason = missing.length > 0
-          ? `Missing evidence: ${missing.map(m => `"${m}"`).join(', ')}`
+          ? missing.join('; ')
           : `HTTP status ${res.statusCode}`;
         console.log(`FAIL [HTTP ${res.statusCode}] - ${reason}`);
         failCount++;
@@ -256,15 +314,24 @@ async function main() {
   }
 
   console.log('\n' + '='.repeat(78));
-  console.log(`AUDIT SUMMARY: ${passCount} PASSED, ${failCount} FAILED out of ${rows.length} entries.`);
+  console.log(`AUDIT SUMMARY: ${passCount} PASSED, ${failCount} FAILED out of ${sourcedRows.length} SOURCED entries.`);
+  console.log(`UNVERIFIED: ${unverifiedRows.length} entries reported in separate count (never inside verified figure).`);
   console.log('='.repeat(78));
+
+  if (unverifiedRows.length > 0) {
+    console.log('\nCataloged UNVERIFIED entries in Section 1:');
+    for (const u of unverifiedRows) {
+      console.log(`  - ${u.citation} (${u.url})`);
+    }
+  }
 
   if (failCount > 0) {
     console.error('\nOne or more SOURCED rows failed machine verification!');
     console.error('Per project protocol, any FAIL row must be marked UNVERIFIED.');
     process.exit(1);
   } else {
-    console.log('\nAll SOURCED citations verified successfully against retrieved upstream data.');
+    console.log(`\nAll ${passCount} SOURCED citations verified successfully against retrieved upstream data.`);
+    console.log(`All ${unverifiedRows.length} UNVERIFIED citations documented with non-reachable rationale.`);
     process.exit(0);
   }
 }

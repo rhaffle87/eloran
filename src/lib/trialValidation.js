@@ -227,7 +227,6 @@ export function evaluateKoreaTrialBenchmark(options = {}) {
       ranges,
       measured95m: site.measured95m,
       simuloran95m,
-      loranLab95m: simuloran95m, // backward-compatibility alias
       perStationR95m,
       perStationDeltaMeters,
       perStationAbsDeltaMeters,

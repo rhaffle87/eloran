@@ -14,7 +14,7 @@ test.describe('Marker to Baseline Alignment Suite', () => {
     await page.waitForFunction(() => {
       const map = window.__maplibreInstance;
       const markers = document.querySelectorAll('.station-marker');
-      const baselineFeatures = window.__baselineGeoJson?.features;
+      const baselineFeatures = window.__baselineGeoJson?.features || window.__maplibreInstance?.getSource('loran-baselines-source')?._data?.features;
       return Boolean(map && markers.length >= 3 && baselineFeatures && baselineFeatures.length > 0);
     }, { timeout: 15000 });
 
@@ -28,7 +28,8 @@ test.describe('Marker to Baseline Alignment Suite', () => {
       const markers = document.querySelectorAll('.station-marker');
 
       // Query baseline GeoJSON source directly
-      const baselineFeatures = window.__baselineGeoJson?.features || [];
+      const sourceData = map.getSource('loran-baselines-source')?._data;
+      const baselineFeatures = window.__baselineGeoJson?.features || (sourceData?.type === 'FeatureCollection' ? sourceData.features : []);
 
       const results = [];
 

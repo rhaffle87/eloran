@@ -12,9 +12,9 @@
  *   6. Crossing angle geometry and baseline extension hazard zone detection
  */
 
-import { haversineDistance, initialBearing, destinationPoint, latLngToLocalXY } from './geodesy.js';
+import { haversineDistance, initialBearing, destinationPoint, latLngToLocalXY, SPEED_OF_LIGHT } from './geodesy.js';
 
-export const SPEED_OF_LIGHT = 299792458; // m/s (vacuum)
+export { SPEED_OF_LIGHT };
 export const DEFAULT_ATMOSPHERIC_REFRACTIVE_INDEX = 1.000338; // RTCM / Loran standard atmosphere
 
 /**
@@ -385,8 +385,20 @@ export function computeCrossingAngle(point, master, sec1, sec2) {
  * @param {number} [tdSigmaUs=0.1] - Time difference measurement standard deviation in µs
  * @returns {{gdop: number, hdop: number, twoDrmsMeters: number, valid: boolean}}
  */
-export function computeHyperbolicGDOP(point, master, secondaries, tdSigmaUs = 0.1) {
-  if (!master || !secondaries || secondaries.length < 2 || !point) {
+export function computeHyperbolicGDOP(point, master, secondaries, tdSigmaUs = 0.1, excludeIds = []) {
+  if (!master || !secondaries || !point) {
+    return { gdop: 99.9, hdop: 99.9, twoDrmsMeters: 9999, valid: false };
+  }
+
+  const excludeList = Array.isArray(excludeIds) ? excludeIds : [excludeIds];
+  const excludeSet = new Set(excludeList.filter(Boolean));
+
+  if (excludeSet.has(master.id) || excludeSet.has(master.label)) {
+    return { gdop: 99.9, hdop: 99.9, twoDrmsMeters: 9999, valid: false };
+  }
+
+  const activeSecondaries = secondaries.filter((s) => !excludeSet.has(s.id) && !excludeSet.has(s.label));
+  if (activeSecondaries.length < 2) {
     return { gdop: 99.9, hdop: 99.9, twoDrmsMeters: 9999, valid: false };
   }
 
@@ -394,7 +406,7 @@ export function computeHyperbolicGDOP(point, master, secondaries, tdSigmaUs = 0.
   const c = SPEED_OF_LIGHT / DEFAULT_ATMOSPHERIC_REFRACTIVE_INDEX;
 
   // Compute dimensionless geometry vectors H_norm = [hx, hy]
-  const gradients = secondaries.map((sec) => computeLOPGradient(point, master, sec));
+  const gradients = activeSecondaries.map((sec) => computeLOPGradient(point, master, sec));
   const validGradients = gradients.filter((g) => Math.hypot(g.hx, g.hy) > 1e-4);
 
   if (validGradients.length < 2) {
@@ -430,10 +442,11 @@ export function computeHyperbolicGDOP(point, master, secondaries, tdSigmaUs = 0.
   // 2drms* = 2 * sqrt(2) * sigma_TD * (c / 2)
   const ideal2drms = 2 * Math.SQRT2 * tdSigmaSec * (c / 2);
   const gdop = ideal2drms > 0 ? twoDrms / ideal2drms : 99.9;
+  const hdop = gdop; // In 2D horizontal-only navigation, GDOP = HDOP
 
   return {
     gdop: Math.min(99.9, parseFloat(gdop.toFixed(2))),
-    hdop: Math.min(99.9, parseFloat(gdop.toFixed(2))),
+    hdop: Math.min(99.9, parseFloat(hdop.toFixed(2))),
     twoDrmsMeters: parseFloat(twoDrms.toFixed(1)),
     valid: true,
   };

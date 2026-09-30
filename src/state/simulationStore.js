@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Central Simulation State Store for SIMULORAN
  * Implemented with Zustand. Shared seamlessly across Loran-C, eLoran, Waveforms, and Map.
  */
@@ -30,6 +30,12 @@ import {
   computeEmissionDelay,
   DEFAULT_CHAIN_DESIGN_PARAMS,
 } from '../lib/chainDesign.js';
+import {
+  createTrackingLoop,
+  stepTrackingLoop,
+  injectCycleSlip,
+  reacquireTrackingLoop,
+} from '../lib/trackingLoop.js';
 
 export const DEFAULT_DESIGN_CHAIN = {
   name: 'Proposed Chain',
@@ -148,6 +154,11 @@ export const useSimulationStore = create((set, get) => {
     asfLandFraction: 0.5,
     asfLandSigma: 0.003, // ITU-R P.832 Agricultural/Forest
     asfMillingtonScale: DEFAULT_MILLINGTON_SCALE, // UNVERIFIED: 0.0008
+    asfHeatmapEnabled: false,
+    asfHeatmapMode: 'us', // 'us' (µs timing delay) | 'db' (dB groundwave attenuation)
+    asfHeatmapOpacity: 0.65,
+    asfHeatmapResolution: 40,
+    asfHeatmapIsoContours: true,
     enableDDS: true,
     enableIntegrity: true,
     integrityThresholdMeters: 50,
@@ -160,12 +171,40 @@ export const useSimulationStore = create((set, get) => {
     includeSkywave: false,
     skywaveDelayMs: 1.5,
     skywaveAmpRatio: 0.3,
+    gnssStatus: 'nominal', // 'nominal' | 'jammed' | 'spoofed' | 'outage'
+    gnssStdDevMeters: 8,
+    gnssJammingNoiseMeters: 75,
+    gnssSpoofBiasMeters: 150,
+    showCovarianceEllipses: true,
+    terrainMaskingEnabled: false, // ITU-R P.526 knife-edge diffraction overlay
   },
 
   // Actions
   setMapMode: (mode) => set({ mapMode: mode }),
   setMapCenter: (center, zoom) => set({ mapCenter: center, ...(zoom ? { mapZoom: zoom } : {}) }),
   setSelectedReceiver: (label) => set({ selectedReceiver: label }),
+
+  // Receiver Tracking Loop (PLL / DLL SZC tracking)
+  trackingLoop: createTrackingLoop(),
+  stationStatus: {}, // stationLabel -> 'nominal' | 'degraded' | 'failed'
+  setStationStatus: (label, status) => {
+    set((state) => ({
+      stationStatus: {
+        ...state.stationStatus,
+        [label]: status,
+      },
+    }));
+    setTimeout(() => get().evaluateReceivers(), 20);
+  },
+  stepTrackingLoop: (snrOverride) =>
+    set((state) => {
+      const snr = snrOverride !== undefined ? snrOverride : (state.settings?.snrDb ?? 18);
+      return { trackingLoop: stepTrackingLoop(state.trackingLoop, snr) };
+    }),
+  injectCycleSlip: (direction) =>
+    set((state) => ({ trackingLoop: injectCycleSlip(state.trackingLoop, direction) })),
+  reacquireTrackingLoop: () =>
+    set((state) => ({ trackingLoop: reacquireTrackingLoop(state.trackingLoop) })),
 
   setSimTime: (timeSec) => {
     set({ simTimeSec: timeSec });
@@ -414,7 +453,7 @@ export const useSimulationStore = create((set, get) => {
 
   // Calculates estimated position and integrity metrics for all receivers
   evaluateReceivers: () => {
-    const { masters, slaves, receivers, simTimeSec, settings } = get();
+    const { masters, slaves, receivers, simTimeSec, settings, stationStatus = {} } = get();
     if (!masters.length || !receivers.length) return;
 
     // Attach ASF evaluator (Millington mixed-path or AST formula override) to station
@@ -444,7 +483,11 @@ export const useSimulationStore = create((set, get) => {
 
     const evaluatedMasters = masters.map(attachAsf);
     const evaluatedSlaves = slaves.map(attachAsf);
-    const refMaster = evaluatedMasters[0];
+
+    const activeMasters = evaluatedMasters.filter((m) => (stationStatus[m.label] || 'nominal') !== 'failed');
+    const activeSlaves = evaluatedSlaves.filter((s) => (stationStatus[s.label] || 'nominal') !== 'failed');
+    const refMaster = activeMasters[0] || evaluatedMasters[0];
+    const isMasterFailed = !activeMasters.length;
 
     const toaNoiseStdDevMeters = computeToaNoiseStdDevMeters({
       snrDb: settings.snrDb || 18,
@@ -466,10 +509,14 @@ export const useSimulationStore = create((set, get) => {
       let eloranSol;
       let rawTdoaPairs = [];
 
-      if (settings.solverMode === 'pseudorange' && (evaluatedMasters.length + evaluatedSlaves.length >= 3)) {
+      const activeTransmitters = [...activeMasters, ...activeSlaves];
+      const hasEnoughHyperbolic = !isMasterFailed && activeSlaves.length >= 2;
+      const hasEnoughPseudorange = activeTransmitters.length >= 3;
+
+      if (settings.solverMode === 'pseudorange' && hasEnoughPseudorange) {
         // Modern 3D Pseudorange solver with Receiver Clock Bias (b_rx)
-        const allTransmitters = [...evaluatedMasters, ...evaluatedSlaves];
-        const observations = allTransmitters.map((st) => {
+        const observations = activeTransmitters.map((st) => {
+          const isDegraded = (stationStatus[st.label] || 'nominal') === 'degraded';
           let arrivalSec = computeArrivalSec(
             st,
             rx.lat,
@@ -481,6 +528,9 @@ export const useSimulationStore = create((set, get) => {
 
           if (settings.noiseMode === 'random') {
             arrivalSec += sampleGaussianSec();
+          }
+          if (isDegraded) {
+            arrivalSec += sampleGaussianSec() * 2.5; // Inflated noise for degraded transmitter
           }
 
           let slipped = false;
@@ -509,17 +559,21 @@ export const useSimulationStore = create((set, get) => {
         });
 
         // Also build TDOA pairs for display in LOP telemetry
-        rawTdoaPairs = evaluatedSlaves.map((s) => ({
+        rawTdoaPairs = activeSlaves.map((s) => ({
           master: refMaster,
           slave: s,
           tdoaSec: computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex),
         }));
-      } else {
+      } else if (hasEnoughHyperbolic) {
         // Classical Hyperbolic TDOA Gauss-Newton solver
-        rawTdoaPairs = evaluatedSlaves.map((s) => {
+        rawTdoaPairs = activeSlaves.map((s) => {
+          const isDegraded = (stationStatus[s.label] || 'nominal') === 'degraded';
           let tdoa = computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex);
           if (settings.noiseMode === 'random') {
             tdoa += sampleGaussianSec();
+          }
+          if (isDegraded) {
+            tdoa += sampleGaussianSec() * 2.5;
           }
           if (settings.enableCycleSlips) {
             tdoa = simulateCycleSlip(
@@ -540,10 +594,32 @@ export const useSimulationStore = create((set, get) => {
         eloranSol = solvePositionFromTDOA(rawTdoaPairs, { lat: rx.lat, lng: rx.lng }, {
           eta: settings.refractiveIndex,
         });
+      } else {
+        const failureReason = isMasterFailed
+          ? 'Master transmitter OFFLINE: Hyperbolic navigation impossible without Master reference'
+          : activeSlaves.length < 2
+          ? `Constellation failure: Only ${activeSlaves.length} Secondary active (minimum 2 required for 2D fix)`
+          : 'Insufficient constellation geometry for navigation fix';
+
+        eloranSol = {
+          lat: rx.lat,
+          lng: rx.lng,
+          biasSec: 0,
+          converged: false,
+          iterations: 0,
+          gdop: 99.9,
+          hdop: 99.9,
+          error: failureReason,
+          insufficientStations: true,
+        };
       }
 
-      // Simulate GNSS fix
-      const gnssFix = simulateGnssFix(rx, 8);
+      // Simulate GNSS fix with optional degradation / interference modes
+      const gnssFix = simulateGnssFix(rx, settings.gnssStdDevMeters || 8, Math.random, {
+        status: settings.gnssStatus || 'nominal',
+        jammingNoiseMeters: settings.gnssJammingNoiseMeters || 75,
+        spoofBiasMeters: settings.gnssSpoofBiasMeters || 150,
+      });
 
       // Multi-sensor fusion
       const fused = fusePositions(eloranSol, gnssFix, rx.fuseMode || 'fusion', rx);
@@ -565,6 +641,8 @@ export const useSimulationStore = create((set, get) => {
         lat: fixLat,
         lng: fixLng,
         eloranSol,
+        gnssFix,
+        fusedFix: fused,
         clockBiasSec: eloranSol.clockBiasSec || 0,
         clockBiasNs: (eloranSol.clockBiasSec || 0) * 1e9,
         hdop: eloranSol.hdop || 1.0,

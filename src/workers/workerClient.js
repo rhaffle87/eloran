@@ -8,6 +8,10 @@ let currentGridJobId = 0;
 let pendingGridResolve = null;
 let pendingGridReject = null;
 
+let currentAsfJobId = 1000000;
+let pendingAsfResolve = null;
+let pendingAsfReject = null;
+
 export function getGridWorker() {
   if (!gridWorkerInstance) {
     gridWorkerInstance = new Worker(new URL('./gridWorker.js', import.meta.url), { type: 'module' });
@@ -15,17 +19,25 @@ export function getGridWorker() {
       const msg = e.data;
       if (!msg) return;
 
-      if (msg.type === 'result' && msg.jobId === currentGridJobId) {
-        if (pendingGridResolve) {
+      if (msg.type === 'result') {
+        if (msg.jobId === currentGridJobId && pendingGridResolve) {
           pendingGridResolve(msg.payload);
           pendingGridResolve = null;
           pendingGridReject = null;
+        } else if (msg.jobId === currentAsfJobId && pendingAsfResolve) {
+          pendingAsfResolve(msg.payload);
+          pendingAsfResolve = null;
+          pendingAsfReject = null;
         }
-      } else if (msg.type === 'cancelled' && msg.jobId === currentGridJobId) {
-        if (pendingGridReject) {
+      } else if (msg.type === 'cancelled') {
+        if (msg.jobId === currentGridJobId && pendingGridReject) {
           pendingGridReject(new Error('Job cancelled'));
           pendingGridResolve = null;
           pendingGridReject = null;
+        } else if (msg.jobId === currentAsfJobId && pendingAsfReject) {
+          pendingAsfReject(new Error('ASF job cancelled'));
+          pendingAsfResolve = null;
+          pendingAsfReject = null;
         }
       }
     };
@@ -34,6 +46,11 @@ export function getGridWorker() {
         pendingGridReject(err);
         pendingGridResolve = null;
         pendingGridReject = null;
+      }
+      if (pendingAsfReject) {
+        pendingAsfReject(err);
+        pendingAsfResolve = null;
+        pendingAsfReject = null;
       }
     };
   }
@@ -68,6 +85,29 @@ export function computeGridAsync(payload) {
     }
 
     worker.postMessage({ type: 'computeGrid', jobId, payload }, transfer);
+  });
+}
+
+/**
+ * Computes 2D ASF or groundwave attenuation grid in background worker.
+ * Cancels any prior pending ASF request.
+ */
+export function computeAsfGridAsync(payload) {
+  const worker = getGridWorker();
+
+  if (pendingAsfReject) {
+    worker.postMessage({ type: 'cancel', jobId: currentAsfJobId });
+    pendingAsfReject(new Error('ASF job cancelled by newer request'));
+  }
+
+  currentAsfJobId++;
+  const jobId = currentAsfJobId;
+
+  return new Promise((resolve, reject) => {
+    pendingAsfResolve = resolve;
+    pendingAsfReject = reject;
+
+    worker.postMessage({ type: 'asfGrid', jobId, payload });
   });
 }
 

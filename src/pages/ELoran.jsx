@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Compass, Radio, Clock, Sparkles, Navigation, Layers, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Compass, Radio, Clock, Sparkles, Navigation, Layers, ChevronLeft, ChevronRight, Activity, Wifi, Ship } from 'lucide-react';
 import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
 import ClockPanel from '../components/panels/ClockPanel.jsx';
@@ -7,6 +7,9 @@ import AsfPanel from '../components/panels/AsfPanel.jsx';
 import FusionPanel from '../components/panels/FusionPanel.jsx';
 import DisplayPanel from '../components/panels/DisplayPanel.jsx';
 import ChainDesignPanel from '../components/panels/ChainDesignPanel.jsx';
+import TrackingPanel from '../components/panels/TrackingPanel.jsx';
+import DLoranPanel from '../components/panels/DLoranPanel.jsx';
+import TrajectoryPanel from '../components/panels/TrajectoryPanel.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 
 /** Map-mode toolbar button — theme-aware */
@@ -138,12 +141,15 @@ export default function ELoran() {
     }
   };
 
-  const tabs = [
-    { id: 'stations', label: 'Stations', icon: Radio },
-    { id: 'clocks',   label: 'Clocks',   icon: Clock },
-    { id: 'asf',      label: 'ASF',      icon: Sparkles },
-    { id: 'fusion',   label: 'Fusion',   icon: Navigation },
-    { id: 'display',  label: 'Layers',   icon: Layers },
+    const tabs = [
+    { id: 'stations',   label: 'Stations',   icon: Radio },
+    { id: 'clocks',     label: 'Clocks',     icon: Clock },
+    { id: 'asf',        label: 'ASF',        icon: Sparkles },
+    { id: 'dloran',     label: 'd-Loran',    icon: Wifi },
+    { id: 'tracking',   label: 'Tracking',   icon: Activity },
+    { id: 'trajectory', label: 'Trajectory', icon: Ship },
+    { id: 'fusion',     label: 'Fusion',     icon: Navigation },
+    { id: 'display',    label: 'Layers',     icon: Layers },
   ];
 
   return (
@@ -339,7 +345,7 @@ export default function ELoran() {
               {!isDesignMode && (
                 /* Subsystem tab bar */
                 <div
-                  className="grid grid-cols-5 rounded-lg p-0.5 font-mono text-[10px]"
+                  className="grid grid-cols-4 sm:grid-cols-8 rounded-lg p-0.5 font-mono text-[10px]"
                   style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
                 >
                   {tabs.map(({ id, label, icon: Icon }) => (
@@ -365,11 +371,14 @@ export default function ELoran() {
                 <ChainDesignPanel />
               ) : (
                 <>
-                  {activeTab === 'stations' && <StationEditor isELoran={true} />}
-                  {activeTab === 'clocks'   && <ClockPanel />}
-                  {activeTab === 'asf'      && <AsfPanel />}
-                  {activeTab === 'fusion'   && <FusionPanel />}
-                  {activeTab === 'display'  && <DisplayPanel isELoran={true} />}
+                                    {activeTab === 'stations'   && <StationEditor isELoran={true} />}
+                  {activeTab === 'clocks'     && <ClockPanel />}
+                  {activeTab === 'asf'        && <AsfPanel />}
+                  {activeTab === 'dloran'     && <DLoranPanel />}
+                  {activeTab === 'tracking'   && <TrackingPanel />}
+                  {activeTab === 'trajectory' && <TrajectoryPanel />}
+                  {activeTab === 'fusion'     && <FusionPanel />}
+                  {activeTab === 'display'    && <DisplayPanel isELoran={true} />}
                 </>
               )}
             </div>

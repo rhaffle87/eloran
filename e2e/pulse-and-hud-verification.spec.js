@@ -69,10 +69,10 @@ test.describe('HUD Map Uniformity & Canonical Loran Pulse Verification', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // 1. Dual-trace: Pulse envelope (red) and Pulse wave (cyan)
-    const cyanWave = page.locator('polyline[stroke="#06b6d4"]');
+    const cyanWave = page.locator('polyline[stroke="#06b6d4"], polyline[stroke="#0284c7"]');
     await expect(cyanWave).toBeVisible();
 
-    const redEnvelope = page.locator('polyline[stroke="#ef4444"]');
+    const redEnvelope = page.locator('polyline[stroke="#ef4444"], polyline[stroke="#dc2626"]');
     await expect(redEnvelope).toBeVisible();
 
     // 2. Click "300 µs (1-Pulse Zoom)" preset

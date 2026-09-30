@@ -16,7 +16,11 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 | **ITU-R P.368-10** | International Telecommunication Union (08/2022) | Ground-wave propagation curves for frequencies between $10\text{ kHz}$ and $30\text{ MHz}$, including Millington's mixed-path method. |
 | **ITU-R P.832-4** | International Telecommunication Union (07/2015) | World atlas of ground conductivity ($\sigma$) and relative permittivity ($\varepsilon_r$). Approved July 2015. |
 | **ITU-R P.372-17** | International Telecommunication Union (08/2024) | Standard models for atmospheric radio noise, man-made noise, and galactic background in LF bands. |
+| **ITU-R P.526-15** | International Telecommunication Union (10/2019) | *Propagation by diffraction*. Standard methods for predicting diffraction loss over terrain obstacles, spherical Earth, and knife-edge geometry. Section 4.1 knife-edge model utilized for eLoran signal path blockage. |
 | **ITU-R M.589-3** | International Telecommunication Union (08/2001) | Technical characteristics of methods of data transmission and interference protection for radionavigation services in the $70\text{–}130\text{ kHz}$ band. |
+| **RTCA DO-229D** | RTCA Inc. (12/2006) / DO-316 | *Minimum Operational Performance Standards for GPS/WAAS Airborne Equipment*. Establishes the 4-quadrant Stanford Diagram integrity containment framework (Normal Operations, System Unavailable, MI, HMI) and HPL/HAL alert boundaries. |
+| **ICAO Annex 10** | International Civil Aviation Organization | *Aeronautical Telecommunications, Vol. 1: Radio Navigation Aids*. Mandates alert limits for APV-I ($40\text{ m}$) and RNAV RNP 0.3 ($556\text{ m}$) containment. |
+| **RTCM 10410.1** | Radio Technical Commission for Maritime Services | *Standard for Differential Loran-C / eLoran Receiver Equipment*. Specifies d-Loran spatial decorrelation, reference station broadcasting, and 32-PPM 9th-pulse LDC telemetry frames. |
 
 ---
 
@@ -53,6 +57,14 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
   - **Simulation threshold**: The $10\ \mu\text{s}$ figure ($|\Delta t| > 10\ \mu\text{s}$, a whole carrier cycle slip) is the paper's simulation counting criterion.
   - **Empirical Austron approximation**: ECD standard deviation of $\approx 42/\sqrt{N \cdot \text{SNR}}\ \mu\text{s}$, or $\approx 28/\sqrt{N \cdot \text{SNR}}\ \mu\text{s}$ with newer receivers, where $N \cdot \text{SNR}$ is total averaged SNR.
 - **Lo, S., Morris, P. B., & Enge, P. (2005).** "Early Skywave Detection Network: Preliminary Design and Analysis." *Proc. 34th Annual Convention of the International Loran Association (ILA-34)*, Santa Barbara, CA. SOURCED from Stanford GPS Lab.
+
+### C. Receiver Noise, Terrain Diffraction, & Multi-Sensor Fusion
+- **Rhee, J. H., Kim, J., Son, P. W., & Seo, J. (2021).** "Enhanced Loran (eLoran) Positioning Accuracy Assessment Under Transmitter and Receiver Noise." *IEEE Access*, 9, 116248–116259. DOI: [10.1109/ACCESS.2021.3105739](https://doi.org/10.1109/ACCESS.2021.3105739). SOURCED.
+  - **Noise model**: Establishes the empirical TOA standard deviation $\sigma_i^2 = J_i^2 + K^2 / (N \cdot \text{SNR}_i)$, with transmitter jitter $J_i = 6.0\text{ m}$ and receiver measurement constant $K = 337.5\text{ m}$ ($1.125\ \mu\text{s}$).
+- **COST 231 Project (1999).** *Digital Mobile Radio Towards Future Generation Systems*. Final Report, COST Action 231, European Commission, Brussels.
+  - **Nurul-Saunders approximation**: Closed-form piecewise polynomial approximation to the Fresnel-Kirchhoff diffraction integral $J(v)$, accurate within $\pm 0.5\text{ dB}$ across $v \in [-0.7, 2.4]$.
+- **Kay, S. M. (1993).** *Fundamentals of Statistical Signal Processing: Estimation Theory*. Prentice Hall.
+  - Mathematical basis for Best Linear Unbiased Estimator (BLUE) multi-sensor fusion combining eLoran and GNSS covariance matrices.
 
 ### C. Multilateration & Positioning Algorithms
 - **Gao, A., Ji, B., Wu, M., Chang, S., Zheng, G., Yu, D., & Li, W. (2025).** "Research on the Loran-C Pseudorange Positioning Method Based on an Ellipsoidal Geodesic Model and Its Application in Inland Areas." *Sensors*, 25(16), 5110. DOI: [10.3390/s25165110](https://doi.org/10.3390/s25165110). SOURCED.

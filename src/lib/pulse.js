@@ -35,8 +35,19 @@ export const DEFAULT_SAMPLE_RATE = 1000000;     // 1 MHz
  * Source: USCG Loran-C User Handbook M16562.4A, Table 4-1.
  */
 export const PHASE_CODES = {
-  master: [1, 1, -1, -1, 1, -1, 1, -1, 1],
-  secondary: [1, 1, 1, 1, 1, -1, -1, 1],
+  /** Master station 9-pulse Phase Code A (even GRI period) */
+  masterA:    [ 1, -1, -1,  1,  1,  1, -1,  1,  1],
+  /** Master station 9-pulse Phase Code B (odd GRI period) */
+  masterB:    [ 1,  1, -1, -1,  1, -1,  1, -1,  1],
+  /** Secondary station 8-pulse Phase Code A (even GRI period) */
+  secondaryA: [ 1,  1,  1, -1,  1,  1, -1, -1],
+  /** Secondary station 8-pulse Phase Code B (odd GRI period) */
+  secondaryB: [ 1, -1,  1, -1, -1,  1,  1,  1],
+
+  /** Backward-compatible alias for Master Phase Code A */
+  master:     [ 1, -1, -1,  1,  1,  1, -1,  1,  1],
+  /** Backward-compatible alias for Secondary Phase Code A */
+  secondary:  [ 1,  1,  1, -1,  1,  1, -1, -1],
 };
 
 /**
@@ -148,8 +159,12 @@ export function skywaveAmplitudeRatio(groundDistMeters, reflectionHeightMeters) 
   // Path-loss ratio: (ground / skywave)²
   const pathLossRatio = (groundPath / skywavePath) ** 2;
 
-  // Ionospheric absorption factor (night vs day)
-  const absorptionFactor = reflectionHeightMeters > 95000 ? 0.7 : 0.3; // night:0.7, day:0.3
+  // Ionospheric absorption factor (night vs day).
+  // Corrected per Doherty et al. (1961) empirical ranges at 100 kHz (USCG Handbook Ch. 5):
+  //   D-layer (daytime):   0.05–0.15 → midpoint 0.10
+  //   E-layer (nighttime): 0.15–0.45 → midpoint 0.35
+  // Previous values (0.7 / 0.3) exceeded empirical upper bounds by ~55–100%.
+  const absorptionFactor = reflectionHeightMeters > 95000 ? 0.35 : 0.10; // night:0.35, day:0.10
 
   return Math.max(0, Math.min(1, pathLossRatio * absorptionFactor));
 }

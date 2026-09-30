@@ -22,8 +22,20 @@ import { latLngToLocalXY } from './geodesy.js';
  * @param {Array<object>} slaves - List of slave/secondary stations [{lat, lng}]
  * @returns {{H: number[][], valid: boolean}}
  */
-export function buildHMatrix(receiverPoint, master, slaves) {
-  if (!master || !slaves || slaves.length < 2 || !receiverPoint) {
+export function buildHMatrix(receiverPoint, master, slaves, excludeIds = []) {
+  if (!master || !slaves || !receiverPoint) {
+    return { H: [], valid: false };
+  }
+
+  const excludeList = Array.isArray(excludeIds) ? excludeIds : [excludeIds];
+  const excludeSet = new Set(excludeList.filter(Boolean));
+
+  if (excludeSet.has(master.id) || excludeSet.has(master.label)) {
+    return { H: [], valid: false };
+  }
+
+  const activeSlaves = slaves.filter((s) => !excludeSet.has(s.id) && !excludeSet.has(s.label));
+  if (activeSlaves.length < 2) {
     return { H: [], valid: false };
   }
 
@@ -43,7 +55,7 @@ export function buildHMatrix(receiverPoint, master, slaves) {
 
   const H = []; // Geometry matrix rows: (u_S - u_M)
 
-  for (const s of slaves) {
+  for (const s of activeSlaves) {
     const sxy = latLngToLocalXY(s.lat, s.lng, refLat, refLng);
     const dS = Math.hypot(rx.x - sxy.x, rx.y - sxy.y);
     if (dS < 10) continue;
@@ -69,8 +81,8 @@ export function buildHMatrix(receiverPoint, master, slaves) {
  * @param {Array<object>} slaves - List of slave/secondary stations [{lat, lng}]
  * @returns {{gdop: number, hdop: number, rawHdop: number, valid: boolean}} Dilution values
  */
-export function computeGDOPAtPoint(receiverPoint, master, slaves) {
-  const { H, valid } = buildHMatrix(receiverPoint, master, slaves);
+export function computeGDOPAtPoint(receiverPoint, master, slaves, excludeIds = []) {
+  const { H, valid } = buildHMatrix(receiverPoint, master, slaves, excludeIds);
   if (!valid) {
     return { gdop: 99.9, hdop: 99.9, rawHdop: 99.9, valid: false };
   }
@@ -114,7 +126,7 @@ export function computeGDOPAtPoint(receiverPoint, master, slaves) {
  * @param {number} ny - Grid rows
  * @returns {{buffer: ArrayBuffer, minVal: number, maxVal: number}} Float32Array buffer with GDOP values
  */
-export function computeGDOPGrid(master, slaves, bbox, nx = 80, ny = 80) {
+export function computeGDOPGrid(master, slaves, bbox, nx = 80, ny = 80, excludeIds = []) {
   const data = new Float32Array(nx * ny);
   const dLng = (bbox.maxLng - bbox.minLng) / (nx - 1);
   const dLat = (bbox.maxLat - bbox.minLat) / (ny - 1);
@@ -127,7 +139,7 @@ export function computeGDOPGrid(master, slaves, bbox, nx = 80, ny = 80) {
     const lat = bbox.minLat + j * dLat;
     for (let i = 0; i < nx; i++, idx++) {
       const lng = bbox.minLng + i * dLng;
-      const { gdop, valid } = computeGDOPAtPoint({ lat, lng }, master, slaves);
+      const { gdop, valid } = computeGDOPAtPoint({ lat, lng }, master, slaves, excludeIds);
       const val = valid ? gdop : 99.9;
       data[idx] = val;
       if (valid) {

@@ -24,6 +24,7 @@ export default function StationEditor({ isELoran = false }) {
   const {
     masters, slaves, receivers, activePresetId,
     loadPreset, addStation, removeStation, setStations, resetAll, evaluateReceivers,
+    stationStatus = {}, setStationStatus,
   } = useSimulationStore();
 
   const handleFileUpload = (e) => {
@@ -236,6 +237,60 @@ export default function StationEditor({ isELoran = false }) {
                   </div>
                 </div>
 
+                <div className="flex items-center gap-1.5">
+                  {(st.role === 'master' || st.role === 'slave') && (
+                    <button
+                      type="button"
+                      data-testid={`btn-station-status-${st.label}`}
+                      onClick={() => {
+                        const cur = stationStatus[st.label] || 'nominal';
+                        const next = cur === 'nominal' ? 'degraded' : cur === 'degraded' ? 'failed' : 'nominal';
+                        setStationStatus(st.label, next);
+                      }}
+                      className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1"
+                      style={{
+                        background:
+                          (stationStatus[st.label] || 'nominal') === 'nominal'
+                            ? 'var(--status-ok-subtle)'
+                            : stationStatus[st.label] === 'degraded'
+                            ? 'var(--status-warn-subtle)'
+                            : 'var(--status-danger-subtle)',
+                        color:
+                          (stationStatus[st.label] || 'nominal') === 'nominal'
+                            ? 'var(--status-ok)'
+                            : stationStatus[st.label] === 'degraded'
+                            ? 'var(--status-warn)'
+                            : 'var(--status-danger)',
+                        borderColor:
+                          (stationStatus[st.label] || 'nominal') === 'nominal'
+                            ? 'var(--status-ok-border)'
+                            : stationStatus[st.label] === 'degraded'
+                            ? 'var(--status-warn-border)'
+                            : 'var(--status-danger-border)',
+                      }}
+                      title={`Station Status: ${(stationStatus[st.label] || 'nominal').toUpperCase()} (Click to cycle Nominal -> Degraded -> Failed)`}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{
+                          background:
+                            (stationStatus[st.label] || 'nominal') === 'nominal'
+                              ? 'var(--status-ok)'
+                              : stationStatus[st.label] === 'degraded'
+                              ? 'var(--status-warn)'
+                              : 'var(--status-danger)',
+                        }}
+                      />
+                      <span>
+                        {(stationStatus[st.label] || 'nominal') === 'nominal'
+                          ? 'NOM'
+                          : stationStatus[st.label] === 'degraded'
+                          ? 'DEG'
+                          : 'OFF'}
+                      </span>
+                    </button>
+                  )}
+
                 <button
                   onClick={() => removeStation(st.label)}
                   className="p-1 rounded-md transition"
@@ -247,6 +302,7 @@ export default function StationEditor({ isELoran = false }) {
                 >
                   <Trash2 size={13} />
                 </button>
+                </div>
               </div>
             );
           })}

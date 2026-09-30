@@ -13,6 +13,7 @@ export default function PulseViewer() {
   const {
     masters, slaves, receivers, selectedReceiver,
     setSelectedReceiver, simTimeSec, settings, updateSettings,
+    trackingLoop,
   } = useSimulationStore();
 
   const svgRef = useRef(null);
@@ -560,6 +561,62 @@ export default function PulseViewer() {
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-ok)] animate-pulse" />
               RF FRONT-END ACTIVE
             </span>
+
+            {/* Live Tracking Loop Status Beacon */}
+            <div
+              data-testid="pulse-tracking-loop-badge"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border transition-all"
+              style={{
+                background:
+                  (trackingLoop?.state || 'LOCKED') === 'LOCKED'
+                    ? 'var(--status-ok-subtle)'
+                    : trackingLoop?.state === 'SLIPPED'
+                    ? 'var(--status-warn-subtle)'
+                    : trackingLoop?.state === 'ACQUIRING'
+                    ? 'var(--accent-eloran-subtle)'
+                    : 'var(--status-danger-subtle)',
+                color:
+                  (trackingLoop?.state || 'LOCKED') === 'LOCKED'
+                    ? 'var(--status-ok)'
+                    : trackingLoop?.state === 'SLIPPED'
+                    ? 'var(--status-warn)'
+                    : trackingLoop?.state === 'ACQUIRING'
+                    ? 'var(--accent-eloran)'
+                    : 'var(--status-danger)',
+                borderColor:
+                  (trackingLoop?.state || 'LOCKED') === 'LOCKED'
+                    ? 'var(--status-ok-border)'
+                    : trackingLoop?.state === 'SLIPPED'
+                    ? 'var(--status-warn-border)'
+                    : trackingLoop?.state === 'ACQUIRING'
+                    ? 'var(--accent-eloran-border)'
+                    : 'var(--status-danger-border)',
+              }}
+              title="Receiver SZC phase-lock tracking loop status (PLL / DLL at 30 µs)"
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-ping"
+                style={{
+                  background:
+                    (trackingLoop?.state || 'LOCKED') === 'LOCKED'
+                      ? 'var(--status-ok)'
+                      : trackingLoop?.state === 'SLIPPED'
+                      ? 'var(--status-warn)'
+                      : trackingLoop?.state === 'ACQUIRING'
+                      ? 'var(--accent-eloran)'
+                      : 'var(--status-danger)',
+                }}
+              />
+              <span>
+                {(trackingLoop?.state || 'LOCKED') === 'LOCKED'
+                  ? `SZC LOCKED: ${(trackingLoop?.estimatedSzcUs ?? 30.0).toFixed(1)} µs`
+                  : trackingLoop?.state === 'SLIPPED'
+                  ? `CYCLE SLIP: Cycle ${trackingLoop?.cycleIndex ?? 4} (${(trackingLoop?.estimatedSzcUs ?? 40.0).toFixed(1)} µs)`
+                  : trackingLoop?.state === 'ACQUIRING'
+                  ? 'SZC ACQUIRING...'
+                  : 'SIGNAL LOST'}
+              </span>
+            </div>
           </div>
 
           {/* Action Buttons: High-Res PNG, Vector SVG & CSV Data Exports */}

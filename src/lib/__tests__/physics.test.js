@@ -48,6 +48,7 @@ import {
   computeTheoreticalRiceWrongCycleProbability,
   simulateMonteCarloWrongCycleCurve,
   erfc,
+  PHASE_CODES,
 } from '../pulse.js';
 import { fusePositions } from '../fusion.js';
 import { TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, FALLBACK_CHAIN, getNextFallbackProvider } from '../tiles.js';
@@ -861,3 +862,22 @@ describe("Mixed-Path Groundwave ASF (Millington's Method)", () => {
 });
 
 
+
+describe('USCG COMDTINST M16562.4A Phase Code Sequences (pulse.js)', () => {
+  it('defines valid 9-pulse Master and 8-pulse Secondary Phase Codes A & B', () => {
+    expect(PHASE_CODES.masterA).toEqual([1, -1, -1, 1, 1, 1, -1, 1, 1]);
+    expect(PHASE_CODES.masterB).toEqual([1, 1, -1, -1, 1, -1, 1, -1, 1]);
+    expect(PHASE_CODES.secondaryA).toEqual([1, 1, 1, -1, 1, 1, -1, -1]);
+    expect(PHASE_CODES.secondaryB).toEqual([1, -1, 1, -1, -1, 1, 1, 1]);
+  });
+
+  it('maintains backward-compatible master/secondary aliases pointing to Group I', () => {
+    expect(PHASE_CODES.master).toEqual(PHASE_CODES.masterA);
+    expect(PHASE_CODES.secondary).toEqual(PHASE_CODES.secondaryA);
+  });
+
+  it('verifies orthogonality properties across Phase Codes A and B', () => {
+    const dotSec = PHASE_CODES.secondaryA.reduce((sum, val, idx) => sum + val * PHASE_CODES.secondaryB[idx], 0);
+    expect(dotSec).toBe(0); // Secondary A and B are strictly orthogonal over 8 pulses
+  });
+});

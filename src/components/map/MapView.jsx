@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSimulationStore } from '../../state/simulationStore.js';
@@ -11,6 +11,11 @@ import {
 } from '../../lib/chainDesign.js';
 import { computeGDOPGrid } from '../../lib/gdop.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
+import AsfHeatmapLayer from './AsfHeatmapLayer.jsx';
+import { computeCovarianceEllipse } from '../../lib/fusion.js';
+import { computeTerrainMasking } from '../../lib/terrainMasking.js';
+import { fetchElevationProfile } from '../../lib/elevationProfile.js';
+import { ROTTERDAM_APPROACH_WAYPOINTS, DOVER_STRAIT_TSS_WAYPOINTS, YELLOW_SEA_CORRIDOR_WAYPOINTS } from '../../lib/trajectory.js';
 
 function isMapStyleReady(map) {
   return Boolean(map && map.style && typeof map.isStyleLoaded === 'function' && map.isStyleLoaded());
@@ -23,6 +28,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
   const markersRef = useRef({});
   const estMarkerRef = useRef({});
   const radarCanvasRef = useRef(null);
+  const [mapInstance, setMapInstance] = useState(null);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
 
@@ -141,6 +147,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
     showCrossingAngles,
     updateDesignMaster,
     updateDesignSecondary,
+    stationStatus = {},
+    settings,
   } = useSimulationStore();
 
   const stationsRef = useRef({ masters, slaves });
@@ -220,6 +228,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       };
 
       mapInstance.on('load', handleStyleData);
+      mapInstance.on('style.load', handleStyleData);
       mapInstance.on('styledata', handleStyleData);
       mapInstance.on('idle', handleStyleData);
 
@@ -322,6 +331,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       });
 
       mapRef.current = mapInstance;
+      setMapInstance(mapInstance);
       currentStyleKeyRef.current = `${activeTileProvider}:${effectiveTheme}`;
       if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
         window.__maplibreInstance = mapInstance;
@@ -370,6 +380,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
           console.warn('MapLibre cleanup notice:', e);
         }
         mapRef.current = null;
+        setMapInstance(null);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -440,6 +451,19 @@ export default function MapView({ onMapClick, isELoran = false }) {
         const size = station.type === 'master' ? 22 : 18;
         const el = document.createElement('div');
         el.className = `station-marker marker-${station.type}`;
+        const stStatus = stationStatus[station.label] || 'nominal';
+        if (stStatus === 'failed') {
+          el.style.opacity = '0.35';
+          el.style.filter = 'grayscale(100%)';
+        } else if (stStatus === 'degraded') {
+          el.style.opacity = '0.9';
+          el.style.filter = 'none';
+          el.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.7)';
+        } else {
+          el.style.opacity = '1';
+          el.style.filter = 'none';
+          el.style.boxShadow = 'none';
+        }
         el.dataset.label = station.label;
         el.dataset.lng = String(station.lng);
         el.dataset.lat = String(station.lat);
@@ -538,6 +562,19 @@ export default function MapView({ onMapClick, isELoran = false }) {
         if (existingEl) {
           existingEl.dataset.lng = String(station.lng);
           existingEl.dataset.lat = String(station.lat);
+          const stStatus = stationStatus[station.label] || 'nominal';
+          if (stStatus === 'failed') {
+            existingEl.style.opacity = '0.35';
+            existingEl.style.filter = 'grayscale(100%)';
+          } else if (stStatus === 'degraded') {
+            existingEl.style.opacity = '0.9';
+            existingEl.style.filter = 'none';
+            existingEl.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.7)';
+          } else {
+            existingEl.style.opacity = '1';
+            existingEl.style.filter = 'none';
+            existingEl.style.boxShadow = 'none';
+          }
         }
       }
     });
@@ -560,6 +597,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     updateDesignMaster,
     updateDesignSecondary,
     evaluateReceivers,
+    stationStatus,
   ]);
 
   // Synchronize Estimated Position Fix Markers
@@ -574,6 +612,14 @@ export default function MapView({ onMapClick, isELoran = false }) {
       estMarkerRef.current = {};
       return;
     }
+
+    const activeRxLabels = new Set(receivers.map((r) => r.label));
+    Object.keys(estMarkerRef.current).forEach((label) => {
+      if (!activeRxLabels.has(label)) {
+        try { estMarkerRef.current[label].remove(); } catch { /* ignore */ }
+        delete estMarkerRef.current[label];
+      }
+    });
 
     receivers.forEach((rx) => {
       const fix = receiverFixes[rx.label];
@@ -718,7 +764,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
       safeRemoveLayerAndSource(map, layerId, sourceId);
     };
-  }, [masters, slaves, designChain, isDesignMode, baselinesVisible, safeRemoveLayerAndSource]);
+  }, [masters, slaves, designChain, isDesignMode, baselinesVisible, safeRemoveLayerAndSource, activeTileProvider]);
 
   // Render Baseline Extension Hazard Sectors (±7.5° wedges)
   useEffect(() => {
@@ -1302,6 +1348,367 @@ export default function MapView({ onMapClick, isELoran = false }) {
       console.warn('Error setting map style:', err);
     }
   };
+  // Render coverage hole overlay for failed transmitters
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const fillSourceId = 'failed-stations-source';
+    const fillLayerId = 'failed-stations-fill';
+    const lineLayerId = 'failed-stations-line';
+
+    const renderFailedCoverage = () => {
+      if (!isMapStyleReady(map)) return;
+
+      const allTx = isDesignMode
+        ? [{ ...designChain.master, type: 'master' }, ...designChain.secondaries.map((s) => ({ ...s, type: 'slave' }))]
+        : [...masters.map((m) => ({ ...m, type: 'master' })), ...slaves.map((s) => ({ ...s, type: 'slave' }))];
+
+      const failedList = allTx.filter((s) => (stationStatus[s.label] || 'nominal') === 'failed');
+
+      if (failedList.length === 0) {
+        if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+        if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+        if (map.getSource(fillSourceId)) map.removeSource(fillSourceId);
+        return;
+      }
+
+      // Build 250km circle polygon for each failed station to indicate lost coverage area
+      const features = failedList.map((st) => {
+        const coords = [];
+        for (let a = 0; a <= 360; a += 10) {
+          const pt = destinationPoint(st, 250000, a);
+          coords.push([pt.lng, pt.lat]);
+        }
+        return {
+          type: 'Feature',
+          properties: {
+            stationLabel: st.label,
+            type: st.type,
+            name: st.name || st.label,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [coords],
+          },
+        };
+      });
+
+      const geojson = {
+        type: 'FeatureCollection',
+        features,
+      };
+
+      if (map.getSource(fillSourceId)) {
+        map.getSource(fillSourceId).setData(geojson);
+      } else {
+        map.addSource(fillSourceId, { type: 'geojson', data: geojson });
+
+        map.addLayer({
+          id: fillLayerId,
+          type: 'fill',
+          source: fillSourceId,
+          paint: {
+            'fill-color': '#ef4444',
+            'fill-opacity': 0.16,
+          },
+        });
+
+        map.addLayer({
+          id: lineLayerId,
+          type: 'line',
+          source: fillSourceId,
+          paint: {
+            'line-color': '#ef4444',
+            'line-width': 2,
+            'line-dasharray': [3, 2],
+            'line-opacity': 0.85,
+          },
+        });
+      }
+    };
+
+    renderFailedCoverage();
+    map.on('style.load', renderFailedCoverage);
+
+    return () => {
+      map.off('style.load', renderFailedCoverage);
+    };
+  }, [masters, slaves, designChain, isDesignMode, stationStatus]);
+
+
+  // Render Covariance Error Ellipses (eLoran, GNSS, BLUE Fused)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const sourceId = 'fusion-ellipses-source';
+    const fillLayerId = 'fusion-ellipses-fill';
+    const lineLayerId = 'fusion-ellipses-line';
+
+    const showEllipses = settings?.showCovarianceEllipses !== false;
+
+    if (!showEllipses || isDesignMode) {
+      safeRemoveLayerAndSource(map, lineLayerId, null);
+      safeRemoveLayerAndSource(map, fillLayerId, sourceId);
+      return;
+    }
+
+    const renderEllipses = () => {
+      if (!isMapStyleReady(map)) return;
+
+      const features = [];
+
+      receivers.forEach((rx) => {
+        const fix = receiverFixes[rx.label];
+        if (!fix) return;
+
+        // 1. eLoran Error Ellipse
+        const eloran = fix.eloranSol;
+        if (eloran && eloran.covariance && eloran.converged && !eloran.noSolution) {
+          const eloranCenter = { lat: eloran.lat, lng: eloran.lng };
+          const eloranEllipse = computeCovarianceEllipse(eloranCenter, eloran.covariance, 2.45);
+          if (eloranEllipse) {
+            features.push({
+              type: 'Feature',
+              properties: {
+                id: `ellipse-eloran-${rx.label}`,
+                type: 'eloran',
+                color: '#06b6d4', // Cyan
+                label: `eLoran 95% (${rx.label}): ${eloranEllipse.semiMajorMeters.toFixed(1)}m`,
+              },
+              geometry: {
+                type: 'Polygon',
+                coordinates: [eloranEllipse.coordinates],
+              },
+            });
+          }
+        }
+
+        // 2. GNSS Error Ellipse
+        const gnss = fix.gnssFix;
+        if (gnss && gnss.covariance && !gnss.noSolution) {
+          const gnssCenter = { lat: gnss.lat, lng: gnss.lng };
+          const gnssEllipse = computeCovarianceEllipse(gnssCenter, gnss.covariance, 2.45);
+          if (gnssEllipse) {
+            const gnssColor = gnss.status === 'jammed' ? '#f59e0b' : gnss.status === 'spoofed' ? '#ef4444' : '#10b981';
+            features.push({
+              type: 'Feature',
+              properties: {
+                id: `ellipse-gnss-${rx.label}`,
+                type: 'gnss',
+                color: gnssColor,
+                label: `GNSS 95% (${rx.label}): ${gnssEllipse.semiMajorMeters.toFixed(1)}m`,
+              },
+              geometry: {
+                type: 'Polygon',
+                coordinates: [gnssEllipse.coordinates],
+              },
+            });
+          }
+        }
+
+        // 3. Fused Error Ellipse
+        const fused = fix.fusedFix || fix;
+        if (fused && fused.covariance && !fused.noSolution) {
+          const fusedCenter = { lat: fix.lat, lng: fix.lng };
+          const fusedEllipse = computeCovarianceEllipse(fusedCenter, fused.covariance, 2.45);
+          if (fusedEllipse) {
+            features.push({
+              type: 'Feature',
+              properties: {
+                id: `ellipse-fused-${rx.label}`,
+                type: 'fused',
+                color: '#a855f7', // Purple
+                label: `BLUE Fused 95% (${rx.label}): ${fusedEllipse.semiMajorMeters.toFixed(1)}m`,
+              },
+              geometry: {
+                type: 'Polygon',
+                coordinates: [fusedEllipse.coordinates],
+              },
+            });
+          }
+        }
+      });
+
+      if (features.length === 0) {
+        safeRemoveLayerAndSource(map, lineLayerId, null);
+        safeRemoveLayerAndSource(map, fillLayerId, sourceId);
+        return;
+      }
+
+      const geojson = { type: 'FeatureCollection', features };
+
+      if (map.getSource(sourceId)) {
+        map.getSource(sourceId).setData(geojson);
+      } else {
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+
+        map.addLayer({
+          id: fillLayerId,
+          type: 'fill',
+          source: sourceId,
+          paint: {
+            'fill-color': ['get', 'color'],
+            'fill-opacity': 0.14,
+          },
+        });
+
+        map.addLayer({
+          id: lineLayerId,
+          type: 'line',
+          source: sourceId,
+          paint: {
+            'line-color': ['get', 'color'],
+            'line-width': 1.8,
+            'line-opacity': 0.85,
+            'line-dasharray': [
+              'case',
+              ['==', ['get', 'type'], 'fused'],
+              ['literal', [1, 0]],
+              ['literal', [2, 2]],
+            ],
+          },
+        });
+      }
+    };
+
+    renderEllipses();
+    map.on('style.load', renderEllipses);
+
+    return () => {
+      map.off('style.load', renderEllipses);
+    };
+  }, [receivers, receiverFixes, settings?.showCovarianceEllipses, isDesignMode, safeRemoveLayerAndSource]);
+
+  // Render Terrain Masking / Obstacle Diffraction Signal Paths (ITU-R P.526)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const sourceId = 'terrain-paths-source';
+    const clearLayerId = 'terrain-paths-clear';
+    const blockedLayerId = 'terrain-paths-blocked';
+
+    const enabled = Boolean(settings?.terrainMaskingEnabled);
+
+    if (!enabled || isDesignMode) {
+      safeRemoveLayerAndSource(map, clearLayerId, null);
+      safeRemoveLayerAndSource(map, blockedLayerId, sourceId);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const renderTerrainPaths = async () => {
+      if (!isMapStyleReady(map)) return;
+
+      const allTx = [
+        ...masters.map((m) => ({ ...m, type: 'master' })),
+        ...slaves.map((s) => ({ ...s, type: 'slave' })),
+      ];
+
+      if (allTx.length === 0 || receivers.length === 0) {
+        safeRemoveLayerAndSource(map, clearLayerId, null);
+        safeRemoveLayerAndSource(map, blockedLayerId, sourceId);
+        return;
+      }
+
+      const features = [];
+
+      for (const rx of receivers) {
+        for (const tx of allTx) {
+          if (!isValidLngLat(tx.lng, tx.lat) || !isValidLngLat(rx.lng, rx.lat)) continue;
+
+          try {
+            const profile = await fetchElevationProfile(
+              { lat: tx.lat, lng: tx.lng },
+              { lat: rx.lat, lng: rx.lng },
+              16
+            );
+            if (isCancelled) return;
+
+            const masking = computeTerrainMasking(profile, tx.antennaHeightM || 30, rx.antennaHeightM || 5);
+
+            features.push({
+              type: 'Feature',
+              properties: {
+                id: `terrain-path-${tx.label}-${rx.label}`,
+                txLabel: tx.label,
+                rxLabel: rx.label,
+                blocked: Boolean(masking.blocked),
+                diffractionLossDb: Number((masking.diffractionLossDb || 0).toFixed(1)),
+                timingBiasUs: Number((masking.timingBiasUs || 0).toFixed(3)),
+              },
+              geometry: {
+                type: 'LineString',
+                coordinates: [
+                  [tx.lng, tx.lat],
+                  [rx.lng, rx.lat],
+                ],
+              },
+            });
+          } catch (err) {
+            console.warn(`[TerrainMasking] Error calculating path ${tx.label}->${rx.label}:`, err);
+          }
+        }
+      }
+
+      if (isCancelled || !isMapStyleReady(map)) return;
+
+      const geojson = {
+        type: 'FeatureCollection',
+        features,
+      };
+
+      if (map.getSource(sourceId)) {
+        map.getSource(sourceId).setData(geojson);
+      } else {
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+
+        map.addLayer({
+          id: clearLayerId,
+          type: 'line',
+          source: sourceId,
+          filter: ['!=', ['get', 'blocked'], true],
+          paint: {
+            'line-color': '#10b981',
+            'line-width': 1.5,
+            'line-opacity': 0.65,
+          },
+        });
+
+        map.addLayer({
+          id: blockedLayerId,
+          type: 'line',
+          source: sourceId,
+          filter: ['==', ['get', 'blocked'], true],
+          paint: {
+            'line-color': '#ef4444',
+            'line-width': 2.5,
+            'line-opacity': 0.95,
+            'line-dasharray': [3, 2],
+          },
+        });
+      }
+    };
+
+    renderTerrainPaths();
+    map.on('style.load', renderTerrainPaths);
+
+    return () => {
+      isCancelled = true;
+      map.off('style.load', renderTerrainPaths);
+    };
+  }, [
+    masters,
+    slaves,
+    receivers,
+    settings?.terrainMaskingEnabled,
+    isDesignMode,
+    safeRemoveLayerAndSource,
+  ]);
+
 
   return (
     <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
@@ -1324,6 +1731,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
           backgroundColor: activeTileProvider === 'offline-radar' ? 'transparent' : undefined,
         }}
       />
+      <AsfHeatmapLayer map={mapInstance} />
 
       {/* Dismissible Fallback Notice */}
       {showFallbackNotice && (
@@ -1532,6 +1940,19 @@ export default function MapView({ onMapClick, isELoran = false }) {
                 <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                   <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: 'var(--status-danger)' }} /> Estimated PNT Fix
                 </div>
+                <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <span className="w-2.5 h-2.5 rounded-full border-2 shrink-0" style={{ borderColor: '#a855f7' }} /> BLUE 95% Covariance Ellipse
+                </div>
+                {settings?.terrainMaskingEnabled && (
+                  <>
+                    <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                      <span className="w-3 h-0.5 shrink-0" style={{ background: '#10b981' }} /> Terrain Path (Clear)
+                    </div>
+                    <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                      <span className="w-3 h-0.5 shrink-0 border-b-2 border-dashed" style={{ borderColor: '#ef4444' }} /> Masked Path (&gt;15 dB loss)
+                    </div>
+                  </>
+                )}
               </>
             )}
             {(showBaselineExtensions || isDesignMode) && (

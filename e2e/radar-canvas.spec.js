@@ -66,6 +66,11 @@ test.describe('Radar Canvas Map Mode — Comprehensive Functional & Visual Verif
     expect(markerCount).toBeGreaterThanOrEqual(4);
 
     // 6. Verify Baselines layer exists on the MapLibre map instance
+    await page.waitForFunction(() => {
+      const map = window.__maplibreInstance;
+      return Boolean(map && map.getLayer('loran-baselines-layer'));
+    }, { timeout: 10000 });
+
     const hasBaselineLayer = await page.evaluate(() => {
       const map = window.__maplibreInstance;
       return map ? Boolean(map.getLayer('loran-baselines-layer')) : false;

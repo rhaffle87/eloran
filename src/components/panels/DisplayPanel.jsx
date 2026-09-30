@@ -202,6 +202,13 @@ export default function DisplayPanel({ isELoran = false }) {
           checked={gdopLayerVisible}
           onChange={toggleGdopLayer}
         />
+
+        <Toggle
+          label="Terrain Masking Paths (ITU-R P.526)"
+          description="Display transmitter-to-receiver signal paths colored by terrain diffraction obstruction"
+          checked={Boolean(settings.terrainMaskingEnabled)}
+          onChange={(checked) => updateSettings({ terrainMaskingEnabled: checked })}
+        />
       </div>
 
       {/* Grid Mesh & Contour Rendering */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database, ExternalLink, ChevronDown } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database, ExternalLink, ChevronDown, Radio, Activity } from 'lucide-react';
+import { getColormapCssGradient } from '../../lib/heatmapColormap.js';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
   validateAsfExpression,
@@ -19,6 +20,9 @@ import {
 import { TrialValidationPanel } from './TrialValidationPanel.jsx';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
+import FresnelProfileViewer from '../charts/FresnelProfileViewer.jsx';
+import { fetchElevationProfile } from '../../lib/elevationProfile.js';
+import { computeTerrainMasking } from '../../lib/terrainMasking.js';
 import InfoTooltip from '../ui/Tooltip.jsx';
 
 const ASF_TEMPLATES = [
@@ -67,6 +71,26 @@ export default function AsfPanel() {
   const [humidityPct, setHumidityPct] = useState(STANDARD_ATMOSPHERE.humidityPct);
   const [pressureHpa, setPressureHpa] = useState(STANDARD_ATMOSPHERE.pressureHpa);
   const [dayOfYear, setDayOfYear] = useState(180);
+  const [fresnelModalData, setFresnelModalData] = useState(null);
+  const [isAnalyzingFresnel, setIsAnalyzingFresnel] = useState(false);
+
+  const handleInspectFresnel = async () => {
+    if (!master || !rx) return;
+    setIsAnalyzingFresnel(true);
+    try {
+      const profile = await fetchElevationProfile(
+        { lat: master.lat, lng: master.lng },
+        { lat: rx.lat, lng: rx.lng },
+        32
+      );
+      const masking = computeTerrainMasking(profile, master.antennaHeightM || 30, rx.antennaHeightM || 5);
+      setFresnelModalData({ profile, tx: master, rx, masking });
+    } catch (err) {
+      console.error('Failed to load elevation profile:', err);
+    } finally {
+      setIsAnalyzingFresnel(false);
+    }
+  };
   const [temporalDist, setTemporalDist] = useState(500); // km
 
   // Live temporal ASF preview (500 km path by default)
@@ -177,6 +201,183 @@ export default function AsfPanel() {
             <span className="text-[11px] truncate">Formula</span>
           </button>
         </div>
+      </div>
+
+      {/* Live ASF & Groundwave Attenuation Heatmap Controls */}
+      <div
+        data-testid="asf-heatmap-controls-card"
+        className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3.5 space-y-3 font-mono text-xs shadow-sm"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-[var(--accent-eloran)]" />
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
+                <span>Live Heatmap Overlay</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded font-normal bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
+                  Web Worker
+                </span>
+              </div>
+              <div className="text-[10px] text-[var(--text-dim)]">
+                ITU-R P.368-10 / Sommerfeld groundwave rasterization
+              </div>
+            </div>
+          </div>
+          <Toggle
+            label=""
+            checked={Boolean(settings.asfHeatmapEnabled)}
+            onChange={(checked) => updateSettings({ asfHeatmapEnabled: checked })}
+            tooltip="Toggle real-time geographic heatmap overlay across map view"
+          />
+        </div>
+
+        {settings.asfHeatmapEnabled && (
+          <div className="space-y-3 pt-2.5 border-t border-[var(--border-subtle)]">
+            {/* Quantity Selector: µs vs dB */}
+            <div>
+              <div className="flex items-center justify-between text-[11px] mb-1 font-semibold text-[var(--text-secondary)]">
+                <span>Physical Quantity:</span>
+                <span className="text-[10px] text-[var(--accent-eloran)]">
+                  {settings.asfHeatmapMode === 'db' ? 'Groundwave Loss (dB)' : 'ASF Excess Delay (µs)'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  data-testid="btn-heatmap-mode-us"
+                  onClick={() => updateSettings({ asfHeatmapMode: 'us' })}
+                  className={`p-1.5 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px] ${
+                    (settings.asfHeatmapMode || 'us') === 'us'
+                      ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                      : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                  }`}
+                  title="Timing delay in microseconds relative to all-seawater path (Jet colormap)"
+                >
+                  <span>µs Timing Delay</span>
+                </button>
+                <button
+                  type="button"
+                  data-testid="btn-heatmap-mode-db"
+                  onClick={() => updateSettings({ asfHeatmapMode: 'db' })}
+                  className={`p-1.5 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px] ${
+                    settings.asfHeatmapMode === 'db'
+                      ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
+                      : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                  }`}
+                  title="Groundwave amplitude attenuation vs free-space reference (Viridis colormap)"
+                >
+                  <span>dB Attenuation</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Opacity slider */}
+            <Slider
+              label="Overlay Opacity"
+              value={Math.round((settings.asfHeatmapOpacity ?? 0.65) * 100)}
+              onChange={(v) => updateSettings({ asfHeatmapOpacity: v / 100 })}
+              min={10}
+              max={100}
+              step={5}
+              unit="%"
+              tooltip="Visual opacity of the raster overlay on top of the basemap"
+            />
+
+            {/* Resolution slider */}
+            <Slider
+              label="Grid Resolution"
+              value={settings.asfHeatmapResolution ?? 40}
+              onChange={(v) => updateSettings({ asfHeatmapResolution: v })}
+              min={20}
+              max={80}
+              step={5}
+              unit=" px"
+              tooltip="Worker calculation grid dimension per axis (20x20 coarse to 80x80 fine)"
+            />
+
+            {/* Iso-contour toggle */}
+            <Toggle
+              label="Iso-Contour Lines"
+              checked={Boolean(settings.asfHeatmapIsoContours ?? true)}
+              onChange={(checked) => updateSettings({ asfHeatmapIsoContours: checked })}
+              tooltip="Draw subtle iso-contour lines at regular intervals (0.5 µs or 10 dB)"
+            />
+
+            {/* Color Scale Legend */}
+            <div className="pt-1">
+              <div className="flex justify-between text-[10px] mb-1 text-[var(--text-dim)]">
+                <span>Scale: {settings.asfHeatmapMode === 'db' ? '0 dB' : '0.0 µs'}</span>
+                <span className="uppercase text-[9px] font-semibold text-[var(--accent-eloran)]">
+                  {settings.asfHeatmapMode === 'db' ? 'Viridis' : 'Jet'}
+                </span>
+                <span>{settings.asfHeatmapMode === 'db' ? '60 dB' : '3.0 µs'}</span>
+              </div>
+              <div
+                className="h-2.5 w-full rounded border border-[var(--border-subtle)] shadow-inner"
+                style={{
+                  background: getColormapCssGradient(settings.asfHeatmapMode === 'db' ? 'viridis' : 'jet'),
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Terrain Masking & Knife-Edge Diffraction (ITU-R P.526) */}
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-3 font-mono text-xs">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-[var(--text-primary)]">
+              Terrain Masking & Obstacle Diffraction
+            </span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
+              ITU-R P.526
+            </span>
+          </div>
+          <InfoTooltip
+            align="right"
+            text="Single knife-edge diffraction calculation across Great-Circle elevation profiles (Open-Elevation API). Identifies masked transmitter-receiver links (>15 dB loss) with excess propagation delay."
+          />
+        </div>
+
+        <Toggle
+          label="Enable Terrain Masking Overlay"
+          description="Evaluate knife-edge obstacle loss along Tx-Rx paths and draw clear (green) vs masked (dashed red) vectors on the map."
+          checked={Boolean(settings.terrainMaskingEnabled)}
+          onChange={(checked) => updateSettings({ terrainMaskingEnabled: checked })}
+        />
+
+        {Boolean(settings.terrainMaskingEnabled) && (
+          <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+                <span className="text-[10px] text-[var(--text-dim)] uppercase block">Tx Tower Height</span>
+                <span className="text-xs font-semibold text-[var(--text-primary)]">30 m AGL</span>
+              </div>
+              <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+                <span className="text-[10px] text-[var(--text-dim)] uppercase block">Rx Mast Height</span>
+                <span className="text-xs font-semibold text-[var(--text-primary)]">5 m AGL</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] px-1">
+              <span>Wavelength &lambda; (100 kHz): ~2998 m</span>
+              <span className="text-[var(--status-ok)]">API: Open-Elevation + Cache</span>
+            </div>
+            <button
+              onClick={handleInspectFresnel}
+              disabled={isAnalyzingFresnel || !master || !rx}
+              className="w-full mt-2 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition hover:opacity-90 cursor-pointer"
+              style={{
+                background: 'var(--accent-eloran-subtle)',
+                borderColor: 'var(--accent-eloran-border)',
+                color: 'var(--accent-eloran)',
+              }}
+            >
+              <Activity size={14} className={isAnalyzingFresnel ? 'animate-spin' : ''} />
+              {isAnalyzingFresnel ? 'Querying Elevation Profile...' : `Inspect ${master?.label || 'M'} → ${rx?.label || 'R'} Cross-Section`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mode 1: Physical Mixed-Path Millington Model */}
@@ -759,6 +960,15 @@ export default function AsfPanel() {
           </div>
         )}
       </div>
+      {fresnelModalData && (
+        <FresnelProfileViewer
+          profile={fresnelModalData.profile}
+          tx={fresnelModalData.tx}
+          rx={fresnelModalData.rx}
+          masking={fresnelModalData.masking}
+          onClose={() => setFresnelModalData(null)}
+        />
+      )}
     </div>
   );
 }

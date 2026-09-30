@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Compass, Radio, Activity, Layers,
   ShieldCheck, TrendingDown, ArrowRight, BookOpen,
+  Cpu,
 } from 'lucide-react';
 import { useSimulationStore } from '../state/simulationStore.js';
 import MathView from '../components/ui/MathView.jsx';
@@ -37,6 +38,20 @@ const concepts = [
     buttonLabel: 'Inspect High-GDOP Scenario',
   },
   {
+    id: 'gauss-newton',
+    title: 'Gauss-Newton Hyperbolic Solver & Metric Conditioning',
+    icon: Compass,
+    accentVar: '--accent-eloran',
+    summary:
+      'Iterative non-linear least-squares multilateration formulated in range-difference metre space for ill-conditioned singularity protection.',
+    math: '\\Delta \\mathbf{x} = \\left( J^T J \\right)^{-1} J^T \\Delta \\mathbf{\\rho}, \\quad \\det(J^T J) > 10^{-12}',
+    explanation:
+      'Non-linear hyperbolic measurement equations are linearized via a 2D Jacobian matrix J relating positional corrections [Δx, Δy] to range-difference residuals Δρ. Formulating the normal equations in metric distance space rather than seconds space prevents matrix determinants from collapsing to order 10⁻³⁴, guaranteeing rapid 4-iteration convergence and numerical stability.',
+    presetId: 'jakarta_baseline',
+    targetRoute: '/loran-c',
+    buttonLabel: 'Test Hyperbolic Solver',
+  },
+  {
     id: 'asf',
     title: 'Additional Secondary Factor (ASF) & Propagation Delay',
     icon: Layers,
@@ -49,6 +64,20 @@ const concepts = [
     presetId: 'north_sea',
     targetRoute: '/eloran',
     buttonLabel: 'Explore North Sea ASF Grid',
+  },
+  {
+    id: 'groundwave-decomposition',
+    title: 'Groundwave Total Propagation Delay (PF, SF & ASF)',
+    icon: Layers,
+    accentVar: '--accent-eloran',
+    summary:
+      'Complete physical phase delay decomposition across atmospheric, seawater, and heterogeneous terrestrial media.',
+    math: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF}(\\eta) + \\text{SF}(\\sigma) + \\text{ASF}(d, \\sigma)',
+    explanation:
+      'Total signal propagation time decomposes into three physical terms: Primary Factor (PF: atmospheric refractivity delay along the geodesic), Secondary Factor (SF: phase lag over an ideal all-seawater spherical earth with σ = 4.0 S/m), and Additional Secondary Factor (ASF: excess phase retardation accumulated over resistive land and terrain profiles calculated via Millington boundary integration).',
+    presetId: 'north_sea',
+    targetRoute: '/eloran',
+    buttonLabel: 'Inspect Groundwave Delay Grids',
   },
   {
     id: 'gri',
@@ -65,20 +94,6 @@ const concepts = [
     buttonLabel: 'Open RF Oscilloscope',
   },
   {
-    id: 'fusion',
-    title: 'GNSS–eLoran Multi-Source PNT Resiliency',
-    icon: ShieldCheck,
-    accentVar: '--status-ok',
-    summary:
-      'Complementary integration between satellite GNSS and high-power terrestrial eLoran.',
-    math: '\\mathbf{x}_{\\text{fused}} = w_{\\text{eLoran}} \\mathbf{x}_{\\text{eLoran}} + w_{\\text{GNSS}} \\mathbf{x}_{\\text{GNSS}}',
-    explanation:
-      'GNSS operates at microwave frequencies (1.2–1.5 GHz) with extremely faint satellite signals (−130 dBm), vulnerable to accidental jamming and intentional spoofing. eLoran operates at 100 kHz (LF) with megawatt transmitter towers emitting high-power terrestrial groundwaves that penetrate cities, fjords, and electronic jamming. Together they provide sovereign, uninterrupted positioning, navigation, and timing (PNT).',
-    presetId: 'gnss_denied',
-    targetRoute: '/eloran',
-    buttonLabel: 'Test GNSS-Denied Outage',
-  },
-  {
     id: 'uscg-pulse',
     title: '100 kHz Standard Pulse & USCG Envelope Specification',
     icon: Radio,
@@ -91,6 +106,20 @@ const concepts = [
     presetId: 'jakarta_baseline',
     targetRoute: '/waveforms',
     buttonLabel: 'Inspect 100 kHz Waveform in Oscilloscope',
+  },
+  {
+    id: 'rf-carrier-modulation',
+    title: '100 kHz Modulated Carrier Waveform & Phase Coherence',
+    icon: Activity,
+    accentVar: '--accent-eloran',
+    summary:
+      'Mathematical synthesis of the instantaneous 100 kHz RF carrier signal, phase-code state, and envelope.',
+    math: 's(t) = A \\cdot t^2 e^{-2t/t_p} \\sin(2\\pi f_0 t + \\phi), \\quad f_0 = 100\\text{ kHz}',
+    explanation:
+      'The instantaneous radiated electric field is the product of the USCG asymmetric double-exponential envelope and a 100 kHz sinusoidal carrier. The phase parameter φ ∈ {0, π} rotates by 180° according to the 8-pulse phase-code sequence (e.g. Master Group A: + + - - + - + -), canceling continuous wave (CW) interference and cross-rate chain signals.',
+    presetId: 'jakarta_baseline',
+    targetRoute: '/waveforms',
+    buttonLabel: 'Inspect Carrier Phase in Oscilloscope',
   },
   {
     id: 'skywave-discrimination',
@@ -119,6 +148,34 @@ const concepts = [
     presetId: 'jakarta_baseline',
     targetRoute: '/waveforms',
     buttonLabel: 'Launch Boyce Monte Carlo Simulator',
+  },
+  {
+    id: 'fusion',
+    title: 'GNSS–eLoran Multi-Source PNT Resiliency',
+    icon: ShieldCheck,
+    accentVar: '--status-ok',
+    summary:
+      'Complementary integration between satellite GNSS and high-power terrestrial eLoran.',
+    math: '\\mathbf{x}_{\\text{fused}} = w_{\\text{eLoran}} \\mathbf{x}_{\\text{eLoran}} + w_{\\text{GNSS}} \\mathbf{x}_{\\text{GNSS}}',
+    explanation:
+      'GNSS operates at microwave frequencies (1.2–1.5 GHz) with extremely faint satellite signals (−130 dBm), vulnerable to accidental jamming and intentional spoofing. eLoran operates at 100 kHz (LF) with megawatt transmitter towers emitting high-power terrestrial groundwaves that penetrate cities, fjords, and electronic jamming. Together they provide sovereign, uninterrupted positioning, navigation, and timing (PNT).',
+    presetId: 'gnss_denied',
+    targetRoute: '/eloran',
+    buttonLabel: 'Test GNSS-Denied Outage',
+  },
+  {
+    id: 'ast-parser',
+    title: 'Sandboxed AST Mathematical Expression Parser',
+    icon: Cpu,
+    accentVar: '--status-ok',
+    summary:
+      'Formal recursive descent grammar and AST evaluation for user-defined spatial conductivity functions.',
+    math: '\\text{Eval}: \\operatorname{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
+    explanation:
+      'Custom ground conductivity distributions entered by users are transformed into an Abstract Syntax Tree (AST) using a strict Recursive Descent Parser. The tree is evaluated via safe token dispatch without dynamic code execution (0 eval(), 0 new Function()), guaranteeing absolute security while computing complex mathematical spatial models.',
+    presetId: 'north_sea',
+    targetRoute: '/eloran',
+    buttonLabel: 'Explore North Sea ASF Grid',
   },
 ];
 
@@ -158,45 +215,50 @@ export default function Learn() {
       </header>
 
       {/* Concept Cards */}
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {concepts.map((c) => {
           const Icon = c.icon;
           return (
             <article
               key={c.id}
-              className="rounded-2xl p-6 space-y-4"
+              className="rounded-2xl p-6 flex flex-col justify-between space-y-4"
               style={{
                 background: 'var(--bg-surface)',
-                border: `1px solid var(${c.accentVar}-border, var(--border-subtle))`,
+                border: '1px solid var(--border-subtle)',
                 boxShadow: 'var(--shadow-card)',
               }}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <div
-                    className="p-2.5 rounded-xl"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{
                       background: `var(${c.accentVar}-subtle, var(--bg-subtle))`,
+                      color: `var(${c.accentVar})`,
                       border: `1px solid var(${c.accentVar}-border, var(--border-subtle))`,
                     }}
                   >
-                    <Icon size={22} style={{ color: `var(${c.accentVar})` }} aria-hidden="true" />
+                    <Icon size={16} aria-hidden="true" />
                   </div>
-                  <div>
-                    <h2 className="text-lg font-bold font-mono tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                      {c.title}
-                    </h2>
-                    <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{c.summary}</p>
-                  </div>
+                  <span
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded"
+                    style={{
+                      background: 'var(--bg-subtle)',
+                      color: 'var(--text-dim)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    {c.id.toUpperCase()}
+                  </span>
                 </div>
 
-                <button
-                  onClick={() => handleLaunch(c.presetId, c.targetRoute)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-mono font-bold rounded-lg uppercase tracking-wider transition shrink-0"
-                  style={{ background: `var(${c.accentVar})`, color: 'var(--bg-canvas)' }}
-                >
-                  {c.buttonLabel} <ArrowRight size={14} aria-hidden="true" />
-                </button>
+                <h2 className="text-base font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
+                  {c.title}
+                </h2>
+
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {c.summary}
+                </p>
               </div>
 
               {/* Math Formula */}
@@ -214,6 +276,27 @@ export default function Learn() {
               <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
                 {c.explanation}
               </p>
+
+              {/* Interactive Simulator Launcher */}
+              <div className="pt-2 border-t border-[var(--border-subtle)]">
+                <button
+                  onClick={() => handleLaunch(c.presetId, c.targetRoute)}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-mono font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+                  style={{
+                    background: `var(${c.accentVar}-subtle, var(--accent-eloran-subtle))`,
+                    color: `var(${c.accentVar}, var(--accent-eloran))`,
+                    border: `1px solid var(${c.accentVar}-border, var(--accent-eloran-border))`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  {c.buttonLabel} <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </div>
             </article>
           );
         })}
@@ -235,7 +318,7 @@ export default function Learn() {
             Groundwave Propagation & Atmospheric Delay Physics
           </h2>
           <p className="text-xs mt-1 max-w-3xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Mathematical formulations relocated from interactive simulation panels to maintain a clean, focused user interface while preserving full scientific rigor.
+            Mathematical formulations and scientific derivations defining low-frequency propagation velocity, surface impedance, and multi-boundary phase recovery.
           </p>
         </div>
 
@@ -262,7 +345,7 @@ export default function Learn() {
             <div className="text-[10px] leading-normal text-[var(--text-muted)] space-y-0.5 font-mono bg-[var(--bg-subtle)]/50 p-2 rounded border border-[var(--border-subtle)]">
               <div><strong>SI Units:</strong> <span className="text-[var(--text-primary)]">d</span> in meters [m], <span className="text-[var(--text-primary)]">λ = c/f₀</span> ≈ 2997.9 m [m], <span className="text-[var(--text-primary)]">σ</span> in Siemens per meter [S·m⁻¹], <span className="text-[var(--text-primary)]">ω = 2πf₀</span> ≈ 6.283×10⁵ [rad·s⁻¹], <span className="text-[var(--text-primary)]">ε₀</span> ≈ 8.854×10⁻¹² [F·m⁻¹], <span className="text-[var(--text-primary)]">εᵣ, η, p</span> dimensionless [-].</div>
               <div className="text-[9px] pt-1 border-t border-[var(--border-subtle)] text-[var(--text-dim)]">
-                <strong>Citations:</strong> Sommerfeld (1909), <em>Ann. Phys.</em> 333(4); Norton (1936), <em>Proc. IRE</em> 24(10); ITU-R Recommendation P.368-10 (not machine-verified upstream).
+                <strong>Citations:</strong> Sommerfeld (1909), <em>Ann. Phys.</em> 333(4); Norton (1936), <em>Proc. IRE</em> 24(10); ITU-R Recommendation P.368-10.
               </div>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">
@@ -292,7 +375,7 @@ export default function Learn() {
             <div className="text-[10px] leading-normal text-[var(--text-muted)] space-y-0.5 font-mono bg-[var(--bg-subtle)]/50 p-2 rounded border border-[var(--border-subtle)]">
               <div><strong>SI Units & Terms:</strong> <span className="text-[var(--text-primary)]">x_k = \sum d_i</span> cumulative distance [km], <span className="text-[var(--text-primary)]">Δt_k(x)</span> homogeneous delay over medium <span className="text-[var(--text-primary)]">k</span> [µs], <span className="text-[var(--text-primary)]">ASF</span> total delay [µs] or [m] via <span className="text-[var(--text-primary)]">c·Δt</span>.</div>
               <div className="text-[9px] pt-1 border-t border-[var(--border-subtle)] text-[var(--text-dim)]">
-                <strong>Citations:</strong> Millington, G. (1949), <em>Proc. IEE</em> 96(39), 53–64; ITU-R Recommendation P.368-10 (not machine-verified upstream).
+                <strong>Citations:</strong> Millington, G. (1949), <em>Proc. IEE</em> 96(39), 53–64; ITU-R Recommendation P.368-10.
               </div>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] font-sans">

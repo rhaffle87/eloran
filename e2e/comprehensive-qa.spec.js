@@ -125,14 +125,14 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
     }
   });
 
-  test('Priority 6: KaTeX math formulas render properly on Learn, About, and Waveforms', async ({ page }) => {
-    // 1. Check /learn
+  test('Priority 6: KaTeX math formulas render properly on Theory (Learn) and Waveforms, with pure content on About', async ({ page }) => {
+    // 1. Check /learn (Dedicated Theory & Formulas page)
     await page.goto('/learn', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('text=Initializing Simulation Subsystem…')).toHaveCount(0);
     const katexLearn = page.locator('.katex');
     await expect(katexLearn.first()).toBeVisible();
     const learnCount = await katexLearn.count();
-    expect(learnCount).toBeGreaterThanOrEqual(5);
+    expect(learnCount).toBeGreaterThanOrEqual(8);
 
     // Verify raw LaTeX strings like \frac are NOT visible as raw text
     const rawFracLearn = page.locator('text="\\frac"');
@@ -154,18 +154,19 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
 
     await page.screenshot({ path: path.join(screenshotsDir, 'p6_katex_waveforms_formulas.png') });
 
-    // 3. Check /about
+    // 3. Check /about (Pure content page with links to theory)
     await page.goto('/about', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('text=Initializing Simulation Subsystem…')).toHaveCount(0);
-    const katexAbout = page.locator('.katex');
-    await expect(katexAbout.first()).toBeVisible();
-    const aboutCount = await katexAbout.count();
-    expect(aboutCount).toBeGreaterThanOrEqual(4);
+    await expect(page.getByRole('heading', { name: 'About SIMULORAN' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Visit Theory Page/i })).toBeVisible();
 
+    // Verify no unrendered LaTeX strings on About page
     const rawDeltaAbout = page.locator('text="\\Delta"');
     await expect(rawDeltaAbout).toHaveCount(0);
+    const rawFracAbout = page.locator('text="\\frac"');
+    await expect(rawFracAbout).toHaveCount(0);
 
-    await page.screenshot({ path: path.join(screenshotsDir, 'p6_katex_about_formulas.png') });
+    await page.screenshot({ path: path.join(screenshotsDir, 'p6_about_pure_content.png') });
   });
 
   test('Priority 7: System-wide interactive controls (Pan, Stations, Presets, Settings, Exports)', async ({ page }) => {

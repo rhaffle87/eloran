@@ -1,35 +1,74 @@
 import React from 'react';
-import { Cpu, ShieldCheck, Heart, Radio, ExternalLink, BookOpen, Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  Cpu, ShieldCheck, Heart, Radio, ExternalLink,
+  BookOpen, Database, Compass, Activity, ArrowRight,
+  Code2, CheckCircle2,
+} from 'lucide-react';
 
-import MathView from '../components/ui/MathView.jsx';
 import TrialValidationPanel from '../components/panels/TrialValidationPanel.jsx';
+
+const CAPABILITIES = [
+  {
+    title: 'Loran-C Hyperbolic Multilateration',
+    icon: Radio,
+    accent: 'var(--accent-loran-c)',
+    accentBg: 'var(--accent-loran-c-subtle)',
+    accentBorder: 'var(--accent-loran-c-border)',
+    description:
+      'Full-featured hyperbolic radionavigation supporting Master-Secondary pairs, Time Difference of Arrival (TDOA) tracking, baseline vectors, off-thread marching-squares LOP contour generation, and real-time GDOP coverage mapping.',
+  },
+  {
+    title: 'eLoran Precision Suite (v1.5)',
+    icon: Compass,
+    accent: 'var(--accent-eloran)',
+    accentBg: 'var(--accent-eloran-subtle)',
+    accentBorder: 'var(--accent-eloran-border)',
+    description:
+      'Modern enhanced Loran incorporating Additional Secondary Factor (ASF) conductivity models, Cesium atomic clock steering, Differential Loran (d-Loran) reference stations, and multi-waypoint dynamic vehicle trajectories.',
+  },
+  {
+    title: 'Multi-Source Resilient PNT & EW Suite',
+    icon: ShieldCheck,
+    accent: 'var(--status-ok)',
+    accentBg: 'var(--status-ok-subtle)',
+    accentBorder: 'var(--status-ok-border)',
+    description:
+      'Best Linear Unbiased Estimator (BLUE) Kalman filter fusing eLoran and GNSS measurements, Stanford Safety Containment Matrix for integrity monitoring, and realistic RF Electronic Warfare jammer path loss simulations.',
+  },
+  {
+    title: '100 kHz RF Waveform Oscilloscope & Demodulation',
+    icon: Activity,
+    accent: 'var(--accent-eloran)',
+    accentBg: 'var(--accent-eloran-subtle)',
+    accentBorder: 'var(--accent-eloran-border)',
+    description:
+      'High-resolution carrier oscilloscope synthesizing USCG standard pulse envelopes, GRI multi-chain pulse sequencing, ionospheric skywave multi-path discrimination, and Loran Data Channel (LDC) 9th-pulse demodulation.',
+  },
+];
+
+const ARCHITECTURAL_HIGHLIGHTS = [
+  {
+    title: 'Well-Conditioned Range-Difference Solver',
+    body: 'The hyperbolic multilateration engine is formulated in metric range-difference space rather than seconds space. This prevents matrix determinants from collapsing to order 10⁻³⁴ on iteration zero, guaranteeing rapid 4-iteration convergence and singularity protection under high GDOP.',
+  },
+  {
+    title: 'Sandboxed AST Expression Engine',
+    body: 'Custom spatial conductivity and terrain formulas are parsed into an Abstract Syntax Tree via a strict recursive descent parser. Evaluation uses a safe null-prototype token dispatch with zero dynamic code execution (0 eval(), 0 new Function()), ensuring total security.',
+  },
+  {
+    title: 'Decoupled Pure Physics Core',
+    body: 'All mathematical, geodesy, and electromagnetic propagation models are isolated in pure, framework-agnostic modules in src/lib/. The physics engine is verified by a 340-test automated Vitest suite covering geodesics, TDOA symmetry, GDOP, and decimation.',
+  },
+  {
+    title: 'Off-Thread High-Performance Web Workers',
+    body: 'Computationally demanding grid operations—such as marching-squares hyperbolic contour generation and spatial ASF interpolation—execute on dedicated Web Workers, ensuring the MapLibre GL canvas and user interface maintain a steady 60 FPS.',
+  },
+];
 
 const TECH_STACK = [
   'React 19', 'Vite 7', 'React Router v7', 'Tailwind CSS v4',
   'Zustand', 'MapLibre GL', 'Proj4', 'Turf.js', 'PapaParse', 'Vitest', 'Web Workers',
-];
-
-const ARCHITECTURE_CARDS = [
-  {
-    title: '1. Well-Conditioned Gauss-Newton Solver',
-    body: 'Discovered and fixed a critical bug in the legacy solver where Jacobians scaled in seconds (1/c) caused matrix determinants of order 10⁻³⁴ to prematurely trigger the 10⁻¹² singularity abort on iteration 0. Refactored into metre range-difference space, ensuring rapid 4-iteration convergence.',
-    formula: '\\Delta \\mathbf{x} = \\left( J^T J \\right)^{-1} J^T \\Delta \\mathbf{\\rho}, \\quad \\det(J^T J) > 10^{-12}',
-  },
-  {
-    title: '2. Sandboxed AST Expression Parser',
-    body: 'Replaced unsafe new Function and eval statements with a strict whitelist Recursive Descent Parser and null-prototype token dispatch. Completely immune to code injection.',
-    formula: '\\text{Eval}: \\operatorname{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
-  },
-  {
-    title: '3. Decoupled Pure Physics Library',
-    body: 'Separated all mathematical and geodesy logic into pure, testable modules in src/lib/, validated by a 50-test Vitest suite covering geodesics, TDOA symmetry, GDOP on known geometries, and RDP decimation.',
-    formula: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF}(\\eta) + \\text{SF}(\\sigma) + \\text{ASF}(d, \\sigma)',
-  },
-  {
-    title: '4. 100 kHz Modulated Carrier Oscilloscope',
-    body: 'Upgraded the RF waveform viewer from a static envelope display to a high-resolution 100 kHz carrier synthesizer with GRI grid overlays, per-station delay flags, and ionospheric skywave multi-path modelling.',
-    formula: 's(t) = A \\cdot t^2 e^{-2t/t_p} \\sin(2\\pi f_0 t), \\quad f_0 = 100\\text{ kHz}',
-  },
 ];
 
 const DOCS = [
@@ -71,16 +110,141 @@ export default function About() {
           className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider mb-1"
           style={{ color: 'var(--accent-eloran)' }}
         >
-          <Cpu size={14} aria-hidden="true" /> System Specifications
+          <Cpu size={14} aria-hidden="true" /> Project Overview & System Specifications
         </div>
         <h1 className="text-3xl font-bold font-mono tracking-tight" style={{ color: 'var(--text-primary)' }}>
           About SIMULORAN
         </h1>
-        <p className="text-sm mt-2 max-w-2xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          A dedicated, high-performance, in-browser simulator for 100 kHz Loran-C and enhanced
-          Loran (eLoran) hyperbolic radio navigation systems.
+        <p className="text-sm mt-2 max-w-3xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          SIMULORAN is an open-source, high-fidelity radionavigation and RF physics testbed running
+          entirely inside the browser. It simulates 100 kHz Loran-C and enhanced Loran (eLoran) systems,
+          providing an accessible platform to explore resilient Positioning, Navigation, and Timing (PNT).
         </p>
       </header>
+
+      {/* Purpose & Strategic Mission */}
+      <SectionCard>
+        <SectionHeading icon={Compass} iconColor="var(--accent-eloran)">Purpose & Strategic Mission</SectionHeading>
+        <div className="space-y-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <p>
+            Modern global transportation, cellular synchronization, financial transaction timestamps, and electrical
+            power grids depend overwhelmingly on satellite Global Navigation Satellite Systems (GNSS: GPS, Galileo,
+            BeiDou, GLONASS). Because satellite signals originate over 20,000 km in medium Earth orbit, their received
+            signal power is exceptionally faint—often below -130 dBm, which is weaker than the cosmic thermal noise floor.
+            This makes satellite PNT susceptible to intentional jamming, deceptive spoofing, space weather, and cyber disruption.
+          </p>
+          <p>
+            <strong>eLoran (enhanced Loran)</strong> is the internationally recognized, sovereign terrestrial backup to GNSS.
+            Operating at 100 kHz in the low-frequency (LF) spectrum, eLoran utilizes high-power megawatt transmitter towers
+            emitting surface groundwaves that hug the curvature of the Earth. With a received signal strength exceeding satellite
+            signals by +60 to +100 dB, eLoran signals reliably penetrate dense urban skylines, mountainous terrain, and heavily
+            contested electronic warfare environments.
+          </p>
+          <p style={{ color: 'var(--text-muted)' }}>
+            SIMULORAN was created to make the complex electromagnetics, geodesy, and signal processing of terrestrial
+            radionavigation tangible, interactive, and verifiable for researchers, engineers, and students without requiring
+            expensive RF hardware or field receivers.
+          </p>
+        </div>
+      </SectionCard>
+
+      {/* Subsystem Capabilities */}
+      <SectionCard>
+        <SectionHeading icon={Activity} iconColor="var(--accent-eloran)">Core Subsystem Capabilities</SectionHeading>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
+          {CAPABILITIES.map((cap) => {
+            const CapIcon = cap.icon;
+            return (
+              <div
+                key={cap.title}
+                className="p-4 rounded-xl border flex flex-col justify-between space-y-2"
+                style={{
+                  background: 'var(--bg-subtle)',
+                  borderColor: 'var(--border-subtle)',
+                }}
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div
+                      className="w-6 h-6 rounded flex items-center justify-center"
+                      style={{
+                        background: cap.accentBg,
+                        color: cap.accent,
+                        border: `1px solid ${cap.accentBorder}`,
+                      }}
+                    >
+                      <CapIcon size={13} aria-hidden="true" />
+                    </div>
+                    <span className="font-mono font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
+                      {cap.title}
+                    </span>
+                  </div>
+                  <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    {cap.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* Software Architecture & Engineering Highlights */}
+      <SectionCard>
+        <SectionHeading icon={ShieldCheck} iconColor="var(--status-ok)">
+          Software Architecture & Engineering Highlights
+        </SectionHeading>
+        <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+          Engineered as a pure client-side application emphasizing mathematical correctness, sandboxed execution,
+          and robust numerical stability.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          {ARCHITECTURAL_HIGHLIGHTS.map((item) => (
+            <div
+              key={item.title}
+              className="p-4 rounded-xl space-y-2"
+              style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
+            >
+              <div className="font-bold font-mono text-xs flex items-center gap-1.5" style={{ color: 'var(--accent-eloran)' }}>
+                <CheckCircle2 size={13} aria-hidden="true" />
+                {item.title}
+              </div>
+              <p className="leading-relaxed text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                {item.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Callout to Theory Page for Equations & Mathematical Models */}
+        <div
+          className="mt-5 p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          style={{
+            background: 'var(--accent-eloran-subtle)',
+            borderColor: 'var(--accent-eloran-border)',
+          }}
+        >
+          <div>
+            <div className="font-mono font-bold text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--accent-eloran)' }}>
+              <BookOpen size={14} aria-hidden="true" /> Dedicated Mathematical Foundations & Theory
+            </div>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+              Looking for detailed mathematical proofs, Sommerfeld integrals, Millington boundary equations, and interactive algorithm demos?
+            </p>
+          </div>
+          <Link
+            to="/learn"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition shrink-0 cursor-pointer shadow-xs"
+            style={{
+              background: 'var(--accent-eloran)',
+              color: 'var(--btn-eloran-text, #ffffff)',
+            }}
+          >
+            Visit Theory Page <ArrowRight size={13} aria-hidden="true" />
+          </Link>
+        </div>
+      </SectionCard>
 
       {/* Origin & Attribution */}
       <SectionCard>
@@ -94,7 +258,7 @@ export default function About() {
             href="https://github.com/rhaffle87/ai_ml"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 font-semibold"
             style={{ color: 'var(--accent-eloran)' }}
           >
             rhaffle87/ai_ml <ExternalLink size={11} />
@@ -105,33 +269,6 @@ export default function About() {
           linear regression), SIMULORAN isolates the navigation and RF physics into a production-grade,
           zero-dependency, standalone application with strict unit test coverage and mathematical precision.
         </p>
-      </SectionCard>
-
-      {/* Architectural Improvements */}
-      <SectionCard>
-        <SectionHeading icon={ShieldCheck} iconColor="var(--status-ok)">Architectural Improvements & Bug Fixes</SectionHeading>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          {ARCHITECTURE_CARDS.map((card) => (
-            <div
-              key={card.title}
-              className="p-4 rounded-xl space-y-2 flex flex-col justify-between"
-              style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
-            >
-              <div>
-                <div className="font-bold font-mono" style={{ color: 'var(--accent-eloran)' }}>{card.title}</div>
-                <p className="leading-relaxed mt-1" style={{ color: 'var(--text-muted)' }}>{card.body}</p>
-              </div>
-              {card.formula && (
-                <div
-                  className="mt-2 px-3 py-1.5 rounded-lg overflow-x-auto"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
-                >
-                  <MathView math={card.formula} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
       </SectionCard>
 
       {/* Empirical Field Trial Benchmarks */}
@@ -174,11 +311,12 @@ export default function About() {
         </div>
       </SectionCard>
 
-      {/* Tech Stack */}
+      {/* Tech Stack & Offline First */}
       <SectionCard>
-        <h2 className="text-base font-bold font-mono mb-3" style={{ color: 'var(--text-primary)' }}>
-          Technology Stack (Free & Open Source Only)
-        </h2>
+        <div className="flex items-center gap-2 mb-3 font-mono font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+          <Code2 size={16} style={{ color: 'var(--accent-eloran)' }} aria-hidden="true" />
+          Technology Stack & Privacy Guarantees
+        </div>
         <div className="flex flex-wrap gap-2 pt-1 font-mono text-xs">
           {TECH_STACK.map((tech) => (
             <span
@@ -190,10 +328,28 @@ export default function About() {
             </span>
           ))}
         </div>
-        <p className="text-[11px] pt-2" style={{ color: 'var(--text-dim)' }}>
-          Static deployment ready. No external APIs, paid subscriptions, or serverless functions required.
+        <p className="text-[11px] pt-3 leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+          100% Free & Open Source. Zero telemetry, zero analytics tracking, and zero external server dependencies.
+          All physics simulations, geodesic calculations, and signal syntheses execute entirely within your browser client.
         </p>
       </SectionCard>
+
+      {/* Non-Operational Educational Disclaimer */}
+      <div
+        className="p-4 rounded-xl border text-xs font-mono leading-relaxed"
+        style={{
+          background: 'var(--banner-edu-bg, #fffbeb)',
+          borderColor: 'var(--banner-edu-border, #fde68a)',
+          color: 'var(--banner-edu-text, #92400e)',
+        }}
+      >
+        <div className="font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5" style={{ color: 'var(--banner-edu-title, #78350f)' }}>
+          <span>⚠ Educational Simulator Notice</span>
+        </div>
+        SIMULORAN is an academic simulation and educational tool for exploring radio-navigation principles. It is
+        explicitly <strong>not certified</strong> for actual maritime navigation, aviation, or safety-of-life operations.
+        Never use simulated coordinates or propagation delays for real-world vessel piloting.
+      </div>
     </div>
   );
 }

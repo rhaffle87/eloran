@@ -4,6 +4,7 @@ import {
   Sliders, ShieldCheck, RotateCcw, Image as ImageIcon,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
+import { useThemeStore } from '../../state/themeStore.js';
 import { synthesizeReceiverWaveform } from '../../lib/pulse.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
@@ -15,6 +16,8 @@ export default function PulseViewer() {
   } = useSimulationStore();
 
   const svgRef = useRef(null);
+  const { effectiveTheme } = useThemeStore();
+  const isDark = effectiveTheme === 'dark';
 
   // Timebase & Oscilloscope Controls
   const [windowDurationMs, setWindowDurationMs] = useState(10);
@@ -144,7 +147,7 @@ export default function PulseViewer() {
   // Single-pulse zoom mode detection (window <= 0.5 ms)
   const isSinglePulseZoom = windowDurationMs <= 0.5;
 
-  // Presentation-Grade Vector SVG String Generator (Shared between SVG & PNG exports)
+  // Presentation-Grade Vector SVG String Generator (Theme-Adaptive between Light & Dark modes)
   const generateExportSvgString = () => {
     if (!waveform.length) return '';
     const exportWidth = 1200;
@@ -156,6 +159,71 @@ export default function PulseViewer() {
     const chartH = 360;
     const midY = topY + chartH / 2;
     const botY = topY + chartH;
+
+    // Theme-specific colors calibrated for WCAG contrast & crisp oscilloscope presentation
+    const colors = isDark ? {
+      bgStart: '#080c14',
+      bgEnd: '#03050a',
+      bezelFill: '#03050a',
+      bezelStroke: '#1e293b',
+      headerTitle: '#f8fafc',
+      headerSubtitle: '#94a3b8',
+      headerStandards: '#64748b',
+      hudBg: '#090d16',
+      hudBorder: '#334155',
+      hudTitle: '#38bdf8',
+      hudText: '#cbd5e1',
+      hudSubText: '#94a3b8',
+      gridLine: '#1e293b',
+      centerLine: '#334155',
+      axisText: '#94a3b8',
+      waveColor: '#06b6d4',
+      envColor: '#ef4444',
+      masterColor: '#06b6d4',
+      slaveColor: '#f59e0b',
+      badgeBg: '#070c18',
+      badgeText: '#f8fafc',
+      badgeSkyText: '#fcd34d',
+      szcLine: '#10b981',
+      szcBoxBg: '#064e3b',
+      szcBoxBorder: '#10b981',
+      szcText: '#ecfdf5',
+      peakLine: '#ef4444',
+      peakBoxBg: '#7f1d1d',
+      peakBoxBorder: '#ef4444',
+      peakText: '#fef2f2',
+    } : {
+      bgStart: '#f8fafc',
+      bgEnd: '#edf2f7',
+      bezelFill: '#ffffff',
+      bezelStroke: '#cbd5e1',
+      headerTitle: '#0f172a',
+      headerSubtitle: '#475569',
+      headerStandards: '#64748b',
+      hudBg: '#f1f5f9',
+      hudBorder: '#cbd5e1',
+      hudTitle: '#0284c7',
+      hudText: '#1e293b',
+      hudSubText: '#64748b',
+      gridLine: '#e2e8f0',
+      centerLine: '#94a3b8',
+      axisText: '#64748b',
+      waveColor: '#0284c7',
+      envColor: '#dc2626',
+      masterColor: '#0369a1',
+      slaveColor: '#d97706',
+      badgeBg: '#ffffff',
+      badgeText: '#0f172a',
+      badgeSkyText: '#b45309',
+      szcLine: '#059669',
+      szcBoxBg: '#ecfdf5',
+      szcBoxBorder: '#059669',
+      szcText: '#065f46',
+      peakLine: '#dc2626',
+      peakBoxBg: '#fef2f2',
+      peakBoxBorder: '#dc2626',
+      peakText: '#991b1b',
+    };
 
     const ptsCount = Math.min(waveform.length, 2400);
     const expStep = Math.max(1, Math.floor(waveform.length / ptsCount));
@@ -182,8 +250,8 @@ export default function PulseViewer() {
         ? `${(frac * windowDurationMs * 1000).toFixed(0)} µs`
         : `${(frac * windowDurationMs).toFixed(1)} ms`;
       gridLinesSvg += `
-        <line x1="${gx.toFixed(1)}" y1="${topY}" x2="${gx.toFixed(1)}" y2="${botY}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2 3" />
-        <text x="${gx.toFixed(1)}" y="${botY + 22}" fill="#94a3b8" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">${timeVal}</text>
+        <line x1="${gx.toFixed(1)}" y1="${topY}" x2="${gx.toFixed(1)}" y2="${botY}" stroke="${colors.gridLine}" stroke-width="1" stroke-dasharray="2 3" />
+        <text x="${gx.toFixed(1)}" y="${botY + 22}" fill="${colors.axisText}" font-size="11" font-family="ui-monospace, monospace" text-anchor="middle">${timeVal}</text>
       `;
     }
 
@@ -199,8 +267,8 @@ export default function PulseViewer() {
     ampLines.forEach((l) => {
       const isCenter = Math.abs(l.y - midY) < 1;
       ampGridSvg += `
-        <line x1="${padX}" y1="${l.y.toFixed(1)}" x2="${padX + chartW}" y2="${l.y.toFixed(1)}" stroke="${isCenter ? '#334155' : '#1e293b'}" stroke-width="${isCenter ? '1.5' : '1'}" />
-        <text x="${padX - 12}" y="${(l.y + 4).toFixed(1)}" fill="#94a3b8" font-size="11" font-family="ui-monospace, monospace" text-anchor="end">${l.label}</text>
+        <line x1="${padX}" y1="${l.y.toFixed(1)}" x2="${padX + chartW}" y2="${l.y.toFixed(1)}" stroke="${isCenter ? colors.centerLine : colors.gridLine}" stroke-width="${isCenter ? '1.5' : '1'}" />
+        <text x="${padX - 12}" y="${(l.y + 4).toFixed(1)}" fill="${colors.axisText}" font-size="11" font-family="ui-monospace, monospace" text-anchor="end">${l.label}</text>
       `;
     });
 
@@ -220,7 +288,7 @@ export default function PulseViewer() {
     let arrivalsSvg = '';
 
     visibleArrivals.forEach((arr) => {
-      const color = arr.role === 'master' ? '#06b6d4' : '#f59e0b';
+      const color = arr.role === 'master' ? colors.masterColor : colors.slaveColor;
       const labelText = `${arr.station} ${arr.isSkywave ? '(Sky)' : ''}`;
       const badgeW = Math.max(76, Math.round(labelText.length * 6.5 + 20));
       const badgeH = 19;
@@ -249,9 +317,9 @@ export default function PulseViewer() {
           <line x1="${arr.ax.toFixed(1)}" y1="${topY}" x2="${arr.ax.toFixed(1)}" y2="${botY}" stroke="${color}" stroke-width="${arr.isSkywave ? '1.2' : '1.5'}" stroke-dasharray="${arr.isSkywave ? '3 3' : 'none'}" opacity="0.85" />
           <polygon points="${arr.ax.toFixed(1)},${topY + 9} ${(arr.ax - 4.5).toFixed(1)},${topY} ${(arr.ax + 4.5).toFixed(1)},${topY}" fill="${color}" />
           <line x1="${arr.ax.toFixed(1)}" y1="${(badgeY + badgeH / 2).toFixed(1)}" x2="${leaderTargetX.toFixed(1)}" y2="${(badgeY + badgeH / 2).toFixed(1)}" stroke="${color}" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6" />
-          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW}" height="${badgeH}" rx="4" fill="#070c18" fill-opacity="0.94" stroke="${color}" stroke-width="1" stroke-opacity="0.9" />
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW}" height="${badgeH}" rx="4" fill="${colors.badgeBg}" fill-opacity="0.96" stroke="${color}" stroke-width="1" stroke-opacity="0.9" />
           <circle cx="${(badgeX + 9).toFixed(1)}" cy="${(badgeY + 9.5).toFixed(1)}" r="2.5" fill="${color}" />
-          <text x="${(badgeX + 16).toFixed(1)}" y="${(badgeY + 13.5).toFixed(1)}" fill="${arr.isSkywave ? '#fcd34d' : '#f8fafc'}" font-size="9.5" font-family="ui-monospace, monospace" font-weight="bold" letter-spacing="0.2">${labelText}</text>
+          <text x="${(badgeX + 16).toFixed(1)}" y="${(badgeY + 13.5).toFixed(1)}" fill="${arr.isSkywave ? colors.badgeSkyText : colors.badgeText}" font-size="9.5" font-family="ui-monospace, monospace" font-weight="bold" letter-spacing="0.2">${labelText}</text>
         </g>
       `;
     });
@@ -270,9 +338,9 @@ export default function PulseViewer() {
         const x30 = padX + frac30 * chartW;
         szcMarkersSvg += `
           <g>
-            <line x1="${x30.toFixed(1)}" y1="${topY}" x2="${x30.toFixed(1)}" y2="${botY}" stroke="#10b981" stroke-width="1.8" stroke-dasharray="3 2" />
-            <rect x="${(x30 - 48).toFixed(1)}" y="${botY - 32}" width="96" height="20" rx="4" fill="#064e3b" fill-opacity="0.95" stroke="#10b981" stroke-width="1" />
-            <text x="${x30.toFixed(1)}" y="${botY - 18}" fill="#ecfdf5" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">SZC: 30.0 µs (3rd Cycle)</text>
+            <line x1="${x30.toFixed(1)}" y1="${topY}" x2="${x30.toFixed(1)}" y2="${botY}" stroke="${colors.szcLine}" stroke-width="1.8" stroke-dasharray="3 2" />
+            <rect x="${(x30 - 48).toFixed(1)}" y="${botY - 32}" width="96" height="20" rx="4" fill="${colors.szcBoxBg}" fill-opacity="0.95" stroke="${colors.szcBoxBorder}" stroke-width="1" />
+            <text x="${x30.toFixed(1)}" y="${botY - 18}" fill="${colors.szcText}" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">SZC: 30.0 µs (3rd Cycle)</text>
           </g>
         `;
       }
@@ -281,9 +349,9 @@ export default function PulseViewer() {
         const x65 = padX + frac65 * chartW;
         szcMarkersSvg += `
           <g>
-            <line x1="${x65.toFixed(1)}" y1="${topY}" x2="${x65.toFixed(1)}" y2="${botY}" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="3 2" />
-            <rect x="${(x65 - 45).toFixed(1)}" y="${botY - 58}" width="90" height="20" rx="4" fill="#7f1d1d" fill-opacity="0.95" stroke="#ef4444" stroke-width="1" />
-            <text x="${x65.toFixed(1)}" y="${botY - 44}" fill="#fef2f2" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">Peak τpk: 65.0 µs</text>
+            <line x1="${x65.toFixed(1)}" y1="${topY}" x2="${x65.toFixed(1)}" y2="${botY}" stroke="${colors.peakLine}" stroke-width="1.8" stroke-dasharray="3 2" />
+            <rect x="${(x65 - 45).toFixed(1)}" y="${botY - 58}" width="90" height="20" rx="4" fill="${colors.peakBoxBg}" fill-opacity="0.95" stroke="${colors.peakBoxBorder}" stroke-width="1" />
+            <text x="${x65.toFixed(1)}" y="${botY - 44}" fill="${colors.peakText}" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">Peak τpk: 65.0 µs</text>
           </g>
         `;
       }
@@ -297,8 +365,8 @@ export default function PulseViewer() {
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${exportWidth} ${exportHeight}" width="${exportWidth}" height="${exportHeight}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#080c14" />
-      <stop offset="100%" stop-color="#03050a" />
+      <stop offset="0%" stop-color="${colors.bgStart}" />
+      <stop offset="100%" stop-color="${colors.bgEnd}" />
     </linearGradient>
   </defs>
 
@@ -306,20 +374,20 @@ export default function PulseViewer() {
   <rect width="${exportWidth}" height="${exportHeight}" fill="url(#bgGrad)" rx="10" />
 
   <!-- Oscilloscope Bezel -->
-  <rect x="${padX}" y="${topY}" width="${chartW}" height="${chartH}" fill="#03050a" stroke="#1e293b" stroke-width="1.5" rx="6" />
+  <rect x="${padX}" y="${topY}" width="${chartW}" height="${chartH}" fill="${colors.bezelFill}" stroke="${colors.bezelStroke}" stroke-width="1.5" rx="6" />
 
   <!-- Header Info -->
-  <text x="${padX}" y="38" fill="#f8fafc" font-size="18" font-family="ui-monospace, monospace" font-weight="bold">Loran-C / eLoran Antenna Composite Voltage</text>
-  <text x="${padX}" y="60" fill="#94a3b8" font-size="12" font-family="ui-monospace, monospace">Receiver: ${rx?.label || 'R1-Vessel'} (Lat: ${rx?.lat?.toFixed(4) || '0.0000'}°, Lon: ${rx?.lng?.toFixed(4) || '0.0000'}°) · Window: ${windowTitle} · Gain: ${verticalGain}x · Sample Rate: ${(sampleRate / 1e6).toFixed(1)} MHz</text>
-  <text x="${padX}" y="78" fill="#64748b" font-size="10" font-family="ui-monospace, monospace">Standards: USCG Specification COMDTINST M16562.4A · CCIR Rec. 589 · 100 kHz Groundwave Discrimination</text>
+  <text x="${padX}" y="38" fill="${colors.headerTitle}" font-size="18" font-family="ui-monospace, monospace" font-weight="bold">Loran-C / eLoran Antenna Composite Voltage</text>
+  <text x="${padX}" y="60" fill="${colors.headerSubtitle}" font-size="12" font-family="ui-monospace, monospace">Receiver: ${rx?.label || 'R1-Vessel'} (Lat: ${rx?.lat?.toFixed(4) || '0.0000'}°, Lon: ${rx?.lng?.toFixed(4) || '0.0000'}°) · Window: ${windowTitle} · Gain: ${verticalGain}x · Sample Rate: ${(sampleRate / 1e6).toFixed(1)} MHz</text>
+  <text x="${padX}" y="78" fill="${colors.headerStandards}" font-size="10" font-family="ui-monospace, monospace">Standards: USCG Specification COMDTINST M16562.4A · CCIR Rec. 589 · 100 kHz Groundwave Discrimination</text>
 
   <!-- Scope HUD Box in SVG Header -->
   <g transform="translate(${exportWidth - 460}, 18)">
-    <rect width="415" height="82" fill="#090d16" fill-opacity="0.95" stroke="#334155" stroke-width="1.2" rx="6" />
-    <text x="14" y="20" fill="#38bdf8" font-size="11" font-family="ui-monospace, monospace" font-weight="bold">SCOPE HUD TELEMETRY</text>
-    <text x="14" y="38" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">Vpk: ${(vPeak * 1000).toFixed(1)} mV  |  Vpp: ${(vPp * 1000).toFixed(1)} mV  |  fc: 100.0 kHz</text>
-    <text x="14" y="54" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>
-    <text x="14" y="70" fill="#94a3b8" font-size="9.5" font-family="ui-monospace, monospace">Traces: Pulse Envelope E(t) (Red) · Pulse Wave (100 kHz) (Cyan)</text>
+    <rect width="415" height="82" fill="${colors.hudBg}" fill-opacity="0.96" stroke="${colors.hudBorder}" stroke-width="1.2" rx="6" />
+    <text x="14" y="20" fill="${colors.hudTitle}" font-size="11" font-family="ui-monospace, monospace" font-weight="bold">SCOPE HUD TELEMETRY</text>
+    <text x="14" y="38" fill="${colors.hudText}" font-size="10" font-family="ui-monospace, monospace">Vpk: ${(vPeak * 1000).toFixed(1)} mV  |  Vpp: ${(vPp * 1000).toFixed(1)} mV  |  fc: 100.0 kHz</text>
+    <text x="14" y="54" fill="${colors.hudText}" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>
+    <text x="14" y="70" fill="${colors.hudSubText}" font-size="9.5" font-family="ui-monospace, monospace">Traces: Pulse Envelope E(t) (Red) · Pulse Wave (100 kHz) (${isDark ? 'Cyan' : 'Blue'})</text>
   </g>
 
   <!-- Grid and Ticks -->
@@ -333,11 +401,10 @@ export default function PulseViewer() {
   ${arrivalsSvg}
 
   <!-- Waveform Traces -->
-  ${envPath ? `<path d="${envPath}" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />` : ''}
-  ${settings.includeCarrier && wavePath ? `<path d="${wavePath}" fill="none" stroke="#06b6d4" stroke-width="1.3" stroke-linejoin="round" />` : ''}
+  ${envPath ? `<path d="${envPath}" fill="none" stroke="${colors.envColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />` : ''}
+  ${settings.includeCarrier && wavePath ? `<path d="${wavePath}" fill="none" stroke="${colors.waveColor}" stroke-width="1.3" stroke-linejoin="round" />` : ''}
 </svg>`;
   };
-
   // High-Resolution Raster PNG Export (Requested format for clean report presentation)
   const handleExportPng = () => {
     if (!waveform.length) return;
@@ -891,8 +958,8 @@ export default function PulseViewer() {
                       width={badgeW}
                       height={badgeH}
                       rx={3}
-                      fill="#070c18"
-                      fillOpacity={0.92}
+                      fill={isDark ? "#070c18" : "#ffffff"}
+                      fillOpacity={0.94}
                       stroke={color}
                       strokeWidth={0.8}
                     />
@@ -946,7 +1013,7 @@ export default function PulseViewer() {
               <polyline
                 points={polylinePoints}
                 fill="none"
-                stroke="#06b6d4" strokeWidth={settings.includeCarrier ? "1.2" : "2"}
+                stroke={isDark ? "#06b6d4" : "#0284c7"} strokeWidth={settings.includeCarrier ? "1.2" : "2"}
                 strokeLinejoin="round"
               />
             )}
@@ -956,7 +1023,7 @@ export default function PulseViewer() {
               <polyline
                 points={envelopePoints}
                 fill="none"
-                stroke="#ef4444" strokeWidth="2" strokeLinejoin="round" opacity="0.95"
+                stroke={isDark ? "#ef4444" : "#dc2626"} strokeWidth="2" strokeLinejoin="round" opacity="0.95"
               />
             )}
           </svg>

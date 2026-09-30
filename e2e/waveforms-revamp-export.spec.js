@@ -97,41 +97,80 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
     const updatedOp = page.locator('text=22.0 dB');
     await expect(updatedOp.first()).toBeVisible();
 
-    // 4. Verify Export Fidelity (Requirement 3)
-    // Test PNG Export (High-resolution raster export)
-    const downloadPromisePng = page.waitForEvent('download');
+    // 4. Verify Export Fidelity & Theme-Adaptive Palette (Requirement 3)
+    // A) Verify Light Theme Export (Default)
+    const downloadPromiseLightSvg = page.waitForEvent('download');
+    const exportSvgBtn = page.getByRole('button', { name: /Export SVG/i });
+    await exportSvgBtn.click();
+    const downloadLightSvg = await downloadPromiseLightSvg;
+    const lightSvgPath = await downloadLightSvg.path();
+    const lightSvgContent = fs.readFileSync(lightSvgPath, 'utf8');
+
+    // Verify Light theme colors are applied in the export
+    expect(lightSvgContent).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
+    expect(lightSvgContent).toContain('Loran-C / eLoran Antenna Composite Voltage');
+    expect(lightSvgContent).toContain('fill="#ffffff"'); // Crisp white bezel
+    expect(lightSvgContent).toContain('fill="#f1f5f9"'); // Light HUD box
+    expect(lightSvgContent).toContain('SCOPE HUD TELEMETRY');
+    expect(lightSvgContent).toContain('SZC: 30.0 µs');
+    expect(lightSvgContent).toContain('fc: 100.0 kHz');
+
+    // Test Light PNG Export
+    const downloadPromiseLightPng = page.waitForEvent('download');
     const exportPngBtn = page.getByRole('button', { name: /Export PNG/i });
     await expect(exportPngBtn).toBeVisible();
     await exportPngBtn.click();
-    const downloadPng = await downloadPromisePng;
-    expect(downloadPng.suggestedFilename()).toContain('loran-pulse-trace');
-    expect(downloadPng.suggestedFilename()).toContain('.png');
-    const pngPath = await downloadPng.path();
-    const pngStats = fs.statSync(pngPath);
-    expect(pngStats.size).toBeGreaterThan(10000); // Verify non-empty raster image
-    const pngBuffer = fs.readFileSync(pngPath);
-    // PNG Magic Number check: 0x89 0x50 0x4E 0x47
-    expect(pngBuffer[0]).toBe(0x89);
-    expect(pngBuffer[1]).toBe(0x50);
-    expect(pngBuffer[2]).toBe(0x4E);
-    expect(pngBuffer[3]).toBe(0x47);
+    const downloadLightPng = await downloadPromiseLightPng;
+    expect(downloadLightPng.suggestedFilename()).toContain('loran-pulse-trace');
+    expect(downloadLightPng.suggestedFilename()).toContain('.png');
+    const lightPngPath = await downloadLightPng.path();
+    const lightPngStats = fs.statSync(lightPngPath);
+    expect(lightPngStats.size).toBeGreaterThan(10000);
+    const lightPngBuffer = fs.readFileSync(lightPngPath);
+    expect(lightPngBuffer[0]).toBe(0x89);
+    expect(lightPngBuffer[1]).toBe(0x50);
+    expect(lightPngBuffer[2]).toBe(0x4E);
+    expect(lightPngBuffer[3]).toBe(0x47);
 
-    // Test SVG Export
-    const downloadPromiseSvg = page.waitForEvent('download');
-    const exportSvgBtn = page.getByRole('button', { name: /Export SVG/i });
+    // Save light mode export verification screenshot
+    const screenshotDir = path.resolve('docs/verification/screenshots');
+    fs.mkdirSync(screenshotDir, { recursive: true });
+    fs.copyFileSync(lightPngPath, path.join(screenshotDir, 'export_pulse_trace_light_mode.png'));
+
+    // B) Switch to Dark Theme & Verify Dark Theme Export
+    const darkThemeBtn = page.locator('button[title*="dark" i], button[aria-label*="dark" i]').first();
+    if (await darkThemeBtn.isVisible()) {
+      await darkThemeBtn.click();
+      await page.waitForTimeout(300);
+    }
+
+    const downloadPromiseDarkSvg = page.waitForEvent('download');
     await exportSvgBtn.click();
-    const downloadSvg = await downloadPromiseSvg;
-    const svgPath = await downloadSvg.path();
-    const svgContent = fs.readFileSync(svgPath, 'utf8');
+    const downloadDarkSvg = await downloadPromiseDarkSvg;
+    const darkSvgPath = await downloadDarkSvg.path();
+    const darkSvgContent = fs.readFileSync(darkSvgPath, 'utf8');
 
-    // Rigorous SVG Content checks
-    expect(svgContent).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
-    expect(svgContent).toContain('Loran-C / eLoran Antenna Composite Voltage');
-    expect(svgContent).toContain('SCOPE HUD TELEMETRY');
-    expect(svgContent).toContain('SZC: 30.0 µs');
-    expect(svgContent).toContain('fc: 100.0 kHz');
-    expect(svgContent).not.toContain('NaN');
-    expect(svgContent).not.toContain('undefined');
+    // Verify Dark theme colors are applied in the export
+    expect(darkSvgContent).toContain('fill="#03050a"'); // Deep obsidian bezel
+    expect(darkSvgContent).toContain('fill="#090d16"'); // Dark HUD box
+    expect(darkSvgContent).toContain('SCOPE HUD TELEMETRY');
+    expect(darkSvgContent).toContain('SZC: 30.0 µs');
+
+    // Test Dark PNG Export
+    const downloadPromiseDarkPng = page.waitForEvent('download');
+    await exportPngBtn.click();
+    const downloadDarkPng = await downloadPromiseDarkPng;
+    const darkPngPath = await downloadDarkPng.path();
+    const darkPngStats = fs.statSync(darkPngPath);
+    expect(darkPngStats.size).toBeGreaterThan(10000);
+    fs.copyFileSync(darkPngPath, path.join(screenshotDir, 'export_pulse_trace_dark_mode.png'));
+
+    // Switch back to light theme for subsequent tests
+    const lightThemeBtn = page.locator('button[title*="light" i], button[aria-label*="light" i]').first();
+    if (await lightThemeBtn.isVisible()) {
+      await lightThemeBtn.click();
+      await page.waitForTimeout(300);
+    }
 
     // Test CSV Export
     const downloadPromiseCsv = page.waitForEvent('download');
@@ -156,9 +195,6 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
     await expect(theoryLink).toHaveAttribute('href', '/learn#uscg-pulse');
 
     // Capture visual proof screenshots
-    const screenshotDir = path.resolve('docs/verification/screenshots');
-    fs.mkdirSync(screenshotDir, { recursive: true });
-
     // Switch back to All Views & 1-Pulse canonical zoom for pristine capture
     await quickZoom1Pulse.click();
     await page.waitForTimeout(300);

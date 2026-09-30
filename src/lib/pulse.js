@@ -555,3 +555,256 @@ export function simulateMonteCarloWrongCycleCurve({
   });
 }
 
+
+/**
+ * Calibrated Loran-C Reference Chains from CheolJ Open-Source Reference Implementation.
+ * Source: CheolJ/Loran-c-reference-code (2020)
+ * Repository: https://github.com/CheolJ/Loran-c-reference-code
+ * Features exact USCG-calibrated Emission Delays (ED) in microseconds and multi-station PCI geometry.
+ */
+export const CHEOLJ_REFERENCE_CHAINS = {
+  7430: {
+    id: 7430,
+    griUs: 74300,
+    name: 'China North Sea Chain (GRI 7430)',
+    description: 'Bohai & Yellow Sea coverage with Rongcheng Master, Xuancheng, and Helong secondaries.',
+    master: {
+      name: 'Rongcheng',
+      label: 'M',
+      lat: 37.066667,
+      lng: 122.316667,
+      emissionDelayUs: 10000.0,
+      ampRatio: 0.7,
+    },
+    secondaries: [
+      {
+        name: 'Xuancheng',
+        label: 'X',
+        lat: 31.066667,
+        lng: 118.883333,
+        emissionDelayUs: 13459.70,
+        ampRatio: 0.3,
+      },
+      {
+        name: 'Helong',
+        label: 'Y',
+        lat: 42.716667,
+        lng: 129.100000,
+        emissionDelayUs: 30852.32,
+        ampRatio: 0.2,
+      },
+    ],
+  },
+  8390: {
+    id: 8390,
+    griUs: 83900,
+    name: 'China East Sea Chain (GRI 8390)',
+    description: 'East China Sea maritime corridor with Xuancheng Master, Raoping, and Rongcheng secondaries.',
+    master: {
+      name: 'Xuancheng',
+      label: 'M',
+      lat: 31.066667,
+      lng: 118.883333,
+      emissionDelayUs: 10000.0,
+      ampRatio: 0.7,
+    },
+    secondaries: [
+      {
+        name: 'Raoping',
+        label: 'X',
+        lat: 23.700000,
+        lng: 116.933333,
+        emissionDelayUs: 13795.52,
+        ampRatio: 0.3,
+      },
+      {
+        name: 'Rongcheng',
+        label: 'Y',
+        lat: 37.066667,
+        lng: 122.316667,
+        emissionDelayUs: 31459.70,
+        ampRatio: 0.2,
+      },
+    ],
+  },
+  9930: {
+    id: 9930,
+    griUs: 99300,
+    name: 'East Asia Chain (GRI 9930)',
+    description: 'Korean Peninsula and regional chain with Pohang Master, Kwangju, Ussuriisk, and Incheon.',
+    master: {
+      name: 'Pohang',
+      label: 'M',
+      lat: 36.185600,
+      lng: 129.354700,
+      emissionDelayUs: 10000.0,
+      ampRatio: 0.7,
+    },
+    secondaries: [
+      {
+        name: 'Kwangju',
+        label: 'W',
+        lat: 35.042500,
+        lng: 126.782800,
+        emissionDelayUs: 11946.97,
+        ampRatio: 0.2,
+      },
+      {
+        name: 'Ussuriisk',
+        label: 'Z',
+        lat: 44.050000,
+        lng: 131.983300,
+        emissionDelayUs: 54162.44,
+        ampRatio: 0.15,
+      },
+      {
+        name: 'Incheon',
+        label: 'P',
+        lat: 37.456300,
+        lng: 126.705200,
+        emissionDelayUs: 81352.00,
+        ampRatio: 0.3,
+      },
+    ],
+  },
+};
+
+/**
+ * CheolJ Phase Code Interval (PCI) Alternating Sequences.
+ * In Loran-C, Master stations transmit 9 pulses with index 8 being an empty 1 ms guard space,
+ * followed by the 9th identification pulse at +2000 µs from pulse 8.
+ * GRI A (even) and GRI B (odd) alternate to allow groundwave/skywave cycle identification.
+ */
+export const CHEOLJ_PCI_CODES = {
+  master: {
+    A: [1, 1, -1, -1, 1, -1, 1, -1, 0, 1],
+    B: [1, -1, -1, 1, 1, 1, 1, 1, 0, -1],
+  },
+  secondary: {
+    A: [1, 1, 1, 1, 1, -1, -1, 1],
+    B: [1, -1, 1, -1, 1, 1, -1, -1],
+  },
+};
+
+/**
+ * Synthesize a full Loran-C multi-station reference chain time-series across the Phase Code Interval (PCI).
+ * Based on CheolJ/Loran-c-reference-code reference_signal.py.
+ *
+ * @param {object} options
+ * @param {7430|8390|9930} [options.chainId=9930] - Loran GRI chain ID
+ * @param {'A'|'B'|'both'} [options.pciPeriod='both'] - GRI A, GRI B, or both (full Phase Code Interval)
+ * @param {number} [options.sampleRate=200000] - Sampling frequency in Hz (200 kHz = 5 µs resolution)
+ * @param {boolean} [options.includeCarrier=true] - Whether to modulate with 100 kHz carrier sinusoid
+ * @returns {{ chain: object, timeUs: Float32Array, rfSignal: Float32Array, envelope: Float32Array, arrivals: Array, numSamples: number, durationUs: number }}
+ */
+export function synthesizeCheolJReferenceChain({
+  chainId = 9930,
+  pciPeriod = 'both',
+  sampleRate = 1000000,
+  includeCarrier = true,
+} = {}) {
+  const chain = CHEOLJ_REFERENCE_CHAINS[chainId];
+  if (!chain) {
+    throw new Error(`Unknown CheolJ reference chain ID: ${chainId}. Valid IDs: 7430, 8390, 9930`);
+  }
+
+  const totalDurationUs = pciPeriod === 'both' ? chain.griUs * 2 : chain.griUs;
+  const dtUs = 1e6 / sampleRate;
+  const numSamples = Math.ceil(totalDurationUs / dtUs);
+
+  const timeUs = new Float32Array(numSamples);
+  const rfSignal = new Float32Array(numSamples);
+  const envelope = new Float32Array(numSamples);
+
+  for (let i = 0; i < numSamples; i++) {
+    timeUs[i] = i * dtUs;
+  }
+
+  const periods = pciPeriod === 'both' ? ['A', 'B'] : [pciPeriod];
+  const pulseDurationUs = 300;
+  const arrivals = [];
+
+  periods.forEach((period, pIdx) => {
+    const periodOffsetUs = pIdx * chain.griUs;
+
+    // 1. Master pulse group
+    const masterCode = CHEOLJ_PCI_CODES.master[period];
+    const mEdUs = chain.master.emissionDelayUs + periodOffsetUs;
+    arrivals.push({
+      station: chain.master.name,
+      label: chain.master.label,
+      role: 'master',
+      edUs: mEdUs,
+      period,
+      ampRatio: chain.master.ampRatio,
+    });
+
+    masterCode.forEach((phaseSign, pulseIdx) => {
+      if (phaseSign === 0) return; // 1 ms blanking gap before 9th pulse
+      // Pulses 0..7 spaced by 1000 µs; pulse 9 is at +2000 µs from pulse 7 (1000 µs after index 8)
+      const pulseOffset = pulseIdx === 9 ? 9000 + 1000 : pulseIdx * 1000;
+      const pulseStartUs = mEdUs + pulseOffset;
+      const startIdx = Math.max(0, Math.floor(pulseStartUs / dtUs));
+      const endIdx = Math.min(numSamples, Math.ceil((pulseStartUs + pulseDurationUs) / dtUs));
+
+      for (let i = startIdx; i < endIdx; i++) {
+        const tRelUs = timeUs[i] - pulseStartUs;
+        if (tRelUs >= 0 && tRelUs <= pulseDurationUs) {
+          // Standard normalized envelope peak = 1 at t = 65 µs
+          const env = (tRelUs / 65) ** 2 * Math.exp(-2 * (tRelUs - 65) / 65);
+          const signedEnv = phaseSign * chain.master.ampRatio * env;
+          envelope[i] += signedEnv;
+          if (includeCarrier) {
+            rfSignal[i] += signedEnv * Math.sin(2 * Math.PI * 0.1 * timeUs[i]);
+          } else {
+            rfSignal[i] += signedEnv;
+          }
+        }
+      }
+    });
+
+    // 2. Secondary pulse groups
+    chain.secondaries.forEach((sec) => {
+      const secCode = CHEOLJ_PCI_CODES.secondary[period];
+      const sEdUs = sec.emissionDelayUs + periodOffsetUs;
+      arrivals.push({
+        station: sec.name,
+        label: sec.label,
+        role: 'secondary',
+        edUs: sEdUs,
+        period,
+        ampRatio: sec.ampRatio,
+      });
+
+      secCode.forEach((phaseSign, pulseIdx) => {
+        const pulseStartUs = sEdUs + pulseIdx * 1000;
+        const startIdx = Math.max(0, Math.floor(pulseStartUs / dtUs));
+        const endIdx = Math.min(numSamples, Math.ceil((pulseStartUs + pulseDurationUs) / dtUs));
+
+        for (let i = startIdx; i < endIdx; i++) {
+          const tRelUs = timeUs[i] - pulseStartUs;
+          if (tRelUs >= 0 && tRelUs <= pulseDurationUs) {
+            const env = (tRelUs / 65) ** 2 * Math.exp(-2 * (tRelUs - 65) / 65);
+            const signedEnv = phaseSign * sec.ampRatio * env;
+            envelope[i] += signedEnv;
+            if (includeCarrier) {
+              rfSignal[i] += signedEnv * Math.sin(2 * Math.PI * 0.1 * timeUs[i]);
+            } else {
+              rfSignal[i] += signedEnv;
+            }
+          }
+        }
+      });
+    });
+  });
+
+  return {
+    chain,
+    timeUs,
+    rfSignal,
+    envelope,
+    arrivals,
+    numSamples,
+    durationUs: totalDurationUs,
+  };
+}

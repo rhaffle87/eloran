@@ -43,7 +43,7 @@ const CAPABILITIES = [
     accentBg: 'var(--accent-eloran-subtle)',
     accentBorder: 'var(--accent-eloran-border)',
     description:
-      'High-resolution carrier oscilloscope synthesizing USCG standard pulse envelopes, GRI multi-chain pulse sequencing, ionospheric skywave multi-path discrimination, and Loran Data Channel (LDC) 9th-pulse demodulation.',
+      'High-resolution carrier oscilloscope synthesizing USCG standard pulse envelopes, CheolJ (2020) Phase Code Interval (PCI) chain sequencing, ionospheric skywave multi-path discrimination, and Loran Data Channel (LDC) 9th-pulse demodulation.',
   },
 ];
 
@@ -282,7 +282,7 @@ export default function About() {
               <span>
                 <strong style={{ color: 'var(--text-secondary)' }}>CheolJ/Loran-c-reference-code:</strong> Python reference
                 chain generator implementations for East Asia 9930, North Sea 7430, and East Sea 8390 chains, establishing
-                ground-truth baseline PCI emission delay benchmarks.
+                ground-truth baseline PCI emission delay benchmarks, calibrated regional presets, and interactive PCI waveform synthesis in SIMULORAN.
               </span>
             </li>
             <li className="flex items-start gap-1.5">

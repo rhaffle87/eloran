@@ -4,6 +4,7 @@ import PulseViewer from '../components/charts/PulseViewer.jsx';
 import CycleSelectionPanel from '../components/charts/CycleSelectionPanel.jsx';
 import TrackingPanel from '../components/panels/TrackingPanel.jsx';
 import LdcDemodulatorPanel from '../components/panels/LdcDemodulatorPanel.jsx';
+import CheolJChainViewer from '../components/charts/CheolJChainViewer.jsx';
 import MathView from '../components/ui/MathView.jsx';
 
 export default function Waveforms() {
@@ -44,6 +45,7 @@ export default function Waveforms() {
             {[
               ['all', 'All Views'],
               ['oscilloscope', 'Oscilloscope'],
+              ['pci-chains', 'CheolJ PCI Chains'],
               ['tracking', 'Tracking Loop'],
               ['cycle-selection', 'Boyce Monte Carlo'],
               ['ldc', 'LDC & Eurofix'],
@@ -67,6 +69,7 @@ export default function Waveforms() {
 
       {/* Main Content Panels */}
       {(activeTab === 'all' || activeTab === 'oscilloscope') && <PulseViewer />}
+      {(activeTab === 'all' || activeTab === 'pci-chains') && <CheolJChainViewer />}
       {(activeTab === 'all' || activeTab === 'tracking') && <TrackingPanel />}
       {(activeTab === 'all' || activeTab === 'cycle-selection') && <CycleSelectionPanel />}
       {(activeTab === 'all' || activeTab === 'ldc') && <LdcDemodulatorPanel />}

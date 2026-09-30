@@ -71,6 +71,19 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 - **Collins, J. (1980).** *Formulas for Positioning at Sea by Circular, Hyperbolic, and Astronomic Methods*. NOAA Technical Report NOS 81, National Oceanic and Atmospheric Administration, National Ocean Survey, Rockville, MD. SOURCED from NOAA Institutional Repository (record 30820).
 - **Razin, S. (1967).** "Explicit (noniterative) Loran Solution." *NAVIGATION: Journal of The Institute of Navigation*. *Marked UNVERIFIED (publisher page behind Cloudflare 403; ION abstract index lacks valid page; unconfirmed identifiers removed).*
 
+### D. Reference Signal Architecture & Calibrated Chains
+- **Cheol, J. (2020).** *Loran-C Reference Signal Generator and Northeast Asia Chain Calibration Architecture*. GitHub Repository: [CheolJ/Loran-c-reference-code](https://github.com/CheolJ/Loran-c-reference-code). SOURCED.
+  - Python open-source reference implementation for standard Phase Code Interval (PCI) signal synthesis, group timing structures, and calibrated emission delays for operational Northeast Asia Loran-C chains: China North Sea (GRI 7430), China East Sea (GRI 8390), and East Asia (GRI 9930).
+  - Encodes the standard USCG Loran-C phase alternation sequences:
+    - Master ($GRI_A$): `[+1, +1, -1, -1, +1, -1, +1, -1, 0, +1]` (10 pulses with 2 ms blanking interval before 9th pulse)
+    - Master ($GRI_B$): `[+1, -1, -1, +1, +1, +1, +1, +1, 0, -1]`
+    - Secondary ($GRI_A$): `[+1, +1, +1, +1, +1, -1, -1, +1]` (8 pulses)
+    - Secondary ($GRI_B$): `[+1, -1, +1, -1, +1, +1, -1, -1]`
+  - Calibrated reference station coordinates and emission delays ($ED$):
+    - **China North Sea (GRI 7430)**: Rongcheng-M ($10,000.00\ \mu\text{s}$), Xuancheng-X ($13,459.70\ \mu\text{s}$), Helong-Y ($30,852.32\ \mu\text{s}$).
+    - **China East Sea (GRI 8390)**: Xuancheng-M ($10,000.00\ \mu\text{s}$), Raoping-X ($13,795.52\ \mu\text{s}$), Rongcheng-Y ($31,459.70\ \mu\text{s}$).
+    - **East Asia (GRI 9930)**: Pohang-M ($10,000.00\ \mu\text{s}$), Kwangju-W ($11,946.97\ \mu\text{s}$), Ussuriisk-Z ($54,162.44\ \mu\text{s}$), Incheon-P ($81,352.00\ \mu\text{s}$).
+
 ---
 
 ## 4. Formula Sheet (provenance in PROVENANCE.md)
@@ -142,6 +155,19 @@ $$\sigma_i^2 = \sigma_{\text{jitter}}^2 + \frac{337.5^2}{N_{\text{pulses}} \cdot
 
 - Baseline transmitter timing jitter: Prior literature assumed baseline uncertainty on the order of $4\text{–}6\text{ meters}$, corresponding to approximately $13\text{–}20\text{ ns}$ in one-way propagation time.
 - Wrong-Cycle Selection: Occurs when tracking error exceeds $|\Delta TOA| > 10\ \mu\text{s}$, shifting the measurement by $\pm 1$ carrier cycle ($\sim 2,998\text{ meters} \approx 3\text{ km}$).
+
+
+### 6. Phase Code Interval (PCI) Signal Synthesis (CheolJ 2020)
+The radiated continuous-time signal $s_{\text{PCI}}(t)$ over a Phase Code Interval (PCI) encompassing group intervals $GRI_A$ and $GRI_B$ ($T_{\text{PCI}} = 2 \times T_{\text{GRI}}$) is given by:
+
+$$s_{\text{PCI}}(t) = \sum_{p \in \{A, B\}} \sum_{s \in \mathcal{S}} \sum_{k=0}^{K_s - 1} c_{s, p}[k] \cdot E\left(t - t_{s, p}[k]\right) \cdot \sin\left(2\pi f_0 (t - t_{s, p}[k])\right)$$
+
+where:
+- $\mathcal{S}$ is the set of transmitting stations in the chain (Master $M$ and secondaries $X, Y, Z, \dots$).
+- $c_{s, p}[k] \in \{+1, -1\}$ is the phase coding coefficient for pulse $k$ of station $s$ during group interval $p \in \{A, B\}$.
+- For Master ($K_M = 10$), $c_{M, p}[8] = 0$ represents the $1000\ \mu\text{s}$ blanking interval preceding the 9th identification pulse at $k = 9$ ($t = ED + 10,000\ \mu\text{s}$).
+- $t_{s, p}[k] = T_{\text{period}}[p] + ED_s + \Delta t_k$, where $ED_s$ is the calibrated Emission Delay of station $s$, and $\Delta t_k = k \times 1000\ \mu\text{s}$ (with $\Delta t_9 = 10,000\ \mu\text{s}$ for Master).
+- $E(t)$ is the standard Loran-C envelope function ($E(t) = A_s (t/\tau)^2 e^{-2(t-\tau)/\tau}$ for $t \ge 0$).
 
 ---
 

@@ -77,6 +77,21 @@ The following citations, models, and empirical figures have been audited and exp
 
 ---
 
+### Phase Code Interval (PCI) & Calibrated Reference Chains (CheolJ 2020)
+
+- **Source Implementation & Repository**: Open-source reference code by CheolJ (2020) at [`CheolJ/Loran-c-reference-code`](https://github.com/CheolJ/Loran-c-reference-code) on GitHub (`code/reference_signal.py`).
+- **SIMULORAN Modules**:
+  - [`src/lib/pulse.js`](file:///E:/Projects/simuloran/src/lib/pulse.js): Core mathematical synthesis function `synthesizeCheolJReferenceChain`, `CHEOLJ_REFERENCE_CHAINS`, and `CHEOLJ_PCI_CODES`.
+  - [`src/components/charts/CheolJChainViewer.jsx`](file:///E:/Projects/simuloran/src/components/charts/CheolJChainViewer.jsx): Interactive RF Waveforms oscilloscope displaying high-resolution PCI pulse groups, carrier modulations, burst zooming, and phase code matrix telemetry.
+  - [`src/state/presets.js`](file:///E:/Projects/simuloran/src/state/presets.js): Calibrated presets `china_east_sea_8390` and `east_asia_9930`, and calibrated emission delays for `bohai_yellow_sea_active` (Xuancheng: $13,459.70\ \mu\text{s}$, Helong: $30,852.32\ \mu\text{s}$).
+- **Validation Dataset & Test Coverage**:
+  - Unit tests in [`src/lib/__tests__/cheoljChains.test.js`](file:///E:/Projects/simuloran/src/lib/__tests__/cheoljChains.test.js) (6 dedicated tests, $100\%$ pass rate).
+  - Verifies exact phase codes across $GRI_A$ and $GRI_B$ for Master (10 pulses with 2 ms blanking interval before 9th pulse) and Secondaries (8 pulses).
+  - Confirms zero-error baseline emission delay reproduction matching published Northeast Asia chain specifications.
+- **Classification**: SOURCED (Direct reproduction of open-source algorithmic reference model).
+
+---
+
 ## 3. Groundwave Engine Reference Output Validation (ITU-R P.368 / GRWAVE)
 
 - **Source Implementation & Binary Origin**: Field strength attenuation reference curves were generated using the CCIR/ITU-R P.368-9 Fortran binary (`grwave.bin.exe`), pre-compiled (dated June 2, 2026) within the local `space-physics/grwave` submodule. Invoked via Python `SubprocessEngine` with standard parameters (100 kHz, 1 kW radiated power, flat-earth / residue-series transitions).

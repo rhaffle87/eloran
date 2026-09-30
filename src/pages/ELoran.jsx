@@ -286,56 +286,103 @@ export default function ELoran() {
         >
             {/* Console header */}
             <div
-              className="p-4"
+              className="p-3.5"
               style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-2"
-                  style={{ color: 'var(--accent-eloran)' }}
-                >
-                  <Compass size={15} aria-hidden="true" /> eLoran Precision Suite
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] hidden sm:inline-block" style={{ color: 'var(--text-dim)' }}>
-                    DDS · ASF · PNT Fusion
-                  </span>
-                  <button
-                    data-testid="sidebar-collapse-btn"
-                    onClick={() => {
-                      setIsTransitioning(true);
-                      setSidebarOpen(false);
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: 'var(--accent-eloran-subtle)',
+                      border: '1px solid var(--accent-eloran-border)',
+                      color: 'var(--accent-eloran)',
+                      boxShadow: '0 0 10px var(--glow-eloran)',
                     }}
-                    className="p-1.5 rounded-md hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer border border-[var(--border-subtle)]"
-                    title="Collapse console drawer"
-                    aria-label="Collapse console drawer"
                   >
-                    <ChevronRight size={15} />
-                  </button>
+                    <Compass size={15} aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="font-mono font-bold text-xs uppercase tracking-wider truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        eLoran Precision Suite
+                      </span>
+                      <span
+                        className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded-full border shrink-0"
+                        style={{
+                          background: 'var(--accent-eloran-subtle)',
+                          borderColor: 'var(--accent-eloran-border)',
+                          color: 'var(--accent-eloran)',
+                        }}
+                      >
+                        v1.5
+                      </span>
+                    </div>
+                    <div
+                      className="text-[10px] font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
+                      style={{ color: 'var(--text-dim)' }}
+                    >
+                      DDS · ASF · PNT Fusion
+                    </div>
+                  </div>
                 </div>
+
+                <button
+                  data-testid="sidebar-collapse-btn"
+                  onClick={() => {
+                    setIsTransitioning(true);
+                    setSidebarOpen(false);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer border border-[var(--border-subtle)] shrink-0"
+                  title="Collapse console drawer"
+                  aria-label="Collapse console drawer"
+                >
+                  <ChevronRight size={15} />
+                </button>
               </div>
 
               {/* Primary Mode Switcher: Simulation vs Chain Design */}
               <div
-                className="flex rounded-lg p-0.5 font-mono text-xs mb-3"
+                className="grid grid-cols-2 rounded-lg p-1 font-mono text-xs mb-3 gap-1 shadow-inner"
                 style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
               >
                 <button
                   onClick={() => toggleDesignMode(false)}
-                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer font-medium"
                   style={!isDesignMode
-                    ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
-                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                    ? {
+                        background: 'var(--bg-surface)',
+                        color: 'var(--accent-eloran)',
+                        border: '1px solid var(--accent-eloran-border)',
+                        fontWeight: 700,
+                        boxShadow: 'var(--shadow-subtle)',
+                      }
+                    : {
+                        color: 'var(--text-secondary)',
+                        border: '1px solid transparent',
+                      }}
                 >
                   <Radio size={12} aria-hidden="true" />
                   <span>Simulation</span>
                 </button>
                 <button
                   onClick={() => toggleDesignMode(true)}
-                  className="flex-1 py-1.5 rounded text-center transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer font-medium"
                   style={isDesignMode
-                    ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
-                    : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                    ? {
+                        background: 'var(--bg-surface)',
+                        color: 'var(--accent-eloran)',
+                        border: '1px solid var(--accent-eloran-border)',
+                        fontWeight: 700,
+                        boxShadow: 'var(--shadow-subtle)',
+                      }
+                    : {
+                        color: 'var(--text-secondary)',
+                        border: '1px solid transparent',
+                      }}
                 >
                   <Compass size={12} aria-hidden="true" />
                   <span>Chain Design</span>
@@ -343,24 +390,42 @@ export default function ELoran() {
               </div>
 
               {!isDesignMode && (
-                /* Subsystem tab bar */
+                /* Subsystem tab bar: 4 columns x 2 rows */
                 <div
-                  className="grid grid-cols-4 sm:grid-cols-8 rounded-lg p-0.5 font-mono text-[10px]"
+                  className="grid grid-cols-4 gap-1 p-1 rounded-lg font-mono text-[10px]"
                   style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
                 >
-                  {tabs.map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id)}
-                      className="py-1.5 rounded text-center transition flex flex-col items-center gap-0.5 cursor-pointer"
-                      style={activeTab === id
-                        ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', border: '1px solid var(--accent-eloran-border)', fontWeight: 700 }
-                        : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
-                    >
-                      <Icon size={11} aria-hidden="true" />
-                      <span className="text-[9px] leading-none">{label}</span>
-                    </button>
-                  ))}
+                  {tabs.map(({ id, label, icon: Icon }) => {
+                    const isActive = activeTab === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className="py-2 px-1 rounded-md text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer select-none group"
+                        style={isActive
+                          ? {
+                              background: 'var(--accent-eloran-subtle)',
+                              color: 'var(--accent-eloran)',
+                              border: '1px solid var(--accent-eloran-border)',
+                              fontWeight: 700,
+                              boxShadow: 'var(--shadow-subtle)',
+                            }
+                          : {
+                              color: 'var(--text-secondary)',
+                              border: '1px solid transparent',
+                            }}
+                      >
+                        <Icon
+                          size={12}
+                          aria-hidden="true"
+                          className={isActive ? 'opacity-100' : 'opacity-65 group-hover:opacity-100 group-hover:scale-110 transition-transform'}
+                        />
+                        <span className="text-[10px] tracking-tight leading-tight truncate max-w-full">
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

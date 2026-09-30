@@ -263,64 +263,112 @@ export default function LoranC() {
         >
           {/* Console header */}
           <div
-            className="p-3"
+            className="p-3.5"
             style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div
-                className="font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5"
-                style={{ color: 'var(--accent-loran-c)' }}
-              >
-                <Radio size={13} aria-hidden="true" /> Loran-C Console
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}>
-                  100 kHz
-                </span>
-                <button
-                  data-testid="sidebar-collapse-btn"
-                  onClick={() => {
-                    setIsTransitioning(true);
-                    setSidebarOpen(false);
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: 'var(--accent-loran-c-subtle)',
+                    border: '1px solid var(--accent-loran-c-border)',
+                    color: 'var(--accent-loran-c)',
+                    boxShadow: '0 0 10px var(--glow-loran-c)',
                   }}
-                  className="p-1 rounded hover:bg-[var(--bg-muted)] transition cursor-pointer"
-                  title="Collapse console drawer"
-                  aria-label="Collapse console drawer"
-                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <ChevronRight size={14} />
-                </button>
+                  <Radio size={14} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="font-mono font-bold text-xs uppercase tracking-wider truncate"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      Loran-C Console
+                    </span>
+                    <span
+                      className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded-full border shrink-0"
+                      style={{
+                        background: 'var(--accent-loran-c-subtle)',
+                        borderColor: 'var(--accent-loran-c-border)',
+                        color: 'var(--accent-loran-c)',
+                      }}
+                    >
+                      100 kHz
+                    </span>
+                  </div>
+                  <div
+                    className="text-[10px] font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
+                    style={{ color: 'var(--text-dim)' }}
+                  >
+                    Hyperbolic PNT · GRI Multi-Chain
+                  </div>
+                </div>
               </div>
+
+              <button
+                data-testid="sidebar-collapse-btn"
+                onClick={() => {
+                  setIsTransitioning(true);
+                  setSidebarOpen(false);
+                }}
+                className="p-1.5 rounded-lg hover:bg-[var(--bg-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer border border-[var(--border-subtle)] shrink-0"
+                title="Collapse console drawer"
+                aria-label="Collapse console drawer"
+              >
+                <ChevronRight size={15} />
+              </button>
             </div>
 
             {/* Mode Switcher */}
             <div
-              className="flex rounded p-0.5 font-mono text-xs mb-2"
+              className="grid grid-cols-2 rounded-lg p-1 font-mono text-xs mb-3 gap-1 shadow-inner"
               style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
             >
               <button
                 onClick={() => toggleDesignMode(false)}
-                className="flex-1 py-1 rounded text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px]"
+                className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1 cursor-pointer text-[11px] font-medium"
                 style={!isDesignMode
-                  ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                  : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                  ? {
+                      background: 'var(--bg-surface)',
+                      color: 'var(--accent-loran-c)',
+                      border: '1px solid var(--accent-loran-c-border)',
+                      fontWeight: 700,
+                      boxShadow: 'var(--shadow-subtle)',
+                    }
+                  : {
+                      color: 'var(--text-secondary)',
+                      border: '1px solid transparent',
+                    }}
               >
-                <Radio size={11} aria-hidden="true" /> Simulation
+                <Radio size={11} aria-hidden="true" />
+                <span>Simulation</span>
               </button>
               <button
                 onClick={() => toggleDesignMode(true)}
-                className="flex-1 py-1 rounded text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px]"
+                className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1 cursor-pointer text-[11px] font-medium"
                 style={isDesignMode
-                  ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                  : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                  ? {
+                      background: 'var(--bg-surface)',
+                      color: 'var(--accent-loran-c)',
+                      border: '1px solid var(--accent-loran-c-border)',
+                      fontWeight: 700,
+                      boxShadow: 'var(--shadow-subtle)',
+                    }
+                  : {
+                      color: 'var(--text-secondary)',
+                      border: '1px solid transparent',
+                    }}
               >
-                <Compass size={11} aria-hidden="true" /> Chain Design
+                <Compass size={11} aria-hidden="true" />
+                <span>Chain Design</span>
               </button>
             </div>
 
             {!isDesignMode && (
               <div
-                className="flex rounded p-0.5 font-mono text-[11px]"
+                className="grid grid-cols-2 rounded-lg p-1 font-mono text-[11px] gap-1"
                 style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
               >
                 {[
@@ -330,10 +378,19 @@ export default function LoranC() {
                   <button
                     key={id}
                     onClick={() => setActiveTab(id)}
-                    className="flex-1 py-1 rounded text-center transition cursor-pointer"
+                    className="py-1.5 rounded-md text-center transition-all cursor-pointer font-medium"
                     style={activeTab === id
-                      ? { background: 'var(--accent-loran-c-subtle)', color: 'var(--accent-loran-c)', border: '1px solid var(--accent-loran-c-border)', fontWeight: 700 }
-                      : { color: 'var(--text-secondary)', border: '1px solid transparent' }}
+                      ? {
+                          background: 'var(--accent-loran-c-subtle)',
+                          color: 'var(--accent-loran-c)',
+                          border: '1px solid var(--accent-loran-c-border)',
+                          fontWeight: 700,
+                          boxShadow: 'var(--shadow-subtle)',
+                        }
+                      : {
+                          color: 'var(--text-secondary)',
+                          border: '1px solid transparent',
+                        }}
                   >
                     {label}
                   </button>

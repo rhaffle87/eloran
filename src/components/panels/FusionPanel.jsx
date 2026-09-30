@@ -122,7 +122,7 @@ export default function FusionPanel() {
       }}
     >
       {/* Top Header & Sub-Tab Navigation */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="flex flex-col gap-3 border-b pb-4" style={{ borderColor: 'var(--border-subtle)' }}>
         <div>
           <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--accent-eloran)]">
             <Activity size={14} /> Multi-Source Fusion &amp; EW Resilience
@@ -137,22 +137,22 @@ export default function FusionPanel() {
 
         {/* Sub-Tabs */}
         <div
-          className="flex rounded-lg p-1 text-xs font-mono"
-          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}
+          className="grid grid-cols-3 gap-1 rounded-lg p-1 text-xs font-mono w-full"
+          style={{ background: 'var(--bg-canvas)', border: '1px solid var(--border-subtle)' }}
         >
           {[
-            ['overview', 'Overview & Weights'],
+            ['overview', 'Overview'],
             ['stanford', 'Stanford Matrix'],
-            ['ew', 'Electronic Warfare RF'],
+            ['ew', 'EW Defense'],
           ].map(([tab, label]) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="px-3 py-1.5 rounded transition cursor-pointer"
+              className="py-1.5 px-1 rounded-md text-center transition-all cursor-pointer font-medium text-[11px] truncate"
               style={
                 activeTab === tab
-                  ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
-                  : { color: 'var(--text-dim)' }
+                  ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700, boxShadow: 'var(--shadow-subtle)' }
+                  : { color: 'var(--text-secondary)' }
               }
             >
               {label}
@@ -516,7 +516,7 @@ export default function FusionPanel() {
         <div className="space-y-6 font-mono text-xs">
           {/* Sourced EW Header Banner */}
           <div
-            className="p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            className="p-4 rounded-xl flex flex-col justify-between items-start gap-3"
             style={{
               background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%)',
               border: '1px solid var(--accent-eloran-border)',
@@ -602,7 +602,7 @@ export default function FusionPanel() {
             </div>
 
             {/* Path Loss Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
               <div className="p-2.5 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
                 <div className="text-[10px] text-[var(--text-dim)]">Free Space Loss (FSPL)</div>
                 <div className="text-base font-bold text-[var(--text-primary)] mt-0.5">{ewAnalysis.pathLossDb.toFixed(1)} dB</div>

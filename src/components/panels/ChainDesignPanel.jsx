@@ -442,7 +442,7 @@ export default function ChainDesignPanel() {
         className="p-3 rounded-lg border space-y-2.5"
         style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
             <span>Planning Thresholds & Heuristics</span>
             <InfoTooltip
@@ -454,7 +454,7 @@ export default function ChainDesignPanel() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2.5">
           <div>
             <div className="flex items-center justify-between mb-0.5">
               <label className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>Min Coding Delay (CD)</label>

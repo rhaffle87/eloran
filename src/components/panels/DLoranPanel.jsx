@@ -142,7 +142,7 @@ export default function DLoranPanel() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {DLORAN_MONITOR_PRESETS.map((m) => (
             <button
               key={m.id}

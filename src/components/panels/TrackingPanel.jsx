@@ -148,7 +148,7 @@ export default function TrackingPanel() {
       </div>
 
       {/* Primary Tracking Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         <div className="card p-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-canvas)]">
           <div className="text-[10px] text-[var(--text-dim)]">Estimated SZC</div>
           <div className="text-sm font-bold text-[var(--text-primary)]">

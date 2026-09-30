@@ -98,6 +98,24 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
     await expect(updatedOp.first()).toBeVisible();
 
     // 4. Verify Export Fidelity (Requirement 3)
+    // Test PNG Export (High-resolution raster export)
+    const downloadPromisePng = page.waitForEvent('download');
+    const exportPngBtn = page.getByRole('button', { name: /Export PNG/i });
+    await expect(exportPngBtn).toBeVisible();
+    await exportPngBtn.click();
+    const downloadPng = await downloadPromisePng;
+    expect(downloadPng.suggestedFilename()).toContain('loran-pulse-trace');
+    expect(downloadPng.suggestedFilename()).toContain('.png');
+    const pngPath = await downloadPng.path();
+    const pngStats = fs.statSync(pngPath);
+    expect(pngStats.size).toBeGreaterThan(10000); // Verify non-empty raster image
+    const pngBuffer = fs.readFileSync(pngPath);
+    // PNG Magic Number check: 0x89 0x50 0x4E 0x47
+    expect(pngBuffer[0]).toBe(0x89);
+    expect(pngBuffer[1]).toBe(0x50);
+    expect(pngBuffer[2]).toBe(0x4E);
+    expect(pngBuffer[3]).toBe(0x47);
+
     // Test SVG Export
     const downloadPromiseSvg = page.waitForEvent('download');
     const exportSvgBtn = page.getByRole('button', { name: /Export SVG/i });

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import {
   Download, FileText, Radio, Layers, Activity,
-  Sliders, ShieldCheck, RotateCcw,
+  Sliders, ShieldCheck, RotateCcw, Image as ImageIcon,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { synthesizeReceiverWaveform } from '../../lib/pulse.js';
@@ -144,9 +144,9 @@ export default function PulseViewer() {
   // Single-pulse zoom mode detection (window <= 0.5 ms)
   const isSinglePulseZoom = windowDurationMs <= 0.5;
 
-  // Presentation-Grade Vector SVG Export
-  const handleExportSvg = () => {
-    if (!waveform.length) return;
+  // Presentation-Grade Vector SVG String Generator (Shared between SVG & PNG exports)
+  const generateExportSvgString = () => {
+    if (!waveform.length) return '';
     const exportWidth = 1200;
     const exportHeight = 560;
     const padX = 85;
@@ -204,22 +204,56 @@ export default function PulseViewer() {
       `;
     });
 
-    // Station arrival markers
-    let arrivalsSvg = '';
-    arrivals.forEach((arr) => {
-      const relSec = arr.arrivalSec - effectiveSimTime;
-      const frac = relSec / (windowDurationMs / 1000);
-      if (frac >= 0 && frac <= 1) {
+    // Station arrival markers with collision-free multi-tier pill badges
+    const visibleArrivals = arrivals
+      .map((arr) => {
+        const relSec = arr.arrivalSec - effectiveSimTime;
+        const frac = relSec / (windowDurationMs / 1000);
         const ax = padX + frac * chartW;
-        const color = arr.role === 'master' ? '#06b6d4' : '#f59e0b';
-        arrivalsSvg += `
-          <g>
-            <line x1="${ax.toFixed(1)}" y1="${topY}" x2="${ax.toFixed(1)}" y2="${botY}" stroke="${color}" stroke-width="1.5" stroke-dasharray="${arr.isSkywave ? '3 3' : 'none'}" opacity="0.85" />
-            <polygon points="${ax.toFixed(1)},${topY + 12} ${(ax - 5).toFixed(1)},${topY} ${(ax + 5).toFixed(1)},${topY}" fill="${color}" />
-            <text x="${(ax + 5).toFixed(1)}" y="${topY + 22}" fill="${color}" font-size="10" font-family="ui-monospace, monospace" font-weight="bold">${arr.station} ${arr.isSkywave ? '(Sky)' : ''}</text>
-          </g>
-        `;
+        return { ...arr, relSec, frac, ax };
+      })
+      .filter((arr) => arr.frac >= 0 && arr.frac <= 1)
+      .sort((a, b) => a.ax - b.ax);
+
+    const tiers = [topY + 12, topY + 36, topY + 60, topY + 84];
+    const tierRightEdges = [-9999, -9999, -9999, -9999];
+    let arrivalsSvg = '';
+
+    visibleArrivals.forEach((arr) => {
+      const color = arr.role === 'master' ? '#06b6d4' : '#f59e0b';
+      const labelText = `${arr.station} ${arr.isSkywave ? '(Sky)' : ''}`;
+      const badgeW = Math.max(76, Math.round(labelText.length * 6.5 + 20));
+      const badgeH = 19;
+
+      let badgeX = arr.ax + 5;
+      if (badgeX + badgeW > padX + chartW - 6) {
+        badgeX = arr.ax - badgeW - 5;
       }
+      if (badgeX < padX + 4) {
+        badgeX = padX + 4;
+      }
+
+      const prefTier = arr.isSkywave ? 1 : 0;
+      let chosenTier = prefTier;
+      if (badgeX < tierRightEdges[prefTier] + 8) {
+        const altTiers = [0, 1, 2, 3].filter((t) => t !== prefTier);
+        const available = altTiers.find((t) => badgeX >= tierRightEdges[t] + 8);
+        chosenTier = available !== undefined ? available : altTiers.reduce((minT, t) => (tierRightEdges[t] < tierRightEdges[minT] ? t : minT), prefTier);
+      }
+      tierRightEdges[chosenTier] = badgeX + badgeW;
+      const badgeY = tiers[chosenTier];
+      const leaderTargetX = badgeX > arr.ax ? badgeX : badgeX + badgeW;
+
+      arrivalsSvg += `
+        <g>
+          <line x1="${arr.ax.toFixed(1)}" y1="${topY}" x2="${arr.ax.toFixed(1)}" y2="${botY}" stroke="${color}" stroke-width="${arr.isSkywave ? '1.2' : '1.5'}" stroke-dasharray="${arr.isSkywave ? '3 3' : 'none'}" opacity="0.85" />
+          <polygon points="${arr.ax.toFixed(1)},${topY + 9} ${(arr.ax - 4.5).toFixed(1)},${topY} ${(arr.ax + 4.5).toFixed(1)},${topY}" fill="${color}" />
+          <line x1="${arr.ax.toFixed(1)}" y1="${(badgeY + badgeH / 2).toFixed(1)}" x2="${leaderTargetX.toFixed(1)}" y2="${(badgeY + badgeH / 2).toFixed(1)}" stroke="${color}" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6" />
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW}" height="${badgeH}" rx="4" fill="#070c18" fill-opacity="0.94" stroke="${color}" stroke-width="1" stroke-opacity="0.9" />
+          <circle cx="${(badgeX + 9).toFixed(1)}" cy="${(badgeY + 9.5).toFixed(1)}" r="2.5" fill="${color}" />
+          <text x="${(badgeX + 16).toFixed(1)}" y="${(badgeY + 13.5).toFixed(1)}" fill="${arr.isSkywave ? '#fcd34d' : '#f8fafc'}" font-size="9.5" font-family="ui-monospace, monospace" font-weight="bold" letter-spacing="0.2">${labelText}</text>
+        </g>
+      `;
     });
 
     // SZC reference marker in single pulse mode
@@ -237,8 +271,8 @@ export default function PulseViewer() {
         szcMarkersSvg += `
           <g>
             <line x1="${x30.toFixed(1)}" y1="${topY}" x2="${x30.toFixed(1)}" y2="${botY}" stroke="#10b981" stroke-width="1.8" stroke-dasharray="3 2" />
-            <rect x="${(x30 - 45).toFixed(1)}" y="${botY - 32}" width="90" height="20" rx="3" fill="#064e3b" stroke="#10b981" stroke-width="1" />
-            <text x="${x30.toFixed(1)}" y="${botY - 18}" fill="#ecfdf5" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">SZC: 30 µs (3rd Cycle)</text>
+            <rect x="${(x30 - 48).toFixed(1)}" y="${botY - 32}" width="96" height="20" rx="4" fill="#064e3b" fill-opacity="0.95" stroke="#10b981" stroke-width="1" />
+            <text x="${x30.toFixed(1)}" y="${botY - 18}" fill="#ecfdf5" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">SZC: 30.0 µs (3rd Cycle)</text>
           </g>
         `;
       }
@@ -248,8 +282,8 @@ export default function PulseViewer() {
         szcMarkersSvg += `
           <g>
             <line x1="${x65.toFixed(1)}" y1="${topY}" x2="${x65.toFixed(1)}" y2="${botY}" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="3 2" />
-            <rect x="${(x65 - 42).toFixed(1)}" y="${botY - 56}" width="84" height="20" rx="3" fill="#7f1d1d" stroke="#ef4444" stroke-width="1" />
-            <text x="${x65.toFixed(1)}" y="${botY - 42}" fill="#fef2f2" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">Peak τ: 65 µs</text>
+            <rect x="${(x65 - 45).toFixed(1)}" y="${botY - 58}" width="90" height="20" rx="4" fill="#7f1d1d" fill-opacity="0.95" stroke="#ef4444" stroke-width="1" />
+            <text x="${x65.toFixed(1)}" y="${botY - 44}" fill="#fef2f2" font-size="10" font-family="ui-monospace, monospace" font-weight="bold" text-anchor="middle">Peak τpk: 65.0 µs</text>
           </g>
         `;
       }
@@ -259,7 +293,7 @@ export default function PulseViewer() {
       ? `${(windowDurationMs * 1000).toFixed(0)} µs`
       : `${windowDurationMs.toFixed(1)} ms`;
 
-    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${exportWidth} ${exportHeight}" width="${exportWidth}" height="${exportHeight}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -280,11 +314,13 @@ export default function PulseViewer() {
   <text x="${padX}" y="78" fill="#64748b" font-size="10" font-family="ui-monospace, monospace">Standards: USCG Specification COMDTINST M16562.4A · CCIR Rec. 589 · 100 kHz Groundwave Discrimination</text>
 
   <!-- Scope HUD Box in SVG Header -->
-  <g transform="translate(${exportWidth - 440}, 24)">
-    <rect width="395" height="66" fill="#0f172a" stroke="#334155" stroke-width="1" rx="6" />
-    <text x="14" y="22" fill="#38bdf8" font-size="11" font-family="ui-monospace, monospace" font-weight="bold">SCOPE HUD TELEMETRY</text>
-    <text x="14" y="42" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">Vpk: ${(vPeak * 1000).toFixed(1)} mV  |  Vpp: ${(vPp * 1000).toFixed(1)} mV  |  fc: 100.0 kHz</text>
-    <text x="14" y="54" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>\n    <text x="14" y="68" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">Traces: Pulse Envelope E(t) (Red) · Pulse Wave (100 kHz) (Cyan)</text>\n  </g>
+  <g transform="translate(${exportWidth - 460}, 18)">
+    <rect width="415" height="82" fill="#090d16" fill-opacity="0.95" stroke="#334155" stroke-width="1.2" rx="6" />
+    <text x="14" y="20" fill="#38bdf8" font-size="11" font-family="ui-monospace, monospace" font-weight="bold">SCOPE HUD TELEMETRY</text>
+    <text x="14" y="38" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">Vpk: ${(vPeak * 1000).toFixed(1)} mV  |  Vpp: ${(vPp * 1000).toFixed(1)} mV  |  fc: 100.0 kHz</text>
+    <text x="14" y="54" fill="#cbd5e1" font-size="10" font-family="ui-monospace, monospace">SZC: 30.0 µs  |  τpk: 65.0 µs  |  Prx: ${pDbm.toFixed(1)} dBm  |  Gain: ${verticalGain}x</text>
+    <text x="14" y="70" fill="#94a3b8" font-size="9.5" font-family="ui-monospace, monospace">Traces: Pulse Envelope E(t) (Red) · Pulse Wave (100 kHz) (Cyan)</text>
+  </g>
 
   <!-- Grid and Ticks -->
   ${gridLinesSvg}
@@ -300,15 +336,79 @@ export default function PulseViewer() {
   ${envPath ? `<path d="${envPath}" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />` : ''}
   ${settings.includeCarrier && wavePath ? `<path d="${wavePath}" fill="none" stroke="#06b6d4" stroke-width="1.3" stroke-linejoin="round" />` : ''}
 </svg>`;
+  };
+
+  // High-Resolution Raster PNG Export (Requested format for clean report presentation)
+  const handleExportPng = () => {
+    if (!waveform.length) return;
+    const svgString = generateExportSvgString();
+    if (!svgString) return;
+
+    const exportWidth = 1200;
+    const exportHeight = 560;
+    const scale = 2; // 2x high-resolution rendering (2400 x 1120) for crisp, readable graphs
+    const canvas = document.createElement('canvas');
+    canvas.width = exportWidth * scale;
+    canvas.height = exportHeight * scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const windowTitle = windowDurationMs < 1
+      ? `${(windowDurationMs * 1000).toFixed(0)}us`
+      : `${windowDurationMs.toFixed(1)}ms`;
+
+    img.onload = () => {
+      try {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const pngUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = pngUrl;
+          a.download = `loran-pulse-trace-${rx?.label || 'rx'}-${windowTitle}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+        }, 'image/png');
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  };
+
+  // Presentation-Grade Vector SVG Export
+  const handleExportSvg = () => {
+    if (!waveform.length) return;
+    const svgContent = generateExportSvgString();
+    if (!svgContent) return;
+
+    const windowTitle = windowDurationMs < 1
+      ? `${(windowDurationMs * 1000).toFixed(0)}us`
+      : `${windowDurationMs.toFixed(1)}ms`;
 
     const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `loran-pulse-trace-${rx?.label || 'rx'}-${windowTitle.replace(/\s+/g, '')}.svg`;
+    a.download = `loran-pulse-trace-${rx?.label || 'rx'}-${windowTitle}.svg`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
 
   // Raw Tabular Data CSV Export for MATLAB / Python / Excel analysis
   const handleExportCsv = () => {
@@ -395,15 +495,27 @@ export default function PulseViewer() {
             </span>
           </div>
 
-          {/* Action Buttons: Vector SVG & CSV Data Exports */}
+          {/* Action Buttons: High-Res PNG, Vector SVG & CSV Data Exports */}
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleExportPng}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer hover:brightness-110 shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(6,182,212,0.1) 100%)',
+                border: '1px solid var(--accent-eloran)',
+                color: 'var(--accent-eloran)',
+              }}
+              title="Download high-resolution 2400x1120 PNG image (crystal clear & ready for reports)"
+            >
+              <ImageIcon size={13} className="text-[var(--accent-eloran)]" /> Export PNG
+            </button>
             <button
               onClick={handleExportSvg}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer hover:bg-[var(--bg-muted)]"
               style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
               title="Download uncompressed presentation-grade vector SVG"
             >
-              <Download size={13} className="text-[var(--accent-eloran)]" /> Export SVG
+              <Download size={13} className="text-[var(--text-secondary)]" /> Export SVG
             </button>
             <button
               onClick={handleExportCsv}
@@ -724,30 +836,80 @@ export default function PulseViewer() {
               />
             ))}
 
-            {/* Station arrival flags */}
-            {arrivals.map((arr, i) => {
-              const relSec = arr.arrivalSec - effectiveSimTime;
-              const x = (relSec / (windowDurationMs / 1000)) * 1000;
-              const color = arr.role === 'master' ? clrEloran : clrLoranC;
-              return (
-                <g key={`arr-${i}`}>
-                  <line
-                    x1={x}
-                    y1="14"
-                    x2={x}
-                    y2="200"
-                    stroke={color}
-                    strokeWidth="1.2"
-                    strokeDasharray={arr.isSkywave ? '2 2' : 'none'}
-                    opacity="0.85"
-                  />
-                  <polygon points={`${x},14 ${x - 4},4 ${x + 4},4`} fill={color} />
-                  <text x={x + 3} y="22" fontSize="9" fill={color} fontFamily="monospace" fontWeight="bold">
-                    {arr.station} {arr.isSkywave ? '(Sky)' : ''}
-                  </text>
-                </g>
-              );
-            })}
+            {/* Station arrival flags with collision-free tiered badges */}
+            {(() => {
+              const visibleOnScreen = arrivals
+                .map((arr, idx) => {
+                  const relSec = arr.arrivalSec - effectiveSimTime;
+                  const x = (relSec / (windowDurationMs / 1000)) * 1000;
+                  return { ...arr, relSec, x, originalIndex: idx };
+                })
+                .filter((arr) => arr.x >= 0 && arr.x <= 1000)
+                .sort((a, b) => a.x - b.x);
+
+              const tiers = [10, 26, 42, 58];
+              const tierRightEdges = [-9999, -9999, -9999, -9999];
+
+              return visibleOnScreen.map((arr) => {
+                const color = arr.role === 'master' ? clrEloran : clrLoranC;
+                const labelText = `${arr.station} ${arr.isSkywave ? '(Sky)' : ''}`;
+                const badgeW = Math.max(54, Math.round(labelText.length * 5.4 + 14));
+                const badgeH = 13;
+
+                let badgeX = arr.x + 3;
+                if (badgeX + badgeW > 995) {
+                  badgeX = arr.x - badgeW - 3;
+                }
+                if (badgeX < 5) badgeX = 5;
+
+                const prefTier = arr.isSkywave ? 1 : 0;
+                let chosenTier = prefTier;
+                if (badgeX < tierRightEdges[prefTier] + 4) {
+                  const altTiers = [0, 1, 2, 3].filter((t) => t !== prefTier);
+                  const avail = altTiers.find((t) => badgeX >= tierRightEdges[t] + 4);
+                  chosenTier = avail !== undefined ? avail : altTiers.reduce((minT, t) => (tierRightEdges[t] < tierRightEdges[minT] ? t : minT), prefTier);
+                }
+                tierRightEdges[chosenTier] = badgeX + badgeW;
+                const badgeY = tiers[chosenTier];
+
+                return (
+                  <g key={`arr-${arr.originalIndex}`}>
+                    <line
+                      x1={arr.x}
+                      y1="14"
+                      x2={arr.x}
+                      y2="200"
+                      stroke={color}
+                      strokeWidth="1.2"
+                      strokeDasharray={arr.isSkywave ? '2 2' : 'none'}
+                      opacity="0.85"
+                    />
+                    <polygon points={`${arr.x},14 ${arr.x - 3.5},4 ${arr.x + 3.5},4`} fill={color} />
+                    <rect
+                      x={badgeX}
+                      y={badgeY}
+                      width={badgeW}
+                      height={badgeH}
+                      rx={3}
+                      fill="#070c18"
+                      fillOpacity={0.92}
+                      stroke={color}
+                      strokeWidth={0.8}
+                    />
+                    <text
+                      x={badgeX + 4}
+                      y={badgeY + 9.5}
+                      fontSize="8"
+                      fill={arr.isSkywave ? '#fcd34d' : '#f8fafc'}
+                      fontFamily="monospace"
+                      fontWeight="bold"
+                    >
+                      {labelText}
+                    </text>
+                  </g>
+                );
+              });
+            })()}
 
             {/* Probes: SZC (30 µs) and Peak (65 µs) in Single-Pulse Inspection */}
             {showProbes && isSinglePulseZoom && arrivals.length > 0 && (() => {

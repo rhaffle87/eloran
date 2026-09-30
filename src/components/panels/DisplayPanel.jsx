@@ -12,6 +12,7 @@ import {
 } from '../../lib/pulse.js';
 import Toggle from '../ui/Toggle.jsx';
 import Slider from '../ui/Slider.jsx';
+import UncertaintySparkline from '../charts/UncertaintySparkline.jsx';
 import { InfoTooltip } from '../ui/Tooltip.jsx';
 
 export default function DisplayPanel({ isELoran = false }) {
@@ -25,6 +26,7 @@ export default function DisplayPanel({ isELoran = false }) {
     settings,
     receiverFixes,
     selectedReceiver,
+    uncertaintyHistory,
     toggleBaselines,
     toggleLops,
     toggleGdopLayer,
@@ -334,6 +336,18 @@ export default function DisplayPanel({ isELoran = false }) {
                   : 'PF + ASF (SF off)'}
               </span>
             </div>
+          </div>
+
+          {/* Uncertainty Variance Trend */}
+          <div className="pt-2 border-t border-[var(--border-subtle)]">
+            <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+              Live Uncertainty Variance (σ²)
+            </span>
+            <UncertaintySparkline
+              data={uncertaintyHistory}
+              height={38}
+              strokeColor="var(--accent-eloran)"
+            />
           </div>
         </div>
       )}

@@ -249,11 +249,9 @@ export default function About() {
       {/* Origin & Attribution */}
       <SectionCard>
         <SectionHeading icon={Heart} iconColor="var(--status-danger)">Origin & Attribution</SectionHeading>
-        <p className="text-xs leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
-          SIMULORAN was extracted, refactored, and modularized from the radio-navigation subsystems of{' '}
-          <strong style={{ color: 'var(--accent-eloran)' }}>ACTIFE</strong>{' '}
-          (Artificial Computing Toolkit for Intelligent Feature Experiments),
-          originally created by <strong style={{ color: 'var(--text-primary)' }}>Rafli Alif</strong> (
+        <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          SIMULORAN was conceived, architected, and engineered by{' '}
+          <strong style={{ color: 'var(--text-primary)' }}>Rafli Alif</strong> (
           <a
             href="https://github.com/rhaffle87/ai_ml"
             target="_blank"
@@ -263,12 +261,47 @@ export default function About() {
           >
             rhaffle87/ai_ml <ExternalLink size={11} />
           </a>).
+          The platform traces its architectural lineage to the early{' '}
+          <strong style={{ color: 'var(--accent-eloran)' }}>ACTIFE</strong>{' '}
+          (Artificial Computing Toolkit for Intelligent Feature Experiments) navigation research module and the{' '}
+          <em>Cross-Disciplinary Perspective (CDP) / Resulmation "eLORAN Advanced Signal Diagnostics Console"</em>{' '}
+          concept demonstrator.
         </p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          While ACTIFE spanned diverse AI/ML disciplines (TensorFlow, MediaPipe, image compression,
-          linear regression), SIMULORAN isolates the navigation and RF physics into a production-grade,
-          zero-dependency, standalone application with strict unit test coverage and mathematical precision.
+        <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>
+          While ACTIFE originally encompassed broader machine learning and computer vision experiments,
+          SIMULORAN isolates, refactors, and modularizes the LF radio-navigation physics into a dedicated,
+          production-grade hyperbolic and pseudorange simulation engine with zero external runtime dependencies.
         </p>
+        <div className="p-3 rounded-xl text-xs font-mono" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}>
+          <div className="font-bold mb-1.5 text-[11px]" style={{ color: 'var(--text-primary)' }}>
+            Open-Source Reference Implementations & Lineage:
+          </div>
+          <ul className="space-y-1.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+            <li className="flex items-start gap-1.5">
+              <span style={{ color: 'var(--accent-eloran)' }}>•</span>
+              <span>
+                <strong style={{ color: 'var(--text-secondary)' }}>CheolJ/Loran-c-reference-code:</strong> Python reference
+                chain generator implementations for East Asia 9930, North Sea 7430, and East Sea 8390 chains, establishing
+                ground-truth baseline PCI emission delay benchmarks.
+              </span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span style={{ color: 'var(--accent-loran-c)' }}>•</span>
+              <span>
+                <strong style={{ color: 'var(--text-secondary)' }}>romavis/LoranC & loran_datatest:</strong> Open-source C/C++ SDR
+                receiver architectures for Loran-C and Russian Chayka (GRI 8000), serving as reference models for RF matched filtering,
+                envelope acquisition, and phase-lock loops.
+              </span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span style={{ color: 'var(--status-ok)' }}>•</span>
+              <span>
+                <strong style={{ color: 'var(--text-secondary)' }}>NOAA NEFSC Coordinate Conversion:</strong> Classical
+                conversion algorithms verifying Loran Time Difference hyperbolic fixes against geodetic WGS-84 ellipsoidal positions.
+              </span>
+            </li>
+          </ul>
+        </div>
       </SectionCard>
 
       {/* Empirical Field Trial Benchmarks */}

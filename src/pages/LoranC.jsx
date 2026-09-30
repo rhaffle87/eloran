@@ -4,6 +4,7 @@ import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
 import DisplayPanel from '../components/panels/DisplayPanel.jsx';
 import ChainDesignPanel from '../components/panels/ChainDesignPanel.jsx';
+import TelemetryConsole from '../components/panels/TelemetryConsole.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 
 /** Map-mode toolbar button — theme-aware */
@@ -214,6 +215,7 @@ export default function LoranC() {
             <ChevronLeft size={17} />
           </button>
         )}
+        <TelemetryConsole isELoran={false} />
       </div>
 
       {/* Collapsible right console drawer — stays mounted to prevent MapLibre flicker */}

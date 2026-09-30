@@ -10,6 +10,7 @@ import ChainDesignPanel from '../components/panels/ChainDesignPanel.jsx';
 import TrackingPanel from '../components/panels/TrackingPanel.jsx';
 import DLoranPanel from '../components/panels/DLoranPanel.jsx';
 import TrajectoryPanel from '../components/panels/TrajectoryPanel.jsx';
+import TelemetryConsole from '../components/panels/TelemetryConsole.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 
 /** Map-mode toolbar button — theme-aware */
@@ -237,6 +238,7 @@ export default function ELoran() {
             <ChevronLeft size={17} />
           </button>
         )}
+        <TelemetryConsole isELoran={true} />
       </div>
 
       {/* Collapsible right console drawer — stays mounted, no flicker */}

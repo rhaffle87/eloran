@@ -132,6 +132,21 @@ export const useSimulationStore = create((set, get) => {
   ddsLogs: [],
   selectedReceiver: 'R1-Vessel',
 
+  // Live Operational Telemetry & Uncertainty State
+  activityLogs: [
+    {
+      id: 'init-1',
+      timestamp: Date.now(),
+      timeStr: new Date().toTimeString().slice(0, 8),
+      category: 'SYSTEM',
+      message: 'SIMULORAN Tactical Core initialized (Dual Loran-C/eLoran)',
+      level: 'info',
+    },
+  ],
+  isActivityFeedPaused: false,
+  uncertaintyHistory: [],
+  isConsoleOpen: false,
+
   // Visualization Layers
   gdopLayerVisible: false,
   baselinesVisible: true,
@@ -194,6 +209,11 @@ export const useSimulationStore = create((set, get) => {
         [label]: status,
       },
     }));
+    get().logActivity(
+      'STATION',
+      `Station ${label} status set to ${status.toUpperCase()}`,
+      status === 'failed' ? 'warn' : 'info'
+    );
     setTimeout(() => get().evaluateReceivers(), 20);
   },
   stepTrackingLoop: (snrOverride) =>
@@ -229,6 +249,28 @@ export const useSimulationStore = create((set, get) => {
     set((state) => ({ showBaselineExtensions: !state.showBaselineExtensions })),
   toggleCrossingAngles: () =>
     set((state) => ({ showCrossingAngles: !state.showCrossingAngles })),
+
+  // Operational Activity & Uncertainty Actions
+  logActivity: (category, message, level = 'info') => {
+    const newEntry = {
+      id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: Date.now(),
+      timeStr: new Date().toTimeString().slice(0, 8),
+      category,
+      message,
+      level,
+    };
+    set((state) => ({
+      activityLogs: [...(state.activityLogs || []).slice(-199), newEntry],
+    }));
+  },
+  clearActivityLogs: () => set({ activityLogs: [] }),
+  toggleActivityFeedPaused: () => set((state) => ({ isActivityFeedPaused: !state.isActivityFeedPaused })),
+  recordUncertaintyPoint: (point) =>
+    set((state) => ({
+      uncertaintyHistory: [...(state.uncertaintyHistory || []).slice(-59), point],
+    })),
+  toggleConsoleOpen: () => set((state) => ({ isConsoleOpen: !state.isConsoleOpen })),
 
   updateDesignMaster: (updates) =>
     set((state) => ({
@@ -402,6 +444,7 @@ export const useSimulationStore = create((set, get) => {
       gridStatus: { status: 'idle', computedAt: null, message: null },
       selectedReceiver: preset.receivers[0]?.label || '',
     });
+    get().logActivity('PRESET', `Loaded scenario preset: ${preset.name || presetId}`, 'info');
     setTimeout(() => get().evaluateReceivers(), 50);
   },
 
@@ -660,7 +703,24 @@ export const useSimulationStore = create((set, get) => {
       };
     });
 
-    set({ receiverFixes: fixes });
+    // Record dynamic uncertainty sample for active receiver
+    const activeLabel = get().selectedReceiver || receivers[0]?.label;
+    const activeFix = fixes[activeLabel] || Object.values(fixes)[0];
+    if (activeFix) {
+      const err = activeFix.errorMeters ?? 0;
+      const sample = {
+        timestamp: Date.now(),
+        variance: Math.max(0.01, err * err),
+        gdop: activeFix.gdop ?? activeFix.eloranSol?.gdop ?? 1.0,
+        errorMeters: err,
+      };
+      set((state) => ({
+        receiverFixes: fixes,
+        uncertaintyHistory: [...(state.uncertaintyHistory || []).slice(-59), sample],
+      }));
+    } else {
+      set({ receiverFixes: fixes });
+    }
   },
 
   resetAll: () =>

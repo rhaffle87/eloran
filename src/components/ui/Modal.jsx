@@ -25,8 +25,9 @@ export default function Modal({
           </h3>
           <button
             onClick={onCancel}
-            className="p-1 rounded-md transition"
+            className="p-1 rounded-md transition cursor-pointer"
             style={{ color: 'var(--text-muted)' }}
+            title="Close dialog"
             aria-label="Close modal"
             onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-muted)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
@@ -60,15 +61,19 @@ export default function Modal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition"
+            className="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition cursor-pointer hover:bg-[var(--border-subtle)]"
             style={{ background: 'var(--bg-subtle)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
+            title="Cancel and close dialog"
+            aria-label="Cancel"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm?.(value)}
-            className="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition font-mono"
+            className="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition font-mono cursor-pointer hover:opacity-90"
             style={{ background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', border: '1px solid transparent' }}
+            title="Confirm and apply changes"
+            aria-label="Confirm"
           >
             Confirm
           </button>

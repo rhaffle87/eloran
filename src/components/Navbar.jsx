@@ -132,7 +132,7 @@ export default function Navbar() {
                 aria-checked={theme === 'light'}
                 tabIndex={theme === 'light' ? 0 : -1}
                 onClick={() => setTheme('light')}
-                className={`p-1.5 rounded-md transition focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
+                className={`p-1.5 rounded-md transition cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
                   theme === 'light'
                     ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -148,7 +148,7 @@ export default function Navbar() {
                 aria-checked={theme === 'dark'}
                 tabIndex={theme === 'dark' ? 0 : -1}
                 onClick={() => setTheme('dark')}
-                className={`p-1.5 rounded-md transition focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
+                className={`p-1.5 rounded-md transition cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
                   theme === 'dark'
                     ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -164,7 +164,7 @@ export default function Navbar() {
                 aria-checked={theme === 'system'}
                 tabIndex={theme === 'system' ? 0 : -1}
                 onClick={() => setTheme('system')}
-                className={`p-1.5 rounded-md transition focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
+                className={`p-1.5 rounded-md transition cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-[var(--accent-eloran)] ${
                   theme === 'system'
                     ? 'bg-[var(--bg-surface)] text-[var(--accent-eloran)] shadow-xs'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -178,10 +178,11 @@ export default function Navbar() {
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] transition"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] transition cursor-pointer"
               onClick={() => setMobileOpen((o) => !o)}
               aria-expanded={mobileOpen}
               aria-controls="mobile-menu"
+              title="Toggle navigation menu"
               aria-label="Toggle navigation menu"
             >
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}

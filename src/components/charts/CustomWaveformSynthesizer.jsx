@@ -377,6 +377,8 @@ export default function CustomWaveformSynthesizer() {
                   key={cnt}
                   onClick={() => handlePulseCountChange(cnt)}
                   className="px-2 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer"
+                  title={`Set pulse group count to ${cnt} pulses`}
+                  aria-label={`Set pulse count ${cnt}`}
                   style={pulseCount === cnt
                     ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', borderColor: 'var(--accent-eloran-border)' }
                     : { background: 'var(--bg-canvas)', color: 'var(--text-dim)', borderColor: 'var(--border-subtle)' }}

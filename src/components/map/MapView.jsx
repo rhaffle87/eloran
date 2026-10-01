@@ -1781,6 +1781,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
             onClick={handleDismissFallbackNotice}
             className="p-1 rounded-md transition text-xs font-bold shrink-0 cursor-pointer hover:bg-[var(--bg-subtle)]"
             style={{ color: 'var(--text-muted)' }}
+            title="Dismiss notice"
             aria-label="Dismiss notice"
           >
             ✕
@@ -1869,7 +1870,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
                   ? 'Offline Radar: Zero-network 2D navigation backdrop with calibrated range rings and bearing radials. Operates without internet connectivity.'
                   : isCartoUnset
                   ? 'CARTO Dark requires VITE_CARTO_API_KEY (optional commercial basemap). Click for setup details.'
-                  : undefined
+                  : `Switch basemap provider to ${p.name}`
               }
               className="px-2 sm:px-2.5 py-0.5 rounded-full transition-colors text-[10px] sm:text-[11px] flex items-center gap-1 cursor-pointer"
               style={activeTileProvider === p.id
@@ -1952,8 +1953,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
               <span>Station Symbols</span>
               <button
                 onClick={() => setShowLegend(false)}
-                className="font-bold px-1 rounded cursor-pointer leading-none"
+                className="font-bold px-1 rounded cursor-pointer leading-none hover:text-[var(--text-primary)]"
                 style={{ color: 'var(--text-dim)' }}
+                title="Hide map symbols legend"
                 aria-label="Hide symbols legend"
               >
                 ✕
@@ -1997,8 +1999,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
         ) : (
           <button
             onClick={() => setShowLegend(true)}
-            className="backdrop-blur-md rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+            className="backdrop-blur-md rounded-md px-2 py-1 text-[10px] font-mono shadow-lg transition flex items-center gap-1.5 cursor-pointer hover:bg-[var(--bg-subtle)]"
             style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
+            title="Show map symbols legend"
             aria-label="Show symbols legend"
           >
             <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-eloran)' }} />

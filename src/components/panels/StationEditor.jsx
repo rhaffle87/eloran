@@ -15,13 +15,19 @@ const ROLE_LABEL = { master: 'MST', slave: 'SEC', receiver: 'RCV' };
 
 export default function StationEditor({ isELoran = false }) {
   const fileInputRef = useRef(null);
+  const jsonInputRef = useRef(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [newRole, setNewRole] = useState('slave');
   const [newLabel, setNewLabel] = useState('');
   const [newLat, setNewLat] = useState('-6.25');
   const [newLng, setNewLng] = useState('106.85');
 
-  const jsonInputRef = useRef(null);
+  const {
+    masters, slaves, receivers, activePresetId,
+    loadPreset, addStation, removeStation, setStations, resetAll, evaluateReceivers,
+    stationStatus = {}, setStationStatus,
+  } = useSimulationStore();
+
   const [hasSavedChain, setHasSavedChain] = useState(() => {
     try { return Boolean(localStorage.getItem('simuloran:custom-chain')); } catch { return false; }
   });
@@ -88,12 +94,6 @@ export default function StationEditor({ isELoran = false }) {
       alert('Could not load saved chain: ' + err.message);
     }
   };
-
-  const {
-    masters, slaves, receivers, activePresetId,
-    loadPreset, addStation, removeStation, setStations, resetAll, evaluateReceivers,
-    stationStatus = {}, setStationStatus,
-  } = useSimulationStore();
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -187,7 +187,8 @@ export default function StationEditor({ isELoran = false }) {
         </div>
         <a
           href="/learn#hyperbolic"
-          className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--accent-loran-c-border)] bg-[var(--accent-loran-c-subtle)] text-[var(--accent-loran-c)] hover:opacity-80 transition"
+          className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--accent-loran-c-border)] bg-[var(--accent-loran-c-subtle)] text-[var(--accent-loran-c)] hover:opacity-80 transition cursor-pointer"
+          title="Read theoretical formulation of Loran-C/eLoran hyperbolic networks"
         >
           Theory &rarr;
         </a>
@@ -217,6 +218,8 @@ export default function StationEditor({ isELoran = false }) {
           value={activePresetId}
           onChange={(e) => loadPreset(e.target.value)}
           style={inputStyle}
+          className="cursor-pointer"
+          title="Select a geographical transmitter chain preset"
         >
           {Object.entries(PRESET_SCENARIOS).map(([id, p]) => (
             <option key={id} value={id}>{p.shortName || p.name}</option>
@@ -226,68 +229,87 @@ export default function StationEditor({ isELoran = false }) {
 
       {/* Action buttons */}
       <div className="grid grid-cols-2 gap-2 pt-1">
+        {/* Primary Action: Add Station */}
         <button
           onClick={() => setModalOpen(true)}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition"
+          className="col-span-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition cursor-pointer hover:opacity-90"
           style={{ background: 'var(--accent-eloran-subtle)', border: '1px solid var(--accent-eloran-border)', color: 'var(--accent-eloran)' }}
+          title="Create a new transmission station or monitor receiver"
+          aria-label="Add Station"
         >
-          <Plus size={14} /> Add Station
+          <Plus size={15} /> Add Station
         </button>
+
+        {/* CSV Import / Export */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Import station network from a CSV file"
+          aria-label="Import CSV"
         >
           <Upload size={14} /> Import CSV
         </button>
-        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-
         <button
           onClick={handleExportCsv}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Export current station coordinates and parameters to CSV"
+          aria-label="Export CSV"
         >
           <Download size={14} /> Export CSV
         </button>
-                <button
-          onClick={handleExportJson}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
-          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
-          title="Download custom transmitter chain as JSON"
-        >
-          <Download size={14} /> Export JSON
-        </button>
+        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+
+        {/* JSON Import / Export */}
         <button
           onClick={() => jsonInputRef.current?.click()}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
-          title="Upload custom transmitter chain from JSON"
+          title="Upload custom transmitter chain and receivers from JSON file"
+          aria-label="Import JSON"
         >
           <Upload size={14} /> Import JSON
         </button>
+        <button
+          onClick={handleExportJson}
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Download custom transmitter chain and receivers as JSON"
+          aria-label="Export JSON"
+        >
+          <Download size={14} /> Export JSON
+        </button>
         <input ref={jsonInputRef} type="file" accept=".json" onChange={handleJsonUpload} className="hidden" />
 
+        {/* Browser LocalStorage Persistence */}
         <button
           onClick={handleSaveToLocalStorage}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--accent-eloran)' }}
-          title="Save custom chain to browser storage"
+          title="Save custom chain into browser local storage for future sessions"
+          aria-label="Save Chain"
         >
           <Save size={14} /> Save Chain
         </button>
         <button
           onClick={handleLoadFromLocalStorage}
           disabled={!hasSavedChain}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)] disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
-          title="Load custom chain from browser storage"
+          title={hasSavedChain ? "Restore saved chain from browser local storage" : "No saved chain in browser local storage"}
+          aria-label="Load Saved"
         >
           <FolderOpen size={14} /> Load Saved
         </button>
-<button
+
+        {/* Spatial GeoJSON Export */}
+        <button
           onClick={handleExportGeoJson}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition"
+          className="col-span-2 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer hover:bg-[var(--bg-canvas)]"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Export stations and receiver geometry as GeoJSON FeatureCollection for GIS"
+          aria-label="Export GeoJSON"
         >
           <FileCode size={14} /> GeoJSON
         </button>
@@ -301,8 +323,10 @@ export default function StationEditor({ isELoran = false }) {
           </span>
           <button
             onClick={resetAll}
-            className="text-[11px] flex items-center gap-1 transition"
+            className="text-[11px] flex items-center gap-1 transition cursor-pointer"
             style={{ color: 'var(--text-secondary)' }}
+            title="Clear all stations from active simulation"
+            aria-label="Clear all stations"
             onMouseEnter={e => e.currentTarget.style.color = 'var(--status-danger)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
           >
@@ -384,7 +408,7 @@ export default function StationEditor({ isELoran = false }) {
                             ? 'var(--status-warn-border)'
                             : 'var(--status-danger-border)',
                       }}
-                      title={`Station Status: ${(stationStatus[st.label] || 'nominal').toUpperCase()} (Click to cycle Nominal -> Degraded -> Failed)`}
+                      title={`Station Status: ${(stationStatus[st.label] || 'nominal').toUpperCase()} (Click to toggle Nominal -> Degraded -> Failed)`}
                     >
                       <span
                         className="w-1.5 h-1.5 rounded-full"
@@ -407,17 +431,17 @@ export default function StationEditor({ isELoran = false }) {
                     </button>
                   )}
 
-                <button
-                  onClick={() => removeStation(st.label)}
-                  className="p-1 rounded-md transition"
-                  style={{ color: 'var(--text-muted)' }}
-                  title="Delete station"
-                  aria-label={`Delete station ${st.label}`}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <Trash2 size={13} />
-                </button>
+                  <button
+                    onClick={() => removeStation(st.label)}
+                    className="p-1 rounded-md transition cursor-pointer"
+                    style={{ color: 'var(--text-muted)' }}
+                    title={`Delete station ${st.label}`}
+                    aria-label={`Delete station ${st.label}`}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
             );
@@ -446,6 +470,8 @@ export default function StationEditor({ isELoran = false }) {
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value)}
                 style={inputStyle}
+                className="cursor-pointer"
+                title="Select station operational role"
               >
                 <option value="master">Master Station (M)</option>
                 <option value="slave">Secondary / Slave Station (S)</option>

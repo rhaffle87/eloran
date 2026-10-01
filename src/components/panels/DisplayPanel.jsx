@@ -246,21 +246,25 @@ export default function DisplayPanel({ isELoran = false }) {
           <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             <button
               onClick={() => updateSettings({ contourUnit: 'meters' })}
-              className={`py-1.5 rounded border transition ${
+              className={`py-1.5 rounded border transition cursor-pointer ${
                 settings.contourUnit === 'meters'
                   ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
                   : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
               }`}
+              title="Display contours in meters (differential pseudorange error)"
+              aria-label="Display meters"
             >
               Meters (Range Δ)
             </button>
             <button
               onClick={() => updateSettings({ contourUnit: 'seconds' })}
-              className={`py-1.5 rounded border transition ${
+              className={`py-1.5 rounded border transition cursor-pointer ${
                 settings.contourUnit === 'seconds'
                   ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
                   : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)]'
               }`}
+              title="Display contours in seconds (TDOA time difference of arrival)"
+              aria-label="Display seconds"
             >
               Seconds (TDOA)
             </button>
@@ -272,6 +276,8 @@ export default function DisplayPanel({ isELoran = false }) {
           onClick={handleComputeContours}
           disabled={isComputing}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--accent-eloran)] hover:bg-[var(--accent-eloran-border)] disabled:opacity-50 text-[var(--btn-eloran-text)] font-semibold rounded-lg font-mono text-xs uppercase tracking-wider shadow-lg transition mt-2 cursor-pointer"
+          title="Generate hyperbolic LOP and GDOP contours across coverage area"
+          aria-label="Generate LOP Contours"
         >
           <Activity size={15} className={isComputing ? 'animate-spin' : ''} />
           {isComputing ? 'Computing Grid Off-Thread...' : 'Generate LOP Contours'}
@@ -372,6 +378,8 @@ export default function DisplayPanel({ isELoran = false }) {
                 ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                 : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
+            title="Select circular TOA/Pseudorange positioning solver"
+            aria-label="Pseudorange solver"
           >
             <span>Pseudorange (2D + b_rx)</span>
           </button>
@@ -383,6 +391,8 @@ export default function DisplayPanel({ isELoran = false }) {
                 ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                 : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
+            title="Select hyperbolic TDOA multilateration solver"
+            aria-label="TDOA solver"
           >
             <span>Hyperbolic TDOA</span>
           </button>

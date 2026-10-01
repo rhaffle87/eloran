@@ -175,7 +175,7 @@ export default function MissionDrawer({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+              className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition cursor-pointer"
               title={isMinimized ? 'Expand Mission Drawer' : 'Minimize Mission Drawer'}
               aria-label={isMinimized ? 'Expand Mission Drawer' : 'Minimize Mission Drawer'}
             >
@@ -184,7 +184,7 @@ export default function MissionDrawer({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+              className="p-1 rounded hover:bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition cursor-pointer"
               title="Close Mission Drawer"
               aria-label="Close Mission Drawer"
             >
@@ -231,6 +231,8 @@ export default function MissionDrawer({ isOpen, onClose }) {
                       setMissionContext({ maxGdopObserved: 0, hasEnteredHazard: false });
                     }}
                     className="flex-1 py-1 px-1.5 rounded text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer truncate"
+                    title={`Mission ${idx + 1}: ${m.title}`}
+                    aria-label={m.title}
                     style={{
                       background: isActive ? 'var(--bg-surface)' : 'transparent',
                       color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -315,7 +317,7 @@ export default function MissionDrawer({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowHints(!showHints)}
-                  className="py-1.5 px-2 rounded text-[10px] font-bold flex items-center gap-1 border transition hover:bg-[var(--bg-muted)]"
+                  className="py-1.5 px-2 rounded text-[10px] font-bold flex items-center gap-1 border transition hover:bg-[var(--bg-muted)] cursor-pointer"
                   style={{
                     background: 'var(--bg-canvas)',
                     borderColor: 'var(--border-subtle)',
@@ -465,6 +467,8 @@ export default function MissionDrawer({ isOpen, onClose }) {
                       background: 'var(--status-ok)',
                       color: '#000',
                     }}
+                    title="Advance to next mission challenge"
+                    aria-label="Next Mission"
                   >
                     <span>Next Mission</span>
                     <ArrowRight size={11} />

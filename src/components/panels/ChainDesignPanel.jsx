@@ -333,6 +333,8 @@ export default function ChainDesignPanel() {
               color: 'var(--accent-loran-c)',
               borderColor: 'var(--accent-loran-c-border)',
             }}
+            title="Add secondary transmission station to current design"
+            aria-label="Add secondary station"
           >
             <Plus size={11} aria-hidden="true" />
             <span>Add Secondary</span>
@@ -358,8 +360,9 @@ export default function ChainDesignPanel() {
               </div>
               <button
                 onClick={() => removeDesignSecondary(idx)}
-                className="p-1 rounded-md transition" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                className="p-1 rounded-md transition cursor-pointer" style={{ color: 'var(--text-muted)' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--status-danger)'; e.currentTarget.style.background = 'var(--status-danger-subtle)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                 title={`Remove secondary ${sec.label}`}
+                aria-label={`Remove secondary ${sec.label}`}
               >
                 <Trash2 size={13} aria-hidden="true" />
               </button>
@@ -544,6 +547,8 @@ export default function ChainDesignPanel() {
               ? 'bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white'
               : 'opacity-50 cursor-not-allowed bg-[var(--bg-subtle)] text-[var(--text-dim)] border border-[var(--border-subtle)]'
           }`}
+          title="Apply and load current station design into simulation"
+          aria-label="Commit design to simulation"
         >
           <span>Commit Design to Active Simulation</span>
           <ArrowRight size={14} aria-hidden="true" />
@@ -557,6 +562,8 @@ export default function ChainDesignPanel() {
             borderColor: 'var(--border-subtle)',
             color: 'var(--text-secondary)',
           }}
+          title="Cancel and exit design mode without applying"
+          aria-label="Cancel design mode"
         >
           Return to Simulation Mode
         </button>

@@ -352,6 +352,8 @@ export default function StanfordDiagram({
                     setSimHpl(null);
                   }}
                   className="text-[10px] text-[var(--accent-eloran)] flex items-center gap-1 hover:underline cursor-pointer"
+                  title="Reset simulated position error back to live EKF solution"
+                  aria-label="Reset simulation"
                 >
                   <RotateCcw size={10} /> Reset Live
                 </button>
@@ -400,6 +402,8 @@ export default function StanfordDiagram({
                   setSimHpl(hal * 0.8);
                 }}
                 className="py-1 px-1 rounded bg-[var(--bg-surface)] text-[var(--status-ok)] border border-[var(--border-subtle)] hover:border-[var(--status-ok)] cursor-pointer"
+                title="Simulate Nominal Safe Operation: HPE < HPL < HAL (Normal Navigation)"
+                aria-label="Simulate Normal Navigation"
               >
                 Nominal
               </button>
@@ -409,6 +413,8 @@ export default function StanfordDiagram({
                   setSimHpl(hal * 1.4);
                 }}
                 className="py-1 px-1 rounded bg-[var(--bg-surface)] text-[var(--status-warn)] border border-[var(--border-subtle)] hover:border-[var(--status-warn)] cursor-pointer"
+                title="Simulate System Unavailable: HPL >= HAL (Navigation Integrity Alert)"
+                aria-label="Simulate System Unavailable"
               >
                 Unavail
               </button>
@@ -418,6 +424,8 @@ export default function StanfordDiagram({
                   setSimHpl(hal * 0.4);
                 }}
                 className="py-1 px-1 rounded bg-[var(--bg-surface)] text-[#f97316] border border-[var(--border-subtle)] hover:border-[#f97316] cursor-pointer"
+                title="Simulate Degraded Operation: High error within integrity bound"
+                aria-label="Simulate Degraded Operation"
               >
                 MI Zone
               </button>
@@ -427,6 +435,8 @@ export default function StanfordDiagram({
                   setSimHpl(hal * 0.7);
                 }}
                 className="py-1 px-1 rounded bg-[var(--bg-surface)] text-[var(--status-error)] border border-[var(--border-subtle)] hover:border-[var(--status-error)] cursor-pointer"
+                title="Simulate Hazardous Misleading Information (HMI): HPE > HAL and HPE > HPL (Critical Safety Hazard)"
+                aria-label="Simulate Critical Safety Hazard"
               >
                 HMI Fault
               </button>

@@ -358,6 +358,8 @@ export default function AsfPanel() {
               onClick={handleInspectFresnel}
               disabled={isAnalyzingFresnel || !master || !rx}
               className="w-full py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition hover:opacity-90 cursor-pointer"
+              title="Analyze 1st Fresnel zone clearance profile"
+              aria-label="Analyze Fresnel Path"
               style={{
                 background: 'var(--accent-eloran-subtle)',
                 borderColor: 'var(--accent-eloran-border)',
@@ -399,6 +401,8 @@ export default function AsfPanel() {
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
+                title="Use ITU-R P.368 GRWAVE numerical boundary solver"
+                aria-label="GRWAVE method"
               >
                 Numerical Groundwave Engine
               </button>
@@ -410,6 +414,8 @@ export default function AsfPanel() {
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
+                title="Use empirical Millington mixed-path conductivity model"
+                aria-label="Millington method"
               >
                 Empirical Model (k_asf)
               </button>
@@ -505,6 +511,8 @@ export default function AsfPanel() {
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
+                title="Geodesic ray-tracing path profile over real terrain"
+                aria-label="Geodesic path"
               >
                 Geodesic GIS (Real)
               </button>
@@ -518,6 +526,8 @@ export default function AsfPanel() {
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
+                title="Manual terrain segment configuration"
+                aria-label="Manual segments"
               >
                 Manual Land Fraction
               </button>
@@ -821,6 +831,8 @@ export default function AsfPanel() {
                   key={tmpl.name}
                   onClick={() => handleApplyTemplate(tmpl)}
                   className="text-left px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] rounded-md text-xs text-[var(--text-secondary)] transition cursor-pointer"
+                  title={`Apply ${tmpl.name} conductivity template`}
+                  aria-label={`Apply ${tmpl.name}`}
                 >
                   <div className="font-medium text-[var(--accent-eloran)] text-[11px]">{tmpl.name}</div>
                   <div className="text-[10px] text-[var(--text-muted)] font-mono truncate">{tmpl.formula}</div>
@@ -841,6 +853,8 @@ export default function AsfPanel() {
             <button
               onClick={handleAutoCalibrate}
               className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--accent-eloran-subtle)] hover:bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]/30 rounded text-[10.5px] font-mono transition cursor-pointer"
+              title="Auto-tune conductivity and permittivity to match measured ASF"
+              aria-label="Auto-Tune Parameters"
             >
               <Wrench size={11} /> Auto-Calibrate
             </button>
@@ -906,6 +920,8 @@ export default function AsfPanel() {
               data-testid="toggle-validation-benchmarks"
               onClick={() => setShowValidation(!showValidation)}
               className="text-[10.5px] px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--accent-eloran-border)] hover:text-[var(--accent-eloran)] font-semibold cursor-pointer transition"
+              title="Toggle ITU-R P.368 and Millington validation benchmark cards"
+              aria-label="Toggle validation benchmarks"
             >
               {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
             </button>

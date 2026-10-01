@@ -495,8 +495,9 @@ export default function TrajectoryPanel() {
                 {p.isCustom && (
                   <button
                     onClick={(e) => handleRemoveCustom(p.id, e)}
-                    className="absolute top-1 right-1 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--status-danger)] hover:bg-[var(--bg-surface)] opacity-0 group-hover:opacity-100 transition"
+                    className="absolute top-1 right-1 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--status-danger)] hover:bg-[var(--bg-surface)] opacity-0 group-hover:opacity-100 transition cursor-pointer"
                     title="Delete custom route"
+                    aria-label="Delete custom route"
                   >
                     <Trash2 size={11} />
                   </button>
@@ -541,7 +542,7 @@ export default function TrajectoryPanel() {
         {uploadError && (
           <div className="px-2.5 py-1.5 rounded bg-[var(--status-danger-subtle)] border border-[var(--status-danger-border)] text-[var(--status-danger)] text-[10px] flex items-center justify-between">
             <span>{uploadError}</span>
-            <button onClick={() => setUploadError(null)} className="underline ml-2 cursor-pointer">
+            <button onClick={() => setUploadError(null)} className="underline ml-2 cursor-pointer" title="Dismiss error" aria-label="Dismiss error">
               Dismiss
             </button>
           </div>
@@ -563,6 +564,8 @@ export default function TrajectoryPanel() {
                   ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] hover:opacity-90'
                   : 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] hover:opacity-90'
               }`}
+              title={isPlaying ? "Pause trajectory playback" : "Start vehicle waypoint navigation playback"}
+              aria-label={isPlaying ? "Pause playback" : "Start playback"}
             >
               {isPlaying ? <Pause size={13} /> : <Play size={13} />}
               <span>{isPlaying ? 'Pause' : 'Play Corridor'}</span>
@@ -597,6 +600,8 @@ export default function TrajectoryPanel() {
                     ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)]'
                     : 'text-[var(--text-dim)] hover:text-[var(--text-primary)]'
                 }`}
+                title={`Set playback speed to ${spd}x`}
+                aria-label={`Playback speed ${spd}x`}
               >
                 {spd}x
               </button>

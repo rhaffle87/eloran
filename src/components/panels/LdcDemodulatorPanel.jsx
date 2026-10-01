@@ -162,6 +162,8 @@ export default function LdcDemodulatorPanel() {
                   ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)' }
                   : { background: 'var(--bg-surface)', color: 'var(--text-dim)', border: '1px solid var(--border-subtle)' }
               }
+              title="Select 32-state Pulse Position Modulation on 9th/10th pulse"
+              aria-label="32-PPM modulation"
             >
               32-PPM (9th)
             </button>
@@ -173,6 +175,8 @@ export default function LdcDemodulatorPanel() {
                   ? { background: 'var(--accent-loran-c)', color: 'var(--btn-loran-text)' }
                   : { background: 'var(--bg-surface)', color: 'var(--text-dim)', border: '1px solid var(--border-subtle)' }
               }
+              title="Select Eurofix pulse-position modulation with DGPS corrections"
+              aria-label="Eurofix modulation"
             >
               Eurofix (3-8)
             </button>
@@ -292,6 +296,8 @@ export default function LdcDemodulatorPanel() {
                 key={idx}
                 onClick={() => setActiveSymbolIndex(idx)}
                 className="p-2.5 rounded-lg text-center font-mono transition cursor-pointer"
+                title={`Select received telemetry symbol #${idx + 1} (${shiftUs >= 0 ? '+' : ''}${shiftUs.toFixed(1)} µs shift)`}
+                aria-label={`Symbol #${idx + 1}`}
                 style={{
                   background: isSelected
                     ? 'var(--accent-eloran)'

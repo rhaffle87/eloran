@@ -42,8 +42,10 @@ export default class ErrorBoundary extends React.Component {
           </pre>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 font-semibold text-xs uppercase tracking-wider rounded-lg transition"
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 font-semibold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer hover:opacity-90"
             style={{ background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)' }}
+            title="Dismiss error and attempt simulation recovery"
+            aria-label="Dismiss and Reset"
           >
             <RefreshCw size={14} /> Dismiss &amp; Reset
           </button>

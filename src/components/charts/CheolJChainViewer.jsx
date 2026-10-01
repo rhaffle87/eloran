@@ -389,6 +389,8 @@ export default function CheolJChainViewer() {
                   handleResetZoom();
                 }}
                 className="flex-1 py-1.5 text-center rounded transition font-medium cursor-pointer"
+                title={`Select transmitter chain: ${c.label}`}
+                aria-label={`Select chain ${c.label}`}
                 style={
                   selectedChainId === c.id
                     ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
@@ -419,6 +421,8 @@ export default function CheolJChainViewer() {
                   handleResetZoom();
                 }}
                 className="flex-1 py-1.5 text-center rounded transition font-medium cursor-pointer"
+                title={`Select PCI period: ${p.label}`}
+                aria-label={`Select PCI period ${p.label}`}
                 style={
                   pciPeriod === p.id
                     ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
@@ -445,6 +449,8 @@ export default function CheolJChainViewer() {
                 key={m.id}
                 onClick={() => setSignalMode(m.id)}
                 className="flex-1 py-1.5 text-center rounded transition font-medium cursor-pointer"
+                title={`Set signal mode: ${m.label}`}
+                aria-label={`Set signal mode ${m.label}`}
                 style={
                   signalMode === m.id
                     ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
@@ -465,22 +471,25 @@ export default function CheolJChainViewer() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => handleZoomDelta(0.5)}
-              className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition"
+              className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
               title="Zoom In 2x"
+              aria-label="Zoom In 2x"
             >
               <ZoomIn size={13} /> In
             </button>
             <button
               onClick={() => handleZoomDelta(2.0)}
-              className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition"
+              className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
               title="Zoom Out 2x"
+              aria-label="Zoom Out 2x"
             >
               <ZoomOut size={13} /> Out
             </button>
             <button
               onClick={handleResetZoom}
-              className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition"
+              className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border-subtle)] transition cursor-pointer"
               title="Reset Viewport to Full Chain"
+              aria-label="Reset Viewport to Full Chain"
             >
               <RotateCcw size={14} />
             </button>
@@ -496,6 +505,8 @@ export default function CheolJChainViewer() {
         <button
           onClick={handleResetZoom}
           className="px-2.5 py-1 rounded text-xs font-mono transition border cursor-pointer"
+          title="Reset viewport to show all station pulse groups"
+          aria-label="Reset zoom"
           style={
             viewportRange === null
               ? {
@@ -521,6 +532,8 @@ export default function CheolJChainViewer() {
               key={`${arr.period}-${arr.label}-${arr.edUs}`}
               onClick={() => handleZoomStation(arr)}
               className="px-2.5 py-1 rounded text-xs font-mono transition border flex items-center gap-1.5 hover:opacity-90 cursor-pointer"
+              title={`Zoom timeline to ${arr.role === 'master' ? 'Master' : 'Secondary'} station ${arr.label}`}
+              aria-label={`Zoom to station ${arr.label}`}
               style={{
                 background: isMaster ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.12)',
                 borderColor: isMaster ? 'rgba(245, 158, 11, 0.35)' : 'rgba(56, 189, 248, 0.35)',
@@ -967,6 +980,8 @@ export default function CheolJChainViewer() {
                       if (arr) handleZoomStation(arr);
                     }}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition cursor-pointer"
+                    title="Zoom timeline to Master pulse group arrival"
+                    aria-label="Zoom to Master"
                   >
                     Focus <ChevronRight size={12} />
                   </button>
@@ -1002,6 +1017,8 @@ export default function CheolJChainViewer() {
                           if (arr) handleZoomStation(arr);
                         }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition cursor-pointer"
+                        title={`Zoom timeline to Secondary ${secLabel} pulse group arrival`}
+                        aria-label={`Zoom to Secondary ${secLabel}`}
                       >
                         Focus <ChevronRight size={12} />
                       </button>

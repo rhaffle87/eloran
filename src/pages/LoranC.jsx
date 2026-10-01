@@ -170,6 +170,8 @@ export default function LoranC() {
                   color: 'var(--text-primary)',
                   borderColor: 'var(--border-subtle)',
                 }}
+                title="Exit chain design mode and return to simulation"
+                aria-label="Back to Simulation"
               >
                 Back to Simulation
               </button>
@@ -332,6 +334,8 @@ export default function LoranC() {
               <button
                 onClick={() => toggleDesignMode(false)}
                 className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1 cursor-pointer text-[11px] font-medium"
+                title="Switch to live Loran-C navigation mode"
+                aria-label="Operation Mode"
                 style={!isDesignMode
                   ? {
                       background: 'var(--bg-surface)',
@@ -351,6 +355,8 @@ export default function LoranC() {
               <button
                 onClick={() => toggleDesignMode(true)}
                 className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1 cursor-pointer text-[11px] font-medium"
+                title="Switch to Loran-C chain design mode"
+                aria-label="Network Design"
                 style={isDesignMode
                   ? {
                       background: 'var(--bg-surface)',
@@ -382,6 +388,8 @@ export default function LoranC() {
                     key={id}
                     onClick={() => setActiveTab(id)}
                     className="py-1.5 rounded-md text-center transition-all cursor-pointer font-medium"
+                    title={`Switch to ${label} panel`}
+                    aria-label={label}
                     style={activeTab === id
                       ? {
                           background: 'var(--accent-loran-c-subtle)',

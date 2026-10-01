@@ -56,16 +56,18 @@ export default function ClockPanel() {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSimRunning}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer hover:opacity-90"
             style={isSimRunning
               ? { background: 'var(--status-warn-subtle)', border: '1px solid var(--status-warn-border)', color: 'var(--status-warn)' }
               : { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', border: '1px solid transparent' }}
+            title={isSimRunning ? "Pause clock simulation" : "Start clock simulation"}
+            aria-label={isSimRunning ? "Pause clock simulation" : "Start clock simulation"}
           >
             {isSimRunning ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Run Clock</>}
           </button>
           <button
             onClick={() => setSimTime(0)}
-            className="p-1.5 rounded-lg transition"
+            className="p-1.5 rounded-lg transition cursor-pointer hover:text-[var(--text-primary)]"
             style={{ background: 'var(--bg-muted)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
             title="Reset Time to 0s"
             aria-label="Reset simulation time to 0 seconds"

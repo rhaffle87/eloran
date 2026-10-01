@@ -19,7 +19,7 @@ function ModeButton({ active, onClick, title, accentVar, children }) {
     <button
       onClick={onClick}
       title={title}
-      className="px-2.5 py-1.5 rounded-md transition text-xs font-mono"
+      className="px-2.5 py-1.5 rounded-md transition text-xs font-mono cursor-pointer"
       style={active
         ? { background: `var(${accentVar}-subtle)`, color: `var(${accentVar})`, border: `1px solid var(${accentVar}-border)`, fontWeight: 700 }
         : { color: 'var(--text-secondary)', background: 'transparent', border: '1px solid transparent' }}
@@ -193,6 +193,8 @@ export default function ELoran() {
                   color: 'var(--text-primary)',
                   borderColor: 'var(--border-subtle)',
                 }}
+                title="Exit chain design mode and return to simulation"
+                aria-label="Back to Simulation"
               >
                 Back to Simulation
               </button>
@@ -355,6 +357,8 @@ export default function ELoran() {
                 <button
                   onClick={() => toggleDesignMode(false)}
                   className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                  title="Switch to live navigation operation mode"
+                  aria-label="Operation Mode"
                   style={!isDesignMode
                     ? {
                         background: 'var(--bg-surface)',
@@ -374,6 +378,8 @@ export default function ELoran() {
                 <button
                   onClick={() => toggleDesignMode(true)}
                   className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                  title="Switch to transmitter network design sandbox"
+                  aria-label="Network Design"
                   style={isDesignMode
                     ? {
                         background: 'var(--bg-surface)',
@@ -405,6 +411,8 @@ export default function ELoran() {
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className="py-2 px-1 rounded-md text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer select-none group"
+                        title={`Switch to ${label} panel`}
+                        aria-label={label}
                         style={isActive
                           ? {
                               background: 'var(--accent-eloran-subtle)',

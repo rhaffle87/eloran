@@ -223,6 +223,8 @@ export default function TrackingPanel() {
                 borderColor: isRunning ? 'var(--status-warn-border)' : 'var(--accent-eloran-border)',
                 color: isRunning ? 'var(--status-warn)' : 'var(--accent-eloran)',
               }}
+              title={isRunning ? "Disengage eLoran tracking loop" : "Engage eLoran phase and envelope tracking loop"}
+              aria-label={isRunning ? "Disengage tracking loop" : "Engage tracking loop"}
             >
               {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               <span>{isRunning ? 'Pause Loop' : 'Run Loop'}</span>

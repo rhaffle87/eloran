@@ -109,14 +109,19 @@ function PresetCard({ preset, isCurrent, onLaunchEloran, onLaunchLoranC }) {
       <div className="mt-4 pt-3 border-t border-[var(--surface-border)] grid grid-cols-2 gap-1.5">
         <button
           onClick={onLaunchEloran}
-          className="py-1.5 px-2 rounded text-xs font-mono font-semibold transition text-center border"
+          className="py-1.5 px-2 rounded text-xs font-mono font-semibold transition text-center border cursor-pointer hover:opacity-90"
           style={{ background: 'var(--accent-eloran-subtle)', color: 'var(--color-eloran)', borderColor: 'var(--accent-eloran-border)' }}
+          title={`Launch ${preset.name || preset.shortName} in eLoran simulator`}
+          aria-label={`Launch ${preset.name || preset.shortName} in eLoran`}
         >
           eLoran
         </button>
         <button
           onClick={onLaunchLoranC}
-          className="py-1.5 px-2 rounded text-xs font-mono font-semibold transition text-center border border-[var(--surface-border)] text-[var(--text-secondary)] hover:border-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+          className="py-1.5 px-2 rounded text-xs font-mono font-semibold transition text-center border border-[var(--surface-border)] text-[var(--text-secondary)] hover:border-[var(--surface-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+          style={{}}
+          title={`Launch ${preset.name || preset.shortName} in Loran-C simulator`}
+          aria-label={`Launch ${preset.name || preset.shortName} in Loran-C`}
         >
           Loran-C
         </button>

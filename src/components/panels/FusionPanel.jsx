@@ -146,6 +146,8 @@ export default function FusionPanel() {
                   ? 'bg-[var(--bg-canvas)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] shadow-xs'
                   : 'text-[var(--text-dim)] hover:text-[var(--text-primary)] border border-transparent'
               }`}
+              title={`Switch fusion view to ${label}`}
+              aria-label={`Switch to ${label}`}
             >
               {label}
             </button>
@@ -198,6 +200,8 @@ export default function FusionPanel() {
                       ? 'bg-[var(--bg-canvas)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
                       : 'text-[var(--text-dim)] hover:text-[var(--text-primary)] border border-transparent'
                   }`}
+                  title={`Select navigation mode: ${label}`}
+                  aria-label={`Select mode ${label}`}
                 >
                   <Icon size={12} aria-hidden="true" className="shrink-0" />
                   <span className="truncate">{label}</span>
@@ -443,6 +447,8 @@ export default function FusionPanel() {
               <button
                 onClick={() => setActiveTab('ew')}
                 className="text-[10px] text-[var(--accent-eloran)] hover:underline cursor-pointer flex items-center gap-0.5"
+                title="Open Electronic Warfare / GPS Interference Lab"
+                aria-label="Open EW Lab"
               >
                 EW Lab &rarr;
               </button>
@@ -651,6 +657,8 @@ export default function FusionPanel() {
                   color: gnssStatus === 'spoofed' ? '#ffffff' : 'var(--text-primary)',
                   border: '1px solid var(--border-subtle)',
                 }}
+                title={gnssStatus === 'spoofed' ? "Clear spoofing attack and restore nominal GPS constellation" : "Inject adversarial GPS spoofing attack"}
+                aria-label={gnssStatus === 'spoofed' ? "Clear spoofing attack" : "Inject GPS spoofing"}
               >
                 {gnssStatus === 'spoofed' ? 'Disable' : 'Activate Attack'}
               </button>

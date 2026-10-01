@@ -98,6 +98,8 @@ export function TrialValidationPanel({ compact = false }) {
           type="button"
           onClick={handleLoadKoreaPreset}
           className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+          title="Load empirical Korea Yellow Sea sea-trial dataset into active simulation"
+          aria-label="Load Korea Yellow Sea Trial"
           style={activePresetId === 'korea_yellow_sea_trial'
             ? {
                 background: 'var(--status-ok-subtle)',
@@ -186,6 +188,8 @@ export function TrialValidationPanel({ compact = false }) {
             type="button"
             onClick={() => setActiveTab('korea')}
             className="px-3 py-1.5 rounded-md transition-all font-medium cursor-pointer"
+            title="Display Korea Yellow Sea empirical sea-trial validation metrics"
+            aria-label="Korea Yellow Sea metrics"
             style={activeTab === 'korea'
               ? {
                   background: 'var(--accent-eloran-subtle)',
@@ -204,6 +208,8 @@ export function TrialValidationPanel({ compact = false }) {
             type="button"
             onClick={() => setActiveTab('maoming')}
             className="px-3 py-1.5 rounded-md transition-all font-medium cursor-pointer"
+            title="Display Maoming maritime trial validation metrics"
+            aria-label="Maoming trial metrics"
             style={activeTab === 'maoming'
               ? {
                   background: 'var(--accent-eloran-subtle)',
@@ -310,6 +316,8 @@ export function TrialValidationPanel({ compact = false }) {
               type="button"
               onClick={handleLoadKoreaPreset}
               className="px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+              title="Load empirical Korea Yellow Sea trial scenario"
+              aria-label="Load Korea Yellow Sea Trial"
               style={activePresetId === 'korea_yellow_sea_trial'
                 ? {
                     background: 'var(--status-ok-subtle)',

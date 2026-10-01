@@ -242,6 +242,7 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition cursor-pointer"
+              title="Close NMEA terminal dialog"
               aria-label="Close NMEA terminal"
             >
               <X size={18} />
@@ -271,6 +272,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
                         ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] shadow-xs'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
+                    title={`Select NMEA talker ID: ${t.label}`}
+                    aria-label={`Talker ${t.label}`}
                   >
                     {t.label}
                   </button>
@@ -290,6 +293,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
                         ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] shadow-xs'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
+                    title={`Set NMEA sentence broadcast rate to ${hz} Hz`}
+                    aria-label={`${hz} Hz`}
                   >
                     {hz} Hz
                   </button>
@@ -330,6 +335,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
               <button
                 onClick={handleDisconnectSerial}
                 className="px-2.5 py-1 rounded-md font-mono text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer bg-[var(--status-danger-subtle)] text-[var(--status-danger)] border border-[var(--status-danger-border)] hover:opacity-90"
+                title="Disconnect physical COM/USB serial port"
+                aria-label="Disconnect Serial"
               >
                 <WifiOff size={13} />
                 <span>Disconnect Serial</span>
@@ -350,7 +357,7 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
         {serialError && (
           <div className="px-4 py-2 bg-[var(--status-danger-subtle)] border-b border-[var(--status-danger-border)] text-[var(--status-danger)] text-xs font-mono flex items-center justify-between">
             <span>{serialError}</span>
-            <button onClick={() => setSerialError(null)} className="underline ml-2 cursor-pointer">
+            <button onClick={() => setSerialError(null)} className="underline ml-2 cursor-pointer" title="Dismiss serial connection error" aria-label="Dismiss error">
               Dismiss
             </button>
           </div>
@@ -403,6 +410,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
                   ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] hover:opacity-90'
                   : 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] hover:opacity-90'
               }`}
+              title={isStreaming ? "Pause telemetry logging stream" : "Resume live telemetry stream"}
+              aria-label={isStreaming ? "Pause stream" : "Resume stream"}
             >
               {isStreaming ? <Pause size={13} /> : <Play size={13} />}
               <span>{isStreaming ? 'Pause' : 'Resume'}</span>
@@ -433,6 +442,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
               onClick={handleCopy}
               disabled={logs.length === 0}
               className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-default)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Copy active NMEA sentences buffer to clipboard"
+              aria-label="Copy Buffer"
             >
               {copied ? <Check size={13} className="text-[var(--status-ok)]" /> : <Copy size={13} />}
               <span>{copied ? 'Copied!' : 'Copy Buffer'}</span>
@@ -442,6 +453,8 @@ export default function NmeaTerminalModal({ isOpen, onClose }) {
               onClick={handleDownload}
               disabled={logs.length === 0}
               className="px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] hover:opacity-90 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Download recorded NMEA logs as a .nmea file"
+              aria-label="Export .nmea"
             >
               <Download size={13} />
               <span>Export .nmea</span>

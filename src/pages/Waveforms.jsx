@@ -61,6 +61,10 @@ export default function Waveforms() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className="px-3 py-1.5 rounded transition cursor-pointer"
+                title={`Switch waveform view to ${label}`}
+                aria-label={`View ${label}`}
+                title={`Switch waveform view to ${label}`}
+                aria-label={`View ${label}`}
                 style={
                   activeTab === tab
                     ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }

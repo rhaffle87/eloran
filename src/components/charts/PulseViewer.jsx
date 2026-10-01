@@ -780,6 +780,8 @@ export default function PulseViewer() {
                   key={dt}
                   onClick={() => setTimeOffsetUs(dt)}
                   className="px-2 py-0.5 rounded text-[10px] font-semibold border transition cursor-pointer"
+                  title={`Set oscilloscope time offset to ${dt} µs`}
+                  aria-label={`Offset ${dt} µs`}
                   style={timeOffsetUs === dt
                     ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', borderColor: 'var(--accent-eloran-border)' }
                     : { background: 'var(--bg-canvas)', color: 'var(--text-dim)', borderColor: 'var(--border-subtle)' }}
@@ -802,6 +804,8 @@ export default function PulseViewer() {
                   key={g}
                   onClick={() => setVerticalGain(g)}
                   className="px-2 py-1 rounded text-[10px] font-bold border transition cursor-pointer text-center"
+                  title={`Set vertical oscilloscope gain to ${g}x`}
+                  aria-label={`Gain ${g}x`}
                   style={verticalGain === g
                     ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', borderColor: 'var(--accent-eloran-border)' }
                     : { background: 'var(--bg-canvas)', color: 'var(--text-dim)', borderColor: 'var(--border-subtle)' }}
@@ -835,6 +839,8 @@ export default function PulseViewer() {
                   key={label}
                   onClick={() => setNoiseSnrDb(val)}
                   className="px-1.5 py-1 rounded text-[10px] font-bold border transition cursor-pointer text-center"
+                  title={`Set RF noise level to SNR ${label}`}
+                  aria-label={`Noise SNR ${label}`}
                   style={noiseSnrDb === val
                     ? { background: 'var(--accent-eloran-subtle)', color: 'var(--accent-eloran)', borderColor: 'var(--accent-eloran-border)' }
                     : { background: 'var(--bg-canvas)', color: 'var(--text-dim)', borderColor: 'var(--border-subtle)' }}

@@ -180,7 +180,7 @@ export default function TrackingPanel() {
             {sigmaUs.toFixed(3)} µs
           </div>
           <div className="text-[9px] text-[var(--text-secondary)]">
-            ~{sigmaMeters.toFixed(1)} m (Rhee 2021)
+            ~{sigmaMeters.toFixed(1)} m 1σ Uncertainty
           </div>
         </div>
 

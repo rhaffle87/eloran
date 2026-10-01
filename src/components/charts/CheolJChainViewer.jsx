@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import {
-  Radio, Layers, Activity, ZoomIn, ZoomOut, RotateCcw,
+  Radio, Layers, Activity, ZoomIn, ZoomOut, RotateCcw, BookOpen,
   Compass, ExternalLink, ChevronRight, Zap
 } from 'lucide-react';
 import { useThemeStore } from '../../state/themeStore.js';
@@ -334,7 +334,7 @@ export default function CheolJChainViewer() {
                 border: '1px solid var(--accent-eloran-border)',
               }}
             >
-              <Radio size={13} /> CheolJ Loran-C Reference Standard
+              <Radio size={13} /> Transmitter Chain Pulse Synthesis
             </span>
             <span className="text-xs font-mono text-[var(--text-dim)]">
               GRI {chain.chainId} &bull; PCI Pulse Synthesis
@@ -354,19 +354,17 @@ export default function CheolJChainViewer() {
 
         <div className="flex items-center gap-2 self-start lg:self-center">
           <a
-            href="https://github.com/CheolJ/Loran-c-reference-code"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/learn#waveforms"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:opacity-90"
             style={{
               background: 'var(--bg-subtle)',
               border: '1px solid var(--border-subtle)',
               color: 'var(--text-primary)',
             }}
-            title="Open CheolJ/Loran-c-reference-code on GitHub"
+            title="View theoretical mathematical formulations in Theory page"
           >
-            <ExternalLink size={13} />
-            CheolJ Reference Repo &rarr;
+            <BookOpen size={13} />
+            Theory &rarr;
           </a>
         </div>
       </div>
@@ -376,7 +374,7 @@ export default function CheolJChainViewer() {
         {/* Chain Selector */}
         <div className="space-y-1.5">
           <label className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-            Reference Chain (GRI)
+            Transmitter Chain (GRI)
           </label>
           <div className="flex rounded-lg p-1 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-mono">
             {[
@@ -772,11 +770,11 @@ export default function CheolJChainViewer() {
           <div className="flex items-center gap-2">
             <Layers size={14} className="text-[var(--accent-eloran)]" />
             <span className="font-bold text-[var(--text-primary)]">
-              CheolJ Phase Code Interval (PCI) Matrix
+              Phase Code Interval (PCI) Matrix
             </span>
           </div>
           <span className="text-[11px] text-[var(--text-dim)]">
-            Standard Loran-C Phase Coding (USCG / CheolJ 2020)
+            Standard Phase Code Sequences
           </span>
         </div>
 

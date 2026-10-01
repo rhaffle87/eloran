@@ -146,7 +146,7 @@ export default function CycleSelectionPanel() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] flex items-center gap-1 font-semibold uppercase tracking-wider">
-              <CheckCircle2 size={11} /> Model: Boyce Ratio &amp; Austron ECD (SOURCED)
+              <CheckCircle2 size={11} /> Cycle Selection Error &amp; ECD Bounds
               <InfoTooltip
                 align="left"
                 title="Boyce (ILA 2006) &amp; Austron ECD Model Sourced Excerpt"
@@ -154,7 +154,7 @@ export default function CycleSelectionPanel() {
               />
             </span>
             <span className="text-[10px] font-mono text-[var(--text-muted)]">
-              Boyce et al. (ILA 2006, Section II-D, Fig. 9)
+              Envelope Ratio Bounds (30 µs Standard Zero Crossing)
             </span>
           </div>
           <h2 className="text-lg font-bold text-[var(--text-primary)] font-mono flex items-center gap-2">

@@ -218,7 +218,7 @@ export default function AsfPanel() {
                 </span>
               </div>
               <div className="text-[10px] text-[var(--text-dim)]">
-                ITU-R P.368-10 / Sommerfeld groundwave raster
+                Groundwave Conductivity Raster
               </div>
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function AsfPanel() {
         )}
       </div>
 
-      {/* Terrain Masking & Knife-Edge Diffraction (ITU-R P.526) */}
+      {/* Terrain Masking & Knife-Edge Diffraction (Diffraction Masking) */}
       <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2.5 font-mono text-xs shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
@@ -400,7 +400,7 @@ export default function AsfPanel() {
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
               >
-                ITU-R P.368 (GRWAVE)
+                Numerical Groundwave Engine
               </button>
               <button
                 type="button"
@@ -419,7 +419,7 @@ export default function AsfPanel() {
             {engineMethod === 'grwave' ? (
               <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-[10px] flex items-center justify-between gap-1">
                 <span className="text-[var(--text-dim)] flex items-center gap-1 truncate">
-                  <span>ITU-R P.368 / Sommerfeld</span>
+                  <span>Physical Groundwave</span>
                   <InfoTooltip
                     align="left"
                     title="Phase Delay Verification Status"
@@ -452,7 +452,7 @@ export default function AsfPanel() {
           {/* Land Conductivity Selector */}
           <div className="space-y-1.5">
             <label className="text-[var(--text-secondary)] text-[11px] font-semibold block">
-              Land Terrain Conductivity Preset (ITU-R P.832)
+              Terrain Surface Conductivity
             </label>
             <select
               value={

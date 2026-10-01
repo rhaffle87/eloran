@@ -31,9 +31,14 @@ export default function Waveforms() {
             >
               100 kHz RF Waveform &amp; Cycle Selection Lab
             </h1>
+            <div className="mt-1">
+              <a href="/learn#waveforms" className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded border border-[var(--accent-eloran-border)] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] hover:opacity-80 transition">
+                Theory &rarr;
+              </a>
+            </div>
             <p className="text-sm mt-1 max-w-3xl" style={{ color: 'var(--text-secondary)' }}>
               Interactive oscilloscope telemetry, USCG standard pulse synthesis, ionospheric skywave multi-path separation,
-              and real-time Boyce (2006) envelope ratio wrong-cycle selection risk modeling.
+              and real-time envelope ratio cycle selection error modeling.
             </p>
           </div>
 
@@ -45,9 +50,9 @@ export default function Waveforms() {
             {[
               ['all', 'All Views'],
               ['oscilloscope', 'Oscilloscope'],
-              ['pci-chains', 'CheolJ PCI Chains'],
+              ['pci-chains', 'Pulse Group Timings'],
               ['tracking', 'Tracking Loop'],
-              ['cycle-selection', 'Boyce Monte Carlo'],
+              ['cycle-selection', 'Cycle Selection'],
               ['ldc', 'LDC & Eurofix'],
             ].map(([tab, label]) => (
               <button

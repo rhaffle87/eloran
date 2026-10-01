@@ -944,13 +944,13 @@ export default function CheolJChainViewer() {
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
               {/* Master Station */}
-              <tr className="hover:bg-[var(--bg-subtle)] transition">
+              <tr key="master-station" className="hover:bg-[var(--bg-subtle)] transition">
                 <td className="py-2.5 px-3 font-bold text-[var(--text-primary)]">
                   {chain.master.name}
                 </td>
                 <td className="py-2.5 px-3">
                   <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/20 text-[var(--accent-loran-c)] border border-amber-500/30">
-                    Master (M)
+                    Master ({chain.master.label || 'M'})
                   </span>
                 </td>
                 <td className="py-2.5 px-3 text-[var(--text-secondary)]">
@@ -976,38 +976,41 @@ export default function CheolJChainViewer() {
               </tr>
 
               {/* Secondary Stations */}
-              {chain.secondaries.map((sec) => (
-                <tr key={sec.code} className="hover:bg-[var(--bg-subtle)] transition">
-                  <td className="py-2.5 px-3 font-bold text-[var(--text-primary)]">
-                    {sec.name}
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-500/20 text-[var(--accent-eloran)] border border-sky-500/30">
-                      Secondary ({sec.code})
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-[var(--text-secondary)]">
-                    {sec.lat.toFixed(4)}°N, {sec.lng.toFixed(4)}°E
-                  </td>
-                  <td className="py-2.5 px-3 font-semibold text-[var(--accent-eloran)]">
-                    {sec.emissionDelayUs.toLocaleString('en-US', { minimumFractionDigits: 2 })} µs
-                  </td>
-                  <td className="py-2.5 px-3 text-[var(--text-secondary)]">
-                    {(sec.ampRatio * 100).toFixed(0)}%
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <button
-                      onClick={() => {
-                        const arr = arrivals.find((a) => a.label === sec.code);
-                        if (arr) handleZoomStation(arr);
-                      }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition cursor-pointer"
-                    >
-                      Focus <ChevronRight size={12} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {chain.secondaries.map((sec) => {
+                const secLabel = sec.label || sec.code || 'S';
+                return (
+                  <tr key={`sec-${secLabel}-${sec.name}`} className="hover:bg-[var(--bg-subtle)] transition">
+                    <td className="py-2.5 px-3 font-bold text-[var(--text-primary)]">
+                      {sec.name}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-500/20 text-[var(--accent-eloran)] border border-sky-500/30">
+                        Secondary ({secLabel})
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-[var(--text-secondary)]">
+                      {sec.lat.toFixed(4)}°N, {sec.lng.toFixed(4)}°E
+                    </td>
+                    <td className="py-2.5 px-3 font-semibold text-[var(--accent-eloran)]">
+                      {sec.emissionDelayUs.toLocaleString('en-US', { minimumFractionDigits: 2 })} µs
+                    </td>
+                    <td className="py-2.5 px-3 text-[var(--text-secondary)]">
+                      {(sec.ampRatio * 100).toFixed(0)}%
+                    </td>
+                    <td className="py-2.5 px-3 text-right">
+                      <button
+                        onClick={() => {
+                          const arr = arrivals.find((a) => a.label === secLabel);
+                          if (arr) handleZoomStation(arr);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] transition cursor-pointer"
+                      >
+                        Focus <ChevronRight size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

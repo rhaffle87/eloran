@@ -252,20 +252,33 @@ export function fusePositions(
     [nE * nE * covE[1][0] + nG * nG * covG[1][0], nE * nE * covE[1][1] + nG * nG * covG[1][1]],
   ];
 
+  // Ensure all covariance entries are finite numbers
+  const safeFusedCov = [
+    [Number.isFinite(fusedCov[0][0]) ? fusedCov[0][0] : 0, Number.isFinite(fusedCov[0][1]) ? fusedCov[0][1] : 0],
+    [Number.isFinite(fusedCov[1][0]) ? fusedCov[1][0] : 0, Number.isFinite(fusedCov[1][1]) ? fusedCov[1][1] : 0],
+  ];
+
   // HPL from fused covariance maximum eigenvalue (simplified 3-sigma bound)
-  const trace = fusedCov[0][0] + fusedCov[1][1];
-  const det = fusedCov[0][0] * fusedCov[1][1] - fusedCov[0][1] * fusedCov[1][0];
+  const trace = safeFusedCov[0][0] + safeFusedCov[1][1];
+  const det = safeFusedCov[0][0] * safeFusedCov[1][1] - safeFusedCov[0][1] * safeFusedCov[1][0];
   const disc = Math.sqrt(Math.max(0, (trace * trace) / 4 - det));
   const lambda1 = Math.max(0, trace / 2 + disc);
-  const fusedHpl = 3 * Math.sqrt(lambda1);
+  const fusedHpl = 3 * Math.sqrt(Math.max(0, lambda1));
+  const safeHpl = Number.isFinite(fusedHpl)
+    ? Math.max(0, fusedHpl)
+    : Number.isFinite(gnssFix?.hplMeters)
+      ? gnssFix.hplMeters
+      : Number.isFinite(eloranFix?.hplMeters)
+        ? eloranFix.hplMeters
+        : 0;
 
   const errorMeters = truePos ? haversineDistance(truePos, { lat: fusedLat, lng: fusedLng }) : 0;
 
   return {
     lat: fusedLat,
     lng: fusedLng,
-    covariance: fusedCov,
-    hplMeters: fusedHpl,
+    covariance: safeFusedCov,
+    hplMeters: safeHpl,
     errorMeters,
     mode: 'fusion',
     weightingMethod,

@@ -118,7 +118,7 @@ export default function MissionDrawer({ isOpen, onClose }) {
       data-testid="mission-drawer"
       className="fixed z-40 transition-all duration-300 font-mono"
       style={{
-        bottom: '36px',
+        bottom: store.isConsoleOpen ? '265px' : '48px',
         left: '16px',
         maxWidth: isMinimized ? '340px' : '480px',
         width: 'calc(100vw - 32px)',

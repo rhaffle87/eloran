@@ -149,6 +149,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     updateDesignSecondary,
     stationStatus = {},
     settings,
+    isConsoleOpen,
   } = useSimulationStore();
 
   const stationsRef = useRef({ masters, slaves });
@@ -1710,8 +1711,37 @@ export default function MapView({ onMapClick, isELoran = false }) {
   ]);
 
 
-  return (
-    <div className="relative w-full h-full min-h-[500px] overflow-hidden select-none" style={{ background: 'var(--bg-canvas)' }}>
+  const mapBottomClearance = isConsoleOpen ? '260px' : '48px';
+
+
+    const legendBottomClearance = isConsoleOpen ? '292px' : '78px';
+
+
+  
+
+
+    return (
+
+
+      <div
+
+
+        className="relative w-full h-full min-h-[500px] overflow-hidden select-none"
+
+
+        style={{
+
+
+          background: 'var(--bg-canvas)',
+
+
+          '--map-bottom-clearance': mapBottomClearance,
+
+
+        }}
+
+
+      >
       {/* Offline Radar 2D Vector Backdrop Canvas (underlay at z-index 0) */}
       <canvas
         ref={radarCanvasRef}
@@ -1905,7 +1935,10 @@ export default function MapView({ onMapClick, isELoran = false }) {
       )}
 
       {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
-      <div className="absolute bottom-12 left-2.5 z-10 font-mono text-xs">
+      <div
+        className="absolute left-2.5 z-10 font-mono text-xs transition-all duration-200"
+        style={{ bottom: legendBottomClearance }}
+      >
         {showLegend ? (
           <div
             className="backdrop-blur-md rounded-lg p-2.5 shadow-md space-y-1.5 text-[11px] animate-fade-in"

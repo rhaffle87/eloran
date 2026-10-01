@@ -39,10 +39,18 @@ export class EkfEstimator {
    * @param {Object} [options] - Configuration overrides
    */
   constructor(initialLat, initialLng, options = {}) {
-    this.refLat = Number(initialLat);
-    this.refLng = Number(initialLng);
+    let lat = initialLat;
+    let lng = initialLng;
+    let opts = options;
+    if (typeof initialLat === 'object' && initialLat !== null) {
+      lat = initialLat.lat;
+      lng = initialLat.lng;
+      opts = initialLng || {};
+    }
+    this.refLat = Number(lat);
+    this.refLng = Number(lng);
 
-    const cfg = { ...DEFAULT_EKF_CONFIG, ...options };
+    const cfg = { ...DEFAULT_EKF_CONFIG, ...opts };
     this.qv = cfg.qv;
     this.qb = cfg.qb;
     this.qd = cfg.qd;
@@ -72,10 +80,18 @@ export class EkfEstimator {
    * @param {number} [clockBiasSec=0]
    */
   reset(lat, lng, clockBiasSec = 0) {
-    this.refLat = Number(lat);
-    this.refLng = Number(lng);
+    let rLat = lat;
+    let rLng = lng;
+    let rBias = clockBiasSec;
+    if (typeof lat === 'object' && lat !== null) {
+      rLat = lat.lat;
+      rLng = lat.lng;
+      rBias = lng || 0;
+    }
+    this.refLat = Number(rLat);
+    this.refLng = Number(rLng);
     this.x.fill(0);
-    this.x[4] = clockBiasSec * SPEED_OF_LIGHT;
+    this.x[4] = rBias * SPEED_OF_LIGHT;
 
     for (let r = 0; r < 6; r++) {
       this.P[r].fill(0);

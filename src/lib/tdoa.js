@@ -267,8 +267,9 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
     const r = [];
 
     for (const p of pairs) {
+      const secStation = p.slave || p.secondary;
       const mxy = latLngToLocalXY(p.master.lat, p.master.lng, refLat);
-      const sxy = latLngToLocalXY(p.slave.lat, p.slave.lng, refLat);
+      const sxy = latLngToLocalXY(secStation.lat, secStation.lng, refLat);
 
       const dM = Math.hypot(x0 - mxy.x, y0 - mxy.y);
       const dS = Math.hypot(x0 - sxy.x, y0 - sxy.y);
@@ -276,8 +277,13 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
       const safeDM = Math.max(1.0, dM);
       const safeDS = Math.max(1.0, dS);
 
-      const modeledDeltaMeters = safeDS - safeDM;
-      const measuredDeltaMeters = p.tdoaSec * propSpeed;
+      const asfDeltaMeters =
+        (typeof secStation?.asfMeters === 'number' ? secStation.asfMeters : 0) -
+        (typeof p.master?.asfMeters === 'number' ? p.master.asfMeters : 0);
+      const modeledDeltaMeters = safeDS - safeDM + asfDeltaMeters;
+
+      const emissionDelaySec = (secStation?.offsetSec || 0) - (p.master?.offsetSec || 0);
+      const measuredDeltaMeters = (p.tdoaSec - emissionDelaySec) * propSpeed;
       const ri = measuredDeltaMeters - modeledDeltaMeters;
 
       // Unitless directional gradients
@@ -320,10 +326,14 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
       break;
     }
 
-    x0 += dx;
-    y0 += dy;
+    const stepNorm = Math.hypot(dx, dy);
+    const maxStep = 25000;
+    const scale = stepNorm > maxStep ? maxStep / stepNorm : 1.0;
 
-    if (Math.hypot(x0, y0) > 20000000) {
+    x0 += dx * scale;
+    y0 += dy * scale;
+
+    if (Math.hypot(x0, y0) > 40000000) {
       converged = false;
       break;
     }
@@ -341,7 +351,7 @@ export function solvePositionFromTDOA(pairs, initialGuess, maxIterOrOptions = 30
   let lat = initialGuess.lat;
   let lng = initialGuess.lng;
 
-  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 10000000) {
+  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 40000000) {
     const converted = localXYToLatLng(x0, y0, refLat);
     if (Number.isFinite(converted.lat) && Number.isFinite(converted.lng)) {
       lat = Math.max(-90, Math.min(90, converted.lat));
@@ -546,11 +556,15 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
       break;
     }
 
-    x0 += dx;
-    y0 += dy;
-    cbrx += dcbrx;
+    const stepNorm = Math.hypot(dx, dy);
+    const maxStep = 25000;
+    const scale = stepNorm > maxStep ? maxStep / stepNorm : 1.0;
 
-    if (Math.hypot(x0, y0) > 20000000) {
+    x0 += dx * scale;
+    y0 += dy * scale;
+    cbrx += dcbrx * scale;
+
+    if (Math.hypot(x0, y0) > 40000000) {
       converged = false;
       break;
     }
@@ -568,7 +582,7 @@ export function solvePositionPseudorange(observations, initialGuess, options = {
   let lat = initialGuess.lat;
   let lng = initialGuess.lng;
 
-  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 10000000) {
+  if (Number.isFinite(x0) && Number.isFinite(y0) && Math.hypot(x0, y0) < 40000000) {
     const converted = localXYToLatLng(x0, y0, refLat);
     if (Number.isFinite(converted.lat) && Number.isFinite(converted.lng)) {
       lat = Math.max(-90, Math.min(90, converted.lat));

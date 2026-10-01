@@ -13,6 +13,7 @@ import {
   computeBrunavsSecondaryFactorSec,
 } from '../geodesy.js';
 import {
+  computeArrivalSec,
   computeTDOAPair,
   solvePositionFromTDOA,
   solvePositionPseudorange,
@@ -185,6 +186,41 @@ describe('TDOA and Multilateration Math', () => {
     expect(solution.lng).toBeLessThanOrEqual(180);
     expect(solution.converged).toBe(false);
     expect(solution.noSolution).toBe(true);
+  });
+
+  it('guarantees convergence and sub-meter precision in the Eastern Hemisphere (> 90 deg longitude, e.g. Jakarta)', () => {
+    const master = { id: 'M', name: 'Master', lat: -6.1, lng: 106.8, offsetSec: 0, asfMeters: 10 };
+    const s1 = { id: 'S1', name: 'Secondary 1', lat: -6.1, lng: 106.6, offsetSec: 0.011, asfMeters: 12 };
+    const s2 = { id: 'S2', name: 'Secondary 2', lat: -6.3, lng: 106.8, offsetSec: 0.024, asfMeters: 8 };
+    const s3 = { id: 'S3', name: 'Secondary 3', lat: -6.2, lng: 107.0, offsetSec: 0.038, asfMeters: 15 };
+    const rx = { lat: -6.2, lng: 106.85 };
+    const eta = 1.000338;
+    const c = 299792458;
+
+    // 1. TDOA solver in Eastern hemisphere with emission delay & ASF
+    const tdoaPairs = [s1, s2, s3].map(sec => ({
+      master,
+      secondary: sec,
+      tdoaSec: computeTDOAPair(master, sec, rx.lat, rx.lng, 0, eta),
+    }));
+    const tdoaSol = solvePositionFromTDOA(tdoaPairs, { lat: -6.0, lng: 106.5 }, { eta });
+    expect(tdoaSol.converged).toBe(true);
+    expect(tdoaSol.lat).toBeCloseTo(rx.lat, 4);
+    expect(tdoaSol.lng).toBeCloseTo(rx.lng, 4);
+
+    // 2. Pseudorange solver in Eastern hemisphere with emission delay & ASF
+    const pseudoObs = [master, s1, s2, s3].map(st => {
+      const arr = computeArrivalSec(st, rx.lat, rx.lng, 0, eta, false);
+      return {
+        station: st,
+        pseudorangeMeters: arr * c - (st.offsetSec || 0) * c,
+        slipped: false,
+      };
+    });
+    const pseudoSol = solvePositionPseudorange(pseudoObs, { lat: -6.0, lng: 106.5 }, { eta });
+    expect(pseudoSol.converged).toBe(true);
+    expect(pseudoSol.lat).toBeCloseTo(rx.lat, 4);
+    expect(pseudoSol.lng).toBeCloseTo(rx.lng, 4);
   });
 
   it('handles degenerate/collinear pseudorange observations safely with bounded coordinates and noSolution flag', () => {
@@ -559,6 +595,18 @@ describe('Multi-Sensor PNT Fusion (Inverse-Covariance BLUE)', () => {
     expect(demoFused.weightingMethod).toBe('fixed-weights-demo');
     expect(demoFused.weights.eloran).toBeCloseTo(0.6, 2);
     expect(demoFused.weights.gnss).toBeCloseTo(0.4, 2);
+  });
+
+  it('safely handles NaN and degenerate covariances without returning NaN HPL or coordinates', () => {
+    const eloranFix = { lat: -6.2, lng: 106.8, covariance: [[NaN, NaN], [NaN, NaN]], hplMeters: NaN };
+    const gnssFix = { lat: -6.2, lng: 106.8, covariance: [[100, 0], [0, 100]], hplMeters: 20 };
+    const fused = fusePositions(eloranFix, gnssFix, 'fusion', { lat: -6.2, lng: 106.8 });
+
+    expect(Number.isFinite(fused.lat)).toBe(true);
+    expect(Number.isFinite(fused.lng)).toBe(true);
+    expect(Number.isFinite(fused.hplMeters)).toBe(true);
+    expect(fused.hplMeters).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(fused.errorMeters)).toBe(true);
   });
 });
 

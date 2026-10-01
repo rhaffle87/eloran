@@ -158,12 +158,16 @@ const path = require('path');
   console.log('==============================================================================\n');
 
   const fs = require('fs');
+  const localScratch = path.join(__dirname, '..', 'scratch');
+  if (!fs.existsSync(localScratch)) fs.mkdirSync(localScratch, { recursive: true });
+  const payload = JSON.stringify({ benchmarkTable, sweepTable, passedCount, failedCount }, null, 2);
+  fs.writeFileSync(path.join(localScratch, 'physics_benchmark_results.json'), payload, 'utf8');
   const outDir = 'C:/Users/Rafli Alif/.gemini/antigravity-ide/brain/b8ef9f43-bb6e-4351-bce9-37e3d6bdc1ff';
-  fs.writeFileSync(
-    path.join(outDir, 'scratch', 'physics_benchmark_results.json'),
-    JSON.stringify({ benchmarkTable, sweepTable, passedCount, failedCount }, null, 2),
-    'utf8'
-  );
+  if (fs.existsSync(outDir)) {
+    const bScratch = path.join(outDir, 'scratch');
+    if (!fs.existsSync(bScratch)) fs.mkdirSync(bScratch, { recursive: true });
+    try { fs.writeFileSync(path.join(bScratch, 'physics_benchmark_results.json'), payload, 'utf8'); } catch (_) {}
+  }
 
   if (failedCount > 0) process.exit(1);
 })().catch(err => {

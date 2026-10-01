@@ -593,9 +593,23 @@ export const useSimulationStore = create((set, get) => {
             slipped = slipRes.slipped;
           }
 
+          // Pre-evaluate position-dependent ASF so the solver's internal model
+          // matches the observation built by computeArrivalSec (which calls
+          // st.asfEvaluator if present; the solver only checks st.asfMeters).
+          let evaluatedAsfMeters = typeof st.asfMeters === 'number' ? st.asfMeters : 0;
+          if (typeof st.asfEvaluator === 'function') {
+            try { evaluatedAsfMeters = st.asfEvaluator(rx.lat, rx.lng) || 0; } catch { /* noop */ }
+          }
+
+          // Subtract the known transmitter emission delay (offsetSec) so that
+          // pseudorangeMeters represents propagation time only.  Without this,
+          // secondary stations produce pseudoranges thousands of km too large
+          // (e.g. offsetSec=0.011 s -> +3,298 km) causing the solver to diverge.
+          const emissionDelayMeters = (st.offsetSec || 0) * SPEED_OF_LIGHT;
+
           return {
-            station: st,
-            pseudorangeMeters: arrivalSec * SPEED_OF_LIGHT,
+            station: { ...st, asfMeters: evaluatedAsfMeters },
+            pseudorangeMeters: arrivalSec * SPEED_OF_LIGHT - emissionDelayMeters,
             slipped,
           };
         });
@@ -616,6 +630,14 @@ export const useSimulationStore = create((set, get) => {
         rawTdoaPairs = activeSlaves.map((s) => {
           const isDegraded = (stationStatus[s.label] || 'nominal') === 'degraded';
           let tdoa = computeTDOAPair(refMaster, s, rx.lat, rx.lng, simTimeSec, settings.refractiveIndex);
+          let sAsf = typeof s.asfMeters === 'number' ? s.asfMeters : 0;
+          if (typeof s.asfEvaluator === 'function') {
+            try { sAsf = s.asfEvaluator(rx.lat, rx.lng) || 0; } catch { sAsf = 0; }
+          }
+          let mAsf = typeof refMaster.asfMeters === 'number' ? refMaster.asfMeters : 0;
+          if (typeof refMaster.asfEvaluator === 'function') {
+            try { mAsf = refMaster.asfEvaluator(rx.lat, rx.lng) || 0; } catch { mAsf = 0; }
+          }
           if (settings.noiseMode === 'random') {
             tdoa += sampleGaussianSec();
           }
@@ -632,8 +654,8 @@ export const useSimulationStore = create((set, get) => {
             ).arrivalSec;
           }
           return {
-            master: refMaster,
-            slave: s,
+            master: { ...refMaster, asfMeters: mAsf },
+            slave: { ...s, asfMeters: sAsf },
             tdoaSec: tdoa,
           };
         });

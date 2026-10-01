@@ -236,9 +236,17 @@ export function mercatorToWgs84([x, y]) {
  * @returns {{x: number, y: number}} Local Cartesian coordinates in meters
  */
 export function latLngToLocalXY(lat, lng, refLat) {
-  const safeLat = Number.isFinite(lat) ? Math.max(-90, Math.min(90, lat)) : 0;
-  const safeLng = Number.isFinite(lng) ? lng : 0;
-  const safeRef = Number.isFinite(refLat) ? Math.max(-90, Math.min(90, refLat)) : 0;
+  let pLat = lat;
+  let pLng = lng;
+  let pRef = refLat;
+  if (typeof lat === 'object' && lat !== null) {
+    pLat = lat.lat;
+    pLng = lat.lng;
+    pRef = lng ?? lat.lat;
+  }
+  const safeLat = Number.isFinite(pLat) ? Math.max(-90, Math.min(90, pLat)) : 0;
+  const safeLng = Number.isFinite(pLng) ? pLng : 0;
+  const safeRef = Number.isFinite(pRef) ? Math.max(-90, Math.min(90, pRef)) : 0;
   const toRad = Math.PI / 180;
   const x = (safeLng * toRad) * EARTH_RADIUS * Math.cos(safeRef * toRad);
   const y = (safeLat * toRad) * EARTH_RADIUS;

@@ -15,7 +15,6 @@
 
 import {
   computeAustronWrongCycleProbability,
-  isWrongCycleSelection,
 } from './pulse.js';
 
 export const TRACKING_STATES = {
@@ -129,7 +128,9 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
 
     if (lockConfidence >= 1.0) {
       // Check if initial lock lands on wrong cycle
-      const isWrong = isWrongCycleSelection(snrDb, config.pulsesAveraged, 'boyce-ratio', rng);
+      const totalSnrDb = snrDb + 10 * Math.log10(Math.max(1, config.pulsesAveraged));
+      const pWrong = computeAustronWrongCycleProbability(totalSnrDb);
+      const isWrong = rng() < pWrong;
       if (isWrong) {
         cycleIndex = rng() > 0.5 ? 4 : 2; // Slipped to 40 µs or 20 µs
         state = TRACKING_STATES.SLIPPED;
@@ -168,7 +169,8 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
   const ecdUs = prevState.ecdUs * (1.0 - config.loopGain) + (trueEcd + ecdNoise) * config.loopGain;
 
   const estimatedSzcUs = config.nominalSzcUs + cycleOffsetUs + phaseOffsetUs;
-  const wrongCycleProb = computeAustronWrongCycleProbability(snrDb);
+  const totalSnrDb = snrDb + 10 * Math.log10(Math.max(1, config.pulsesAveraged));
+  const wrongCycleProb = computeAustronWrongCycleProbability(totalSnrDb);
 
   const historyItem = {
     gri: totalGris,

@@ -359,6 +359,17 @@
   background-color: var(--bg-muted) !important;
 }
 
+/* --- MapLibre Bottom Controls � TelemetryConsole clearance --- */
+/* Push the native zoom buttons and scale bar above the TelemetryConsole strip.
+   The parent .relative div sets --map-bottom-clearance dynamically via JS.
+   Collapsed console  ? 48px  (ribbon bar only)
+   Expanded console   ? 260px (ribbon + data panel) */
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  bottom: var(--map-bottom-clearance, 48px) !important;
+  transition: bottom 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ─── Animations ────────────────────────────────────── */
 @keyframes radar-pulse {
   0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
@@ -384,3 +395,4 @@
 .animate-fade-up {
   animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+

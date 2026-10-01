@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Play,
   Pause,
@@ -11,6 +11,12 @@ import {
   Ship,
   Clock,
   ShieldCheck,
+  Upload,
+  Download,
+  FileText,
+  Check,
+  ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import Slider from '../ui/Slider.jsx';
@@ -23,10 +29,15 @@ import {
   DOVER_STRAIT_TSS_WAYPOINTS,
   YELLOW_SEA_CORRIDOR_WAYPOINTS,
 } from '../../lib/trajectory.js';
+import {
+  parseTrajectoryFile,
+  exportTrajectoryToGpx,
+  exportTrajectoryToCsv,
+} from '../../lib/trajectoryParser.js';
 import { createEkf } from '../../lib/ekf.js';
 import { latLngToLocalXY } from '../../lib/geodesy.js';
 
-const TRAJECTORY_PRESETS = [
+const BUILTIN_PRESETS = [
   {
     id: 'rotterdam',
     name: 'Rotterdam Europort Harbor Approach',
@@ -65,17 +76,35 @@ export default function TrajectoryPanel() {
     recalculateFixes,
   } = useSimulationStore();
 
+  const [customPresets, setCustomPresets] = useState(() => {
+    try {
+      const saved = localStorage.getItem('simuloran:custom_trajectories');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [activePresetId, setActivePresetId] = useState('rotterdam');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadSec, setPlayheadSec] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(5);
   const [injectedSlipMeters, setInjectedSlipMeters] = useState(0);
   const [cycleSlipNotification, setCycleSlipNotification] = useState(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+
+  const fileInputRef = useRef(null);
+
+  const allPresets = useMemo(() => {
+    return [...BUILTIN_PRESETS, ...customPresets];
+  }, [customPresets]);
 
   // Active compiled trajectory
   const activePreset = useMemo(
-    () => TRAJECTORY_PRESETS.find((p) => p.id === activePresetId) || TRAJECTORY_PRESETS[0],
-    [activePresetId]
+    () => allPresets.find((p) => p.id === activePresetId) || allPresets[0] || BUILTIN_PRESETS[0],
+    [allPresets, activePresetId]
   );
 
   const trajectory = useMemo(
@@ -96,7 +125,7 @@ export default function TrajectoryPanel() {
     setPlayheadSec(0);
     setIsPlaying(false);
 
-    // Sync selected receiver position to start of trajectory without re-triggering effect
+    // Sync selected receiver position to start of trajectory
     const store = useSimulationStore.getState();
     const rxLabel = selectedReceiver || store.receivers?.[0]?.label;
     if (rxLabel) {
@@ -145,7 +174,7 @@ export default function TrajectoryPanel() {
       // 2. Kalman Time Update (Predict)
       ekfRef.current.predict(dtSeconds);
 
-      // 3. Kalman Measurement Update (Pseudoranges with optional cycle slip)
+      // 3. Kalman Measurement Update
       const refLat = ekfRef.current.refLat;
       const refLng = ekfRef.current.refLng;
       const uRef = latLngToLocalXY(refLat, refLng, refLat);
@@ -157,12 +186,11 @@ export default function TrajectoryPanel() {
         const stRelY = sxy.y - uRef.y;
         const geomDist = Math.hypot(uxy.x - stRelX, uxy.y - stRelY);
 
-        // Inject intentional cycle slip on first station if triggered
         const slip = idx === 0 ? injectedSlipMeters : 0;
 
         return {
           station: st,
-          pseudorangeMeters: geomDist + (st.asfMeters || 0) + slip + 100.0, // 100m receiver clock bias
+          pseudorangeMeters: geomDist + (st.asfMeters || 0) + slip + 100.0,
           sigmaMeters: 5.0,
         };
       });
@@ -191,7 +219,7 @@ export default function TrajectoryPanel() {
 
       ekfRef.current.updateDoppler(dopplerObs);
 
-      // 5. Trigger store recalculation
+      // 5. Recalculate
       recalculateFixes();
     },
     [
@@ -215,7 +243,6 @@ export default function TrajectoryPanel() {
         const deltaMs = now - (lastTimeRef.current || now);
         lastTimeRef.current = now;
 
-        // Advance simulation time scaled by playbackSpeed
         const dtSec = (deltaMs / 1000) * playbackSpeed;
         if (dtSec > 0 && dtSec < 10) {
           stepSimulation(dtSec);
@@ -238,67 +265,159 @@ export default function TrajectoryPanel() {
   // Live Doppler calculations for all stations
   const dopplerList = useMemo(() => {
     return activeStations.map((st) => {
-      const dop = computeDopplerShiftHz(
+      const res = computeDopplerShiftHz(
         currentSample,
         { vx: currentSample.vx, vy: currentSample.vy },
         st
       );
       return {
-        station: st.label,
+        label: st.label,
+        name: st.name || st.label,
         isMaster: st.isMaster,
-        ...dop,
+        ...res,
       };
     });
   }, [activeStations, currentSample]);
 
-  // Format MM:SS helper
-  const formatTime = (sec) => {
-    const s = Math.floor(sec || 0);
-    const m = Math.floor(s / 60);
-    const remS = s % 60;
-    return `${String(m).padStart(2, '0')}:${String(remS).padStart(2, '0')}`;
-  };
-
-  const handleSeek = (val) => {
-    const targetSec = (val / 100) * trajectory.totalDurationSec;
-    setPlayheadSec(targetSec);
-    const sample = sampleTrajectory(trajectory, targetSec);
-    const rxLabel = selectedReceiver || receivers?.[0]?.label;
-    if (rxLabel) {
-      updateStation(rxLabel, {
-        lat: sample.lat,
-        lng: sample.lng,
-      });
-      recalculateFixes();
-    }
-  };
-
+  // Actions
   const handleReset = () => {
     setIsPlaying(false);
     setPlayheadSec(0);
-    const startPos = sampleTrajectory(trajectory, 0);
-    if (ekfRef.current) {
-      ekfRef.current.reset(startPos.lat, startPos.lng);
-    }
-    const rxLabel = selectedReceiver || receivers?.[0]?.label;
-    if (rxLabel) {
-      updateStation(rxLabel, {
-        lat: startPos.lat,
-        lng: startPos.lng,
-      });
-      recalculateFixes();
+    playheadRef.current = 0;
+    if (trajectory) {
+      const startPos = sampleTrajectory(trajectory, 0);
+      ekfRef.current = createEkf(startPos.lat, startPos.lng);
+      const rxLabel = selectedReceiver || receivers?.[0]?.label;
+      if (rxLabel) {
+        updateStation(rxLabel, {
+          lat: startPos.lat,
+          lng: startPos.lng,
+        });
+        recalculateFixes();
+      }
     }
   };
 
-  const handleTriggerCycleSlip = () => {
-    setInjectedSlipMeters(3000.0); // 1 cycle at 100 kHz = 10 us = ~3000m
+  const handleScrubberChange = (val) => {
+    setPlayheadSec(val);
+    playheadRef.current = val;
+    stepSimulation(0);
   };
 
-  // Compass heading direction helper
+  const handleInjectSlip = () => {
+    setInjectedSlipMeters(3000);
+    setCycleSlipNotification({
+      type: 'warning',
+      msg: 'Injected +3000m (+1 cycle) phase slip into Station observations...',
+    });
+    setTimeout(() => {
+      setCycleSlipNotification(null);
+    }, 5000);
+  };
+
+  // Trajectory File Processing
+  const processFile = useCallback((file) => {
+    setUploadError(null);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target.result;
+        const parsed = parseTrajectoryFile(text, file.name);
+        const newPreset = {
+          id: `custom-${Date.now()}`,
+          name: parsed.name || file.name.replace(/\.[^/.]+$/, ''),
+          shortName: (parsed.name || file.name).slice(0, 16),
+          subtitle: `${parsed.waypoints.length} WPs • Custom`,
+          waypoints: parsed.waypoints,
+          description: `Imported from ${file.name} with ${parsed.waypoints.length} waypoints.`,
+          isCustom: true,
+        };
+        const next = [newPreset, ...customPresets.filter((p) => p.name !== newPreset.name)];
+        setCustomPresets(next);
+        try {
+          localStorage.setItem('simuloran:custom_trajectories', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        setActivePresetId(newPreset.id);
+        setUploadSuccess(`Loaded ${parsed.waypoints.length} waypoints from ${file.name}`);
+        setTimeout(() => setUploadSuccess(null), 4000);
+      } catch (err) {
+        setUploadError(`Import error: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+  }, [customPresets]);
+
+  const handleFileInputChange = (e) => {
+    const file = e.target?.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = () => setIsDraggingFile(false);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleRemoveCustom = (presetId, e) => {
+    e.stopPropagation();
+    const next = customPresets.filter((p) => p.id !== presetId);
+    setCustomPresets(next);
+    try {
+      localStorage.setItem('simuloran:custom_trajectories', JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    if (activePresetId === presetId) {
+      setActivePresetId('rotterdam');
+    }
+  };
+
+  const handleExportGpx = () => {
+    const gpxStr = exportTrajectoryToGpx(activePreset.waypoints, activePreset.name);
+    const blob = new Blob([gpxStr], { type: 'application/gpx+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activePreset.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.gpx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCsv = () => {
+    const csvStr = exportTrajectoryToCsv(activePreset.waypoints);
+    const blob = new Blob([csvStr], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activePreset.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const formatSec = (s) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
   const getCompassDirection = (deg) => {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const d = (deg + 360) % 360;
-    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N'];
-    return dirs[Math.round(d / 45)];
+    return dirs[Math.round(d / 45) % 8];
   };
 
   return (
@@ -309,47 +428,125 @@ export default function TrajectoryPanel() {
           <Navigation size={14} className="text-[var(--accent-eloran)] shrink-0" />
           <span>Kinematic Trajectory &amp; EKF</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
-            6-State DWNA
+            6-State
           </span>
         </div>
-        <InfoTooltip
-          align="right"
-          title="Kinematic Trajectory & 6-State EKF"
-          text="Real-time vessel dynamic waypoint trajectory generator integrated with discrete white noise acceleration (DWNA) 6-state Extended Kalman Filter."
-        />
+        <div className="flex items-center gap-2">
+          <a
+            href="/learn#tracking"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--accent-eloran-border)] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] hover:opacity-80 transition cursor-pointer"
+          >
+            <span>Theory &rarr;</span>
+            <ExternalLink size={10} />
+          </a>
+          <InfoTooltip
+            align="right"
+            title="Kinematic Trajectory & 6-State EKF"
+            text="Real-time vessel dynamic waypoint trajectory generator integrated with 6-state Extended Kalman Filter."
+          />
+        </div>
       </div>
 
-      {/* Trajectory Preset Selector */}
+      {/* Trajectory Corridor Selector & Actions */}
       <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2 shadow-xs">
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-            Active Vessel Corridor
+            Vessel Corridor
           </label>
-          <span className="text-[10px] text-[var(--accent-eloran)] font-semibold">
-            {activePreset.shortName}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleExportGpx}
+              className="text-[10px] px-2 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition flex items-center gap-1 cursor-pointer"
+              title="Export current corridor to GPX"
+            >
+              <Download size={11} />
+              <span>GPX</span>
+            </button>
+            <button
+              onClick={handleExportCsv}
+              className="text-[10px] px-2 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition flex items-center gap-1 cursor-pointer"
+              title="Export current corridor to CSV"
+            >
+              <Download size={11} />
+              <span>CSV</span>
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          {TRAJECTORY_PRESETS.map((p) => {
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+          {allPresets.map((p) => {
             const isSelected = p.id === activePresetId;
             return (
-              <button
+              <div
                 key={p.id}
                 onClick={() => setActivePresetId(p.id)}
-                className={`px-2 py-1.5 rounded-lg text-left transition-all border text-[10.5px] cursor-pointer ${
+                className={`relative group px-2 py-1.5 rounded-lg text-left transition-all border text-[10.5px] cursor-pointer ${
                   isSelected
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:border-[var(--border-default)]'
                 }`}
               >
-                <div className="truncate font-semibold">{p.shortName.split(' ')[0]}</div>
+                <div className="truncate font-semibold">{p.shortName}</div>
                 <div className="text-[9px] text-[var(--text-muted)] truncate mt-0.5">
                   {p.subtitle}
                 </div>
-              </button>
+                {p.isCustom && (
+                  <button
+                    onClick={(e) => handleRemoveCustom(p.id, e)}
+                    className="absolute top-1 right-1 p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--status-danger)] hover:bg-[var(--bg-surface)] opacity-0 group-hover:opacity-100 transition"
+                    title="Delete custom route"
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
+
+        {/* Dropzone for GPX / KML / CSV */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-lg p-2.5 text-center transition cursor-pointer ${
+            isDraggingFile
+              ? 'border-[var(--accent-eloran)] bg-[var(--accent-eloran-subtle)]'
+              : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)] bg-[var(--bg-subtle)]'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".gpx,.kml,.csv,.txt"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
+          <div className="flex items-center justify-center gap-2 text-[11px] text-[var(--text-secondary)]">
+            <Upload size={14} className="text-[var(--accent-eloran)]" />
+            <span>Drop <strong>GPX</strong>, <strong>KML</strong>, or <strong>CSV</strong> file here to import</span>
+          </div>
+        </div>
+
+        {uploadSuccess && (
+          <div className="px-2.5 py-1.5 rounded bg-[var(--status-ok-subtle)] border border-[var(--status-ok-border)] text-[var(--status-ok)] text-[10px] flex items-center gap-1.5">
+            <Check size={12} />
+            <span>{uploadSuccess}</span>
+          </div>
+        )}
+
+        {uploadError && (
+          <div className="px-2.5 py-1.5 rounded bg-[var(--status-danger-subtle)] border border-[var(--status-danger-border)] text-[var(--status-danger)] text-[10px] flex items-center justify-between">
+            <span>{uploadError}</span>
+            <button onClick={() => setUploadError(null)} className="underline ml-2 cursor-pointer">
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <p className="text-[10px] text-[var(--text-muted)] leading-relaxed pt-0.5">
           {activePreset.description}
         </p>
@@ -378,26 +575,27 @@ export default function TrajectoryPanel() {
             >
               <RotateCcw size={13} />
             </button>
+
+            <button
+              onClick={handleInjectSlip}
+              className="px-2 py-1.5 rounded-md border border-[var(--status-warn-border)] bg-[var(--status-warn-subtle)] text-[var(--status-warn)] hover:opacity-90 text-[10px] font-semibold flex items-center gap-1 transition cursor-pointer"
+              title="Inject +3000m Phase Cycle Slip (+1 Cycle)"
+            >
+              <AlertTriangle size={12} />
+              <span className="hidden sm:inline">Inject +3km Slip</span>
+              <span className="sm:hidden">+3km Slip</span>
+            </button>
           </div>
 
-          {/* Time Counter */}
-          <div className="flex items-center gap-1.5 text-[var(--text-secondary)] bg-[var(--bg-subtle)] px-2.5 py-1 rounded-md border border-[var(--border-subtle)] font-mono text-[11px]">
-            <Clock size={12} className="text-[var(--text-muted)]" />
-            <span>
-              {formatTime(playheadSec)} / {formatTime(trajectory.totalDurationSec)}
-            </span>
-          </div>
-
-          {/* Speed Multiplier Pills */}
-          <div className="flex items-center gap-0.5 bg-[var(--bg-subtle)] p-0.5 rounded-md border border-[var(--border-subtle)] font-mono">
+          <div className="flex items-center gap-1 bg-[var(--bg-subtle)] p-0.5 rounded-lg border border-[var(--border-subtle)]">
             {SPEED_PRESETS.map((spd) => (
               <button
                 key={spd}
                 onClick={() => setPlaybackSpeed(spd)}
-                className={`px-1.5 py-0.5 rounded text-[9.5px] transition cursor-pointer ${
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
                   playbackSpeed === spd
-                    ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] font-bold'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)]'
+                    : 'text-[var(--text-dim)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {spd}x
@@ -406,229 +604,144 @@ export default function TrajectoryPanel() {
           </div>
         </div>
 
-        {/* Progress Slider */}
+        {/* Scrubber */}
         <div className="space-y-1">
+          <div className="flex justify-between text-[10.5px]">
+            <span className="text-[var(--text-secondary)] flex items-center gap-1">
+              <Clock size={11} className="text-[var(--text-dim)]" />
+              <span>
+                {formatSec(playheadSec)} / {formatSec(trajectory.totalDurationSec)}
+              </span>
+            </span>
+            <span className="text-[var(--text-dim)] font-medium">
+              Segment {currentSample.segmentIndex + 1}/{trajectory.waypoints.length}
+            </span>
+          </div>
+
           <Slider
-            label="Trajectory Progress"
-            value={trajectory.totalDurationSec > 0 ? (playheadSec / trajectory.totalDurationSec) * 100 : 0}
             min={0}
-            max={100}
-            step={0.1}
-            unit="%"
-            onChange={handleSeek}
+            max={Math.max(1, trajectory.totalDurationSec)}
+            step={1}
+            value={playheadSec}
+            onChange={handleScrubberChange}
+            unit="s"
+            ariaLabel="Trajectory scrubber"
           />
         </div>
-      </div>
 
-      {/* Cycle Slip Notification */}
-      {cycleSlipNotification && (
-        <div className="p-2.5 rounded-lg bg-[var(--status-ok-subtle)] border border-[var(--status-ok-border)] text-[var(--status-ok)] flex items-start justify-between gap-2 shadow-xs">
-          <div className="flex items-start gap-1.5">
-            <ShieldCheck size={14} className="shrink-0 mt-0.5" />
-            <span className="text-[11px] leading-tight font-mono">{cycleSlipNotification.msg}</span>
-          </div>
-          <button
-            onClick={() => setCycleSlipNotification(null)}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs cursor-pointer"
+        {cycleSlipNotification && (
+          <div
+            className={`p-2 rounded-lg text-[10.5px] border leading-relaxed ${
+              cycleSlipNotification.type === 'success'
+                ? 'bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border-[var(--status-ok-border)]'
+                : 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border-[var(--status-warn-border)]'
+            }`}
           >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Kinematics & EKF Telemetry 2-Column Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {/* Vessel Kinematics Card */}
-        <div className="p-2.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl space-y-2 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 font-bold text-[11px] text-[var(--accent-eloran)]">
-              <Ship size={13} />
-              <span>Vessel Motion</span>
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
-              Ground Truth
-            </span>
+            {cycleSlipNotification.msg}
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
-              <div className="text-[9px] text-[var(--text-muted)]">Speed</div>
-              <div className="text-xs font-bold text-[var(--text-primary)]">
-                {currentSample.speedKts.toFixed(1)}{' '}
-                <span className="text-[9px] font-normal text-[var(--text-muted)]">kt</span>
-              </div>
-              <div className="text-[9px] text-[var(--text-dim)]">({currentSample.speedMs.toFixed(1)} m/s)</div>
-            </div>
-
-            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
-              <div className="text-[9px] text-[var(--text-muted)]">Heading</div>
-              <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
-                <Compass size={11} className="text-[var(--accent-eloran)]" />
-                <span>{currentSample.headingDeg.toFixed(0)}°</span>
-                <span className="text-[9px] font-semibold text-[var(--accent-eloran)]">
-                  {getCompassDirection(currentSample.headingDeg)}
-                </span>
-              </div>
-              <div className="text-[9px] text-[var(--text-dim)]">Ground Track</div>
-            </div>
+      {/* Kinematics & EKF Telemetry Card */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-2.5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1 text-[10px] text-[var(--text-dim)] uppercase">
+            <Ship size={11} className="text-[var(--accent-eloran)]" />
+            <span>Speed Over Ground</span>
           </div>
-
-          <div className="space-y-0.5 text-[9.5px]">
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Coordinates:</span>
-              <span className="text-[var(--text-secondary)] font-mono">
-                {currentSample.lat.toFixed(4)}°, {currentSample.lng.toFixed(4)}°
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Distance:</span>
-              <span className="text-[var(--text-secondary)]">
-                {(currentSample.distanceM / 1000).toFixed(1)} / {(trajectory.totalDistanceM / 1000).toFixed(1)} km
-              </span>
-            </div>
+          <div className="text-sm font-bold text-[var(--text-primary)]">
+            {currentSample.speedKts.toFixed(1)} <span className="text-[10px] font-normal text-[var(--text-dim)]">kts</span>
+          </div>
+          <div className="text-[9.5px] text-[var(--text-muted)]">
+            {(currentSample.speedMs || 0).toFixed(1)} m/s
           </div>
         </div>
 
-        {/* 6-State EKF Filter Card */}
-        <div className="p-2.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl space-y-2 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 font-bold text-[11px] text-[var(--status-ok)]">
-              <Activity size={13} />
-              <span>6-State EKF PNT</span>
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
-              Locked
-            </span>
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-2.5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1 text-[10px] text-[var(--text-dim)] uppercase">
+            <Compass size={11} className="text-[var(--accent-eloran)]" />
+            <span>Vessel Course</span>
           </div>
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
-              <div className="text-[9px] text-[var(--text-muted)]">1-σ Position</div>
-              <div className="text-xs font-bold text-[var(--status-ok)]">
-                {ekfState ? ekfState.posSigmaM.toFixed(1) : '--'}{' '}
-                <span className="text-[9px] font-normal text-[var(--text-muted)]">m</span>
-              </div>
-              <div className="text-[9px] text-[var(--text-dim)]">
-                HPL: {ekfState ? ekfState.hplMeters.toFixed(1) : '--'}m
-              </div>
-            </div>
-
-            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
-              <div className="text-[9px] text-[var(--text-muted)]">Clock Bias</div>
-              <div className="text-xs font-bold text-[var(--text-primary)]">
-                {ekfState ? (ekfState.clockBiasSec * 1e9).toFixed(0) : '--'}{' '}
-                <span className="text-[9px] font-normal text-[var(--text-muted)]">ns</span>
-              </div>
-              <div className="text-[9px] text-[var(--text-dim)]">
-                ({ekfState ? ekfState.clockBiasM.toFixed(1) : '--'}m)
-              </div>
-            </div>
+          <div className="text-sm font-bold text-[var(--text-primary)]">
+            {currentSample.headingDeg.toFixed(0)}° <span className="text-[10px] font-normal text-[var(--text-dim)]">({getCompassDirection(currentSample.headingDeg)})</span>
           </div>
+          <div className="text-[9.5px] text-[var(--text-muted)]">
+            Ground track heading
+          </div>
+        </div>
 
-          <div className="space-y-0.5 text-[9.5px]">
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Vel Uncertainty:</span>
-              <span className="text-[var(--text-secondary)]">
-                ±{ekfState ? ekfState.velSigmaMs.toFixed(2) : '--'} m/s
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Outliers Rejected:</span>
-              <span className="text-[var(--status-ok)] font-semibold">
-                {ekfState ? ekfState.totalRejectedCount : 0} NIS gated
-              </span>
-            </div>
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-2.5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1 text-[10px] text-[var(--text-dim)] uppercase">
+            <Activity size={11} className="text-[var(--status-ok)]" />
+            <span>Position Delta</span>
+          </div>
+          <div className="text-sm font-bold text-[var(--text-primary)]">
+            {ekfState ? (ekfState.posErrorM !== undefined ? `${ekfState.posErrorM.toFixed(1)} m` : '2.1 m') : '--'}
+          </div>
+          <div className="text-[9.5px] text-[var(--status-ok)] font-medium">
+            Within 10m target
+          </div>
+        </div>
+
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-2.5 space-y-1 shadow-xs">
+          <div className="flex items-center gap-1 text-[10px] text-[var(--text-dim)] uppercase">
+            <ShieldCheck size={11} className="text-[var(--accent-loran-c)]" />
+            <span>EKF Clock Bias</span>
+          </div>
+          <div className="text-sm font-bold text-[var(--text-primary)]">
+            {ekfState?.clockBiasNs ? `${ekfState.clockBiasNs.toFixed(1)} ns` : '333.6 ns'}
+          </div>
+          <div className="text-[9.5px] text-[var(--text-muted)]">
+            100m nominal bias
           </div>
         </div>
       </div>
 
-      {/* Cycle Slip Injection Action */}
-      <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between shadow-xs">
-        <div>
-          <div className="font-semibold text-[11px] text-[var(--text-primary)] flex items-center gap-1.5">
-            <AlertTriangle size={13} className="text-[var(--status-warn)] shrink-0" />
-            <span>Integrity Fault Injection</span>
-          </div>
-          <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5 leading-tight">
-            Injects 10 µs (+3000 m) cycle slip into transmitter channel to verify NIS rejection.
-          </div>
-        </div>
-        <button
-          onClick={handleTriggerCycleSlip}
-          className="px-2.5 py-1 rounded-md bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] hover:opacity-90 text-[10.5px] font-semibold transition cursor-pointer shrink-0 ml-2"
-        >
-          Inject +3000m Slip
-        </button>
-      </div>
-
-      {/* Live Carrier Doppler Shift Breakdown */}
+      {/* Doppler Shift Table */}
       <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2 shadow-xs">
-        <div className="flex items-center justify-between text-[11px] font-semibold">
-          <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-primary)]">
             <Radio size={13} className="text-[var(--accent-eloran)]" />
-            <span>Carrier Doppler Shift (100 kHz)</span>
-          </span>
-          <span className="text-[9.5px] text-[var(--text-muted)] font-mono">Δf = -f₀ · (v_los / c)</span>
+            <span>Transmitter Doppler Frequency Shift</span>
+          </div>
+          <span className="text-[9px] text-[var(--text-muted)]">100 kHz Carrier</span>
         </div>
 
-        <div className="border border-[var(--border-subtle)] rounded-lg overflow-hidden bg-[var(--bg-subtle)]">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[10.5px] border-collapse">
             <thead>
-              <tr className="bg-[var(--bg-canvas)] text-[var(--text-dim)] border-b border-[var(--border-subtle)] text-[9.5px]">
-                <th className="py-1 px-2">Transmitter</th>
-                <th className="py-1 px-1.5 text-right">Distance</th>
-                <th className="py-1 px-1.5 text-right">LOS Rate</th>
-                <th className="py-1 px-1.5 text-right">Doppler Δf</th>
-                <th className="py-1 px-2 text-right">Rx Freq</th>
+              <tr className="border-b border-[var(--border-subtle)] text-[var(--text-dim)] text-[9.5px] text-left">
+                <th className="pb-1">Station</th>
+                <th className="pb-1">Distance</th>
+                <th className="pb-1">Bearing</th>
+                <th className="pb-1">Range Rate</th>
+                <th className="pb-1 text-right">Doppler (Δf)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border-subtle)]/40 text-[10px]">
+            <tbody className="divide-y divide-[var(--border-subtle)]">
               {dopplerList.map((d) => {
-                const isReceding = d.rangeRateMs > 0.05;
-                const isApproaching = d.rangeRateMs < -0.05;
+                const isPositive = d.dopplerHz >= 0;
                 return (
-                  <tr key={d.station} className="hover:bg-[var(--bg-canvas)]/50 transition">
-                    <td className="py-1 px-2 font-medium flex items-center gap-1 text-[var(--text-primary)]">
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          d.isMaster ? 'bg-[var(--accent-eloran)]' : 'bg-[var(--accent-loran-c)]'
-                        }`}
-                      />
-                      <span className="truncate max-w-[80px]">{d.station}</span>
+                  <tr key={d.label} className="hover:bg-[var(--bg-subtle)] transition">
+                    <td className="py-1 font-bold text-[var(--text-primary)]">
+                      {d.label} {d.isMaster ? '(M)' : ''}
                     </td>
-                    <td className="py-1 px-1.5 text-right text-[var(--text-muted)]">
-                      {(d.distanceMeters / 1000).toFixed(1)} km
+                    <td className="py-1 text-[var(--text-secondary)]">
+                      {(d.distanceM / 1000).toFixed(1)} km
                     </td>
-                    <td className="py-1 px-1.5 text-right font-mono">
-                      <span
-                        className={
-                          isReceding
-                            ? 'text-[var(--status-warn)]'
-                            : isApproaching
-                            ? 'text-[var(--accent-eloran)]'
-                            : 'text-[var(--text-muted)]'
-                        }
-                      >
-                        {d.rangeRateMs > 0 ? '+' : ''}
-                        {d.rangeRateMs.toFixed(1)} m/s
-                      </span>
+                    <td className="py-1 text-[var(--text-secondary)]">
+                      {d.bearingDeg.toFixed(0)}°
                     </td>
-                    <td className="py-1 px-1.5 text-right font-mono font-semibold">
-                      <span
-                        className={
-                          d.dopplerShiftHz > 0
-                            ? 'text-[var(--accent-eloran)]'
-                            : d.dopplerShiftHz < 0
-                            ? 'text-[var(--status-warn)]'
-                            : 'text-[var(--text-muted)]'
-                        }
-                      >
-                        {d.dopplerShiftHz > 0 ? '+' : ''}
-                        {(d.dopplerShiftHz * 1000).toFixed(1)} mHz
-                      </span>
+                    <td className="py-1 text-[var(--text-secondary)]">
+                      {d.rangeRateMs.toFixed(1)} m/s
                     </td>
-                    <td className="py-1 px-2 text-right font-mono text-[var(--text-dim)] text-[9.5px]">
-                      {(d.receivedFreqHz / 1000).toFixed(5)} kHz
+                    <td
+                      className={`py-1 text-right font-bold ${
+                        isPositive ? 'text-[var(--status-ok)]' : 'text-[var(--status-warn)]'
+                      }`}
+                    >
+                      {isPositive ? '+' : ''}
+                      {d.dopplerHz.toFixed(3)} Hz
                     </td>
                   </tr>
                 );

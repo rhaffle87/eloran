@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Compass, Radio, Clock, Sparkles, Navigation, Layers, ChevronLeft, ChevronRight, Activity, Wifi, Ship } from 'lucide-react';
+import { Compass, Radio, Clock, Sparkles, Navigation, Layers, ChevronLeft, ChevronRight, Activity, Wifi, Ship, Target } from 'lucide-react';
 import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
 import ClockPanel from '../components/panels/ClockPanel.jsx';

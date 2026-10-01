@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Compass, Radio, Activity, Layers,
@@ -181,6 +181,15 @@ const concepts = [
 ];
 
 export default function Learn() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.slice(1);
+      const el = document.getElementById(hash);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+      }
+    }
+  }, []);
   const navigate = useNavigate();
   const { loadPreset } = useSimulationStore();
 
@@ -222,7 +231,8 @@ export default function Learn() {
           return (
             <article
               key={c.id}
-              className="rounded-2xl p-6 flex flex-col justify-between space-y-4"
+              id={c.id}
+              className="rounded-2xl p-6 flex flex-col justify-between space-y-4 scroll-mt-24"
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border-subtle)',

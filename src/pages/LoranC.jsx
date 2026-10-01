@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Radio, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Radio, Compass, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 import MapView from '../components/map/MapView.jsx';
 import StationEditor from '../components/panels/StationEditor.jsx';
 import DisplayPanel from '../components/panels/DisplayPanel.jsx';

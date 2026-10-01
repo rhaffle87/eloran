@@ -1,14 +1,22 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
-  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck, Radio,
+  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck, Radio, Target,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import UncertaintySparkline from '../charts/UncertaintySparkline.jsx';
 import ActivityLogFeed from './ActivityLogFeed.jsx';
 import NmeaTerminalModal from './NmeaTerminalModal.jsx';
+import MissionDrawer from './MissionDrawer.jsx';
 
 export default function TelemetryConsole({ isELoran = false }) {
   const [isNmeaModalOpen, setIsNmeaModalOpen] = useState(false);
+  const [isMissionsOpen, setIsMissionsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenMissions = () => setIsMissionsOpen(true);
+    window.addEventListener('simuloran:open-missions', handleOpenMissions);
+    return () => window.removeEventListener('simuloran:open-missions', handleOpenMissions);
+  }, []);
 
   const {
     isConsoleOpen,
@@ -110,6 +118,24 @@ export default function TelemetryConsole({ isELoran = false }) {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMissionsOpen((prev) => !prev);
+            }}
+            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-0.5 rounded transition cursor-pointer hover:opacity-90"
+            style={{
+              background: isMissionsOpen ? 'var(--accent-eloran)' : 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+              color: isMissionsOpen ? '#000' : 'var(--text-primary)',
+            }}
+            title="Open Guided Mission Challenges & Scenario Labs"
+          >
+            <Target size={11} aria-hidden="true" />
+            <span>Missions</span>
+          </button>
+
           <button
             type="button"
             onClick={(e) => {
@@ -272,6 +298,11 @@ export default function TelemetryConsole({ isELoran = false }) {
       )}
 
       {/* NMEA 0183 Telemetry Streamer Modal */}
+      <MissionDrawer
+        isOpen={isMissionsOpen}
+        onClose={() => setIsMissionsOpen(false)}
+      />
+
       <NmeaTerminalModal
         isOpen={isNmeaModalOpen}
         onClose={() => setIsNmeaModalOpen(false)}

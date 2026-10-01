@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Compass, Radio, Activity, Layers,
   ShieldCheck, TrendingDown, ArrowRight, BookOpen,
-  Cpu,
+  Cpu, Database,
 } from 'lucide-react';
+import TrialValidationPanel from '../components/panels/TrialValidationPanel.jsx';
 import { useSimulationStore } from '../state/simulationStore.js';
 import MathView from '../components/ui/MathView.jsx';
 
@@ -441,6 +442,36 @@ export default function Learn() {
               Where seasonal temperature and humidity swings induce sinusoidal phase variations (up to ~100 ns across 500 km), calibrated in literature against Korean eLoran trials (Song & Son 2025).
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Empirical Field Trial Benchmarks & Real-World Validation */}
+      <section id="empirical-benchmarks" className="space-y-4">
+        <div>
+          <div
+            className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider mb-1"
+            style={{ color: 'var(--accent-eloran)' }}
+          >
+            <Database size={14} aria-hidden="true" /> Empirical Scientific Verification
+          </div>
+          <h2
+            className="text-2xl font-bold tracking-tight font-mono"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Empirical Field Trial Benchmarks
+          </h2>
+          <p className="text-sm mt-1 max-w-3xl" style={{ color: 'var(--text-secondary)' }}>
+            To guard against circular self-validation, SIMULORAN is validated against published real-world
+            accuracy campaigns from the Korean Nationwide eLoran Testbed (Rhee et al., 2021) and the
+            Maoming Inland Ellipsoidal Geodesic Experiment (Gao et al., 2025) without artificial parameter tuning.
+          </p>
+        </div>
+
+        <div
+          className="rounded-xl p-5 border"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+        >
+          <TrialValidationPanel />
         </div>
       </section>
     </div>

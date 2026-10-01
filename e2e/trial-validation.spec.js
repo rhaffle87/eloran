@@ -2,18 +2,39 @@ import { test, expect } from '@playwright/test';
 import fs from 'fs';
 
 test.describe('Empirical Field Trial Validation E2E Suite', () => {
-  test('verifies About page benchmark cards and AsfPanel trial validation integration', async ({ page }) => {
+  test('verifies About page benchmark summary, Theory page benchmark tables, and AsfPanel integration', async ({ page }) => {
     test.setTimeout(90000);
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message || String(err)));
 
-    // 1. Visit /about page
+    // 1. Visit /about page and verify streamlined summary card
     await page.goto('/about');
     await page.waitForLoadState('domcontentloaded');
 
-    // Verify benchmark section heading
-    const heading = page.getByRole('heading', { name: 'Empirical Field Trial Benchmarks (Phase 2 Part 2)' });
-    await expect(heading).toBeVisible();
+    const aboutHeading = page.getByRole('heading', { name: 'Empirical Field Trial Validation' });
+    await expect(aboutHeading).toBeVisible();
+
+    await expect(page.getByText('Tier 2 SOURCED').first()).toBeVisible();
+    await expect(page.getByText(/7 Test Locations.*10\.17 m Measured 95% Accuracy/).first()).toBeVisible();
+
+    const outputDir = 'docs/verification/screenshots';
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    await aboutHeading.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${outputDir}/trial_validation_about.png`, fullPage: false });
+
+    // 2. Click link to Theory page benchmarks
+    const theoryLink = page.getByRole('link', { name: /Inspect Benchmark Data in Theory/i });
+    await expect(theoryLink).toBeVisible();
+    await theoryLink.click();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(600);
+
+    // Verify Theory page benchmark section
+    const learnHeading = page.getByRole('heading', { name: 'Empirical Field Trial Benchmarks', exact: true });
+    await expect(learnHeading).toBeVisible();
 
     // Verify Korea 2021 summary cards
     await expect(page.getByText('7 Locations').first()).toBeVisible();
@@ -30,21 +51,12 @@ test.describe('Empirical Field Trial Validation E2E Suite', () => {
     await expect(page.getByRole('cell', { name: 'Incheon' }).first()).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Per-Station (Table 3)' }).first()).toBeVisible();
 
-    // Verify tier disclosure badge
-    await expect(page.getByText('Tier 2 SOURCED').first()).toBeVisible();
-
-    const outputDir = 'docs/verification/screenshots';
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-    await heading.scrollIntoViewIfNeeded();
+    // Capture screenshot of Korea tab in Theory
+    await learnHeading.scrollIntoViewIfNeeded();
     await page.waitForTimeout(400);
-
-    // Capture screenshot of Korea tab showing 5 cards & per-station column
-    await page.screenshot({ path: `${outputDir}/trial_validation_about.png`, fullPage: false });
     await page.screenshot({ path: `${outputDir}/trial_validation_korea.png`, fullPage: false });
 
-    // 2. Switch tab to Maoming 2025
+    // Switch tab to Maoming 2025
     const maomingTab = page.getByRole('button', { name: /Maoming 2025 \(Inland\)/i }).first();
     await expect(maomingTab).toBeVisible();
     await maomingTab.click();

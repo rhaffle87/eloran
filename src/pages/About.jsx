@@ -6,7 +6,6 @@ import {
   Code2, CheckCircle2,
 } from 'lucide-react';
 
-import TrialValidationPanel from '../components/panels/TrialValidationPanel.jsx';
 
 const CAPABILITIES = [
   {
@@ -304,17 +303,58 @@ export default function About() {
         </div>
       </SectionCard>
 
-      {/* Empirical Field Trial Benchmarks */}
+      {/* Empirical Field Trial Validation */}
       <SectionCard>
         <SectionHeading icon={Database} iconColor="var(--accent-eloran)">
-          Empirical Field Trial Benchmarks (Phase 2 Part 2)
+          Empirical Field Trial Validation
         </SectionHeading>
-        <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-          To guard against circular self-validation, SIMULORAN is validated against published real-world
-          accuracy campaigns from the Korean Nationwide eLoran Testbed (Rhee et al., 2021) and the
-          Maoming Inland Ellipsoidal Geodesic Experiment (Gao et al., 2025) without artificial parameter tuning.
+        <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          To guard against circular self-validation, SIMULORAN is benchmarked against published real-world
+          accuracy campaigns from the Korean Nationwide eLoran Testbed (Rhee et al., 2021) across 7 empirical receiver sites
+          and the Maoming Inland Ellipsoidal Geodesic Experiment (Gao et al., 2025) without artificial parameter tuning.
         </p>
-        <TrialValidationPanel />
+
+        <div
+          className="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs"
+          style={{
+            background: 'var(--bg-subtle)',
+            borderColor: 'var(--border-subtle)',
+          }}
+        >
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="px-2 py-0.5 rounded text-[10px] font-bold"
+                style={{
+                  background: 'var(--status-ok-subtle)',
+                  color: 'var(--status-ok)',
+                  border: '1px solid var(--status-ok-border)',
+                }}
+              >
+                Tier 2 SOURCED
+              </span>
+              <span className="font-bold text-[var(--text-primary)]">
+                7 Test Locations &bull; 10.17 m Measured 95% Accuracy
+              </span>
+            </div>
+            <p className="text-[11px] font-sans" style={{ color: 'var(--text-muted)' }}>
+              Evaluates published field campaign statistics, per-station jitter matrices, and ellipsoidal geodesic gains.
+            </p>
+          </div>
+
+          <Link
+            to="/learn#empirical-benchmarks"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition hover:opacity-90 shrink-0 cursor-pointer"
+            style={{
+              background: 'var(--accent-eloran-subtle)',
+              border: '1px solid var(--accent-eloran-border)',
+              color: 'var(--accent-eloran)',
+            }}
+            title="Inspect full empirical benchmark tables, test site coordinates, and preset launchers in Theory"
+          >
+            Inspect Benchmark Data in Theory &rarr;
+          </Link>
+        </div>
       </SectionCard>
 
       {/* Literature & Documentation */}

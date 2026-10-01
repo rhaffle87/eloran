@@ -1024,7 +1024,9 @@ export default function PulseViewer() {
                       x={badgeX + 4}
                       y={badgeY + 9.5}
                       fontSize="8"
-                      fill={arr.isSkywave ? '#fcd34d' : '#f8fafc'}
+                      fill={isDark
+                        ? (arr.isSkywave ? '#fcd34d' : '#f8fafc')
+                        : (arr.isSkywave ? '#b45309' : '#0f172a')}
                       fontFamily="monospace"
                       fontWeight="bold"
                     >
@@ -1046,8 +1048,25 @@ export default function PulseViewer() {
                   {x30 >= 0 && x30 <= 1000 && (
                     <g>
                       <line x1={x30} y1="0" x2={x30} y2="200" stroke="var(--status-ok)" strokeWidth="1.5" strokeDasharray="3 2" />
-                      <rect x={x30 - 35} y="172" width="70" height="18" rx="3" fill="#064e3b" stroke="#10b981" strokeWidth="1" />
-                      <text x={x30} y="184" fill="#ecfdf5" fontSize="8" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+                      <rect
+                        x={x30 - 35}
+                        y="172"
+                        width={70}
+                        height={18}
+                        rx={3}
+                        fill={isDark ? "#064e3b" : "#ecfdf5"}
+                        stroke={isDark ? "#10b981" : "#059669"}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={x30}
+                        y="184"
+                        fill={isDark ? "#ecfdf5" : "#065f46"}
+                        fontSize="8"
+                        fontFamily="monospace"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                      >
                         SZC: 30 µs
                       </text>
                     </g>
@@ -1055,8 +1074,25 @@ export default function PulseViewer() {
                   {x65 >= 0 && x65 <= 1000 && (
                     <g>
                       <line x1={x65} y1="0" x2={x65} y2="200" stroke="var(--status-danger)" strokeWidth="1.5" strokeDasharray="3 2" />
-                      <rect x={x65 - 32} y="8" width="64" height="18" rx="3" fill="#7f1d1d" stroke="#ef4444" strokeWidth="1" />
-                      <text x={x65} y="20" fill="#fef2f2" fontSize="8" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+                      <rect
+                        x={x65 - 32}
+                        y="8"
+                        width={64}
+                        height={18}
+                        rx={3}
+                        fill={isDark ? "#7f1d1d" : "#fef2f2"}
+                        stroke={isDark ? "#ef4444" : "#dc2626"}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={x65}
+                        y="20"
+                        fill={isDark ? "#fef2f2" : "#991b1b"}
+                        fontSize="8"
+                        fontFamily="monospace"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                      >
                         Peak: 65 µs
                       </text>
                     </g>
@@ -1088,7 +1124,7 @@ export default function PulseViewer() {
           {/* Time axis markers */}
           <div
             className="flex justify-between px-2 py-1 text-[10px] font-mono"
-            style={{ background: 'var(--bg-subtle)', borderTop: '1px solid var(--border-subtle)', color: 'var(--text-dim)' }}
+            style={{ background: 'var(--bg-subtle)', borderTop: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
           >
             <span>0 {windowDurationMs < 1 ? 'µs' : 'ms'}</span>
             <span>{windowDurationMs < 1 ? `${(windowDurationMs * 250).toFixed(0)} µs` : `${(windowDurationMs * 0.25).toFixed(1)} ms`}</span>

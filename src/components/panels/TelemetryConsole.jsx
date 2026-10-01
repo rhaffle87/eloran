@@ -1,12 +1,15 @@
-import React from 'react';
+﻿import React, { useState } from 'react';
 import {
-  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck,
+  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck, Radio,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import UncertaintySparkline from '../charts/UncertaintySparkline.jsx';
 import ActivityLogFeed from './ActivityLogFeed.jsx';
+import NmeaTerminalModal from './NmeaTerminalModal.jsx';
 
 export default function TelemetryConsole({ isELoran = false }) {
+  const [isNmeaModalOpen, setIsNmeaModalOpen] = useState(false);
+
   const {
     isConsoleOpen,
     toggleConsoleOpen,
@@ -106,7 +109,25 @@ export default function TelemetryConsole({ isELoran = false }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsNmeaModalOpen(true);
+            }}
+            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-0.5 rounded transition cursor-pointer hover:opacity-90"
+            style={{
+              background: 'var(--accent-eloran-subtle)',
+              border: '1px solid var(--accent-eloran-border)',
+              color: 'var(--accent-eloran)',
+            }}
+            title="Open NMEA 0183 Telemetry Streamer & Serial Console"
+          >
+            <Radio size={11} aria-hidden="true" />
+            <span>NMEA 0183</span>
+          </button>
+
           <div
             className="text-[10px] font-bold flex items-center gap-1.5 px-2 py-0.5 rounded"
             style={{
@@ -249,6 +270,12 @@ export default function TelemetryConsole({ isELoran = false }) {
           </div>
         </div>
       )}
+
+      {/* NMEA 0183 Telemetry Streamer Modal */}
+      <NmeaTerminalModal
+        isOpen={isNmeaModalOpen}
+        onClose={() => setIsNmeaModalOpen(false)}
+      />
     </div>
   );
 }

@@ -31,7 +31,7 @@ const concepts = [
     accentVar: '--accent-loran-c',
     summary:
       'How transmitter geometry magnifies timing measurement errors into horizontal positioning uncertainty.',
-    math: '\\text{GDOP} = \\sqrt{ \\operatorname{Tr}\\left( (H^T H)^{-1} \\right) }',
+    math: '\\text{GDOP} = \\sqrt{ \\mathrm{Tr}\\left( (H^T H)^{-1} \\right) }',
     explanation:
       'When transmitter stations are nearly collinear or subtend narrow angles relative to the receiver, hyperbolic lines of position intersect at grazing angles. A 10 ns timing jitter translates into hundreds of metres of horizontal position error. Wide angular baseline separation yields optimal geometry (GDOP < 2).',
     presetId: 'high_gdop',
@@ -171,7 +171,7 @@ const concepts = [
     accentVar: '--status-ok',
     summary:
       'Formal recursive descent grammar and AST evaluation for user-defined spatial conductivity functions.',
-    math: '\\text{Eval}: \\operatorname{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
+    math: '\\text{Eval}: \\mathrm{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
     explanation:
       'Custom ground conductivity distributions entered by users are transformed into an Abstract Syntax Tree (AST) using a strict Recursive Descent Parser. The tree is evaluated via safe token dispatch without dynamic code execution (0 eval(), 0 new Function()), guaranteeing absolute security while computing complex mathematical spatial models.',
     presetId: 'north_sea',

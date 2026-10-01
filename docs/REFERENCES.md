@@ -89,28 +89,42 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 ## 4. Formula Sheet (provenance in PROVENANCE.md)
 
 ### 1. RF Pulse Envelope & Instantaneous Current
+
 When time $t$ is expressed in **microseconds** ($\mu\text{s}$) from pulse start ($t \ge 0$):
 
-$$i(t) = A \cdot t^2 \cdot e^{-2t / 65} \cdot \sin(2\pi \cdot 0.1 \cdot t + PC) = A \cdot t^2 \cdot e^{-2t / 65} \cdot \sin(0.2\pi \cdot t + PC)$$
+$
+i(t) = A \cdot t^2 \cdot e^{-2t / 65} \cdot \sin(2\pi \cdot 0.1 \cdot t + PC) = A \cdot t^2 \cdot e^{-2t / 65} \cdot \sin(0.2\pi \cdot t + PC)
+$
 
+Where:
 - $t$: Time in microseconds ($\mu\text{s}$).
 - Carrier frequency: $f_0 = 100\text{ kHz} = 0.1\text{ cycles}/\mu\text{s}$ (carrier period $T_c = 10\ \mu\text{s}$).
 - When time $t_s$ is expressed in **seconds**:
 
-  $$\sin(2\pi \cdot f_0 \cdot t_s + PC) = \sin(2\pi \cdot 10^5 \cdot t_s + PC)$$
+  $
+  \sin(2\pi \cdot f_0 \cdot t_s + PC) = \sin(2\pi \cdot 10^5 \cdot t_s + PC)
+  $
 
 - Peak envelope amplitude occurs at $t = 65\ \mu\text{s}$:
 
-  $$\frac{d}{dt}\left(t^2 e^{-2t/65}\right) = \left(2t - \frac{2t^2}{65}\right) e^{-2t/65} = 0 \implies t = 65\ \mu\text{s}$$
+  $
+  \frac{d}{dt}\left(t^2 e^{-2t/65}\right) = \left(2t - \frac{2t^2}{65}\right) e^{-2t/65} = 0 \implies t = 65\ \mu\text{s}
+  $
 
 - Standard Zero Crossing (SZC): 3rd positive-going zero crossing at $t = 30\ \mu\text{s}$ ($3 \times 10\ \mu\text{s}$).
 - $PC$: Phase code ($0$ or $\pi$ radians).
 
 ### 2. Groundwave Propagation Time
-$$t = PF + SF + ASF$$
+
+$
+t = \mathrm{PF} + \mathrm{SF} + \mathrm{ASF}
+$
+
 - **Primary Factor (PF)**: Propagation delay through the standard atmosphere:
 
-  $$PF = \frac{\eta \cdot d}{c}$$
+  $
+  \mathrm{PF} = \frac{\eta \cdot d}{c}
+  $
 
   - $c = 299,792,458\text{ m/s}$ (vacuum speed of light).
   - $\eta = 1.000338$ (RTCM SC-127 standard atmospheric refractive index).
@@ -119,48 +133,92 @@ $$t = PF + SF + ASF$$
 - **Secondary Factor (SF)**: Sourced in concept as the excess delay over all-seawater paths ($\sigma \approx 5\text{ S/m}$, $\varepsilon_r \approx 80$).
   > [!WARNING]
   > **UNVERIFIED COEFFICIENTS**: The piecewise polynomial coefficients below (historically cited in older handbooks) exhibit an unphysical $\approx 0.236\ \mu\text{s}$ ($\approx 71\text{ m}$) step discontinuity at the $100\text{ statute mile}$ ($160,934.4\text{ m}$) boundary:
-  > - For $d_{sm} \le 100\text{ statute miles}$: $SF(\mu\text{s}) = \frac{-0.4076}{d_{sm}} + 0.08182 + 0.003914 \cdot d_{sm}$
-  > - For $d_{sm} > 100\text{ statute miles}$: $SF(\mu\text{s}) = \frac{-107.8}{d_{sm}} + 1.297 + 0.000139 \cdot d_{sm}$
+  >
+  > For $d_{sm} \le 100\text{ statute miles}$:
+  >
+  > $
+  > \mathrm{SF}(\mu\text{s}) = -\frac{0.4076}{d_{sm}} + 0.08182 + 0.003914 \cdot d_{sm}
+  > $
+  >
+  > For $d_{sm} > 100\text{ statute miles}$:
+  >
+  > $
+  > \mathrm{SF}(\mu\text{s}) = -\frac{107.8}{d_{sm}} + 1.297 + 0.000139 \cdot d_{sm}
+  > $
   >
   > Because these coefficients fail continuity testing, they are **UNVERIFIED and disabled by default** in SIMULORAN.
 - **Additional Secondary Factor (ASF)**: Overland excess phase delay due to sub-surface conductivity variations and terrain impedance ($\sigma \approx 0.0001\text{ to }0.01\text{ S/m}$).
 
 ### 3. Pseudorange Observation Model
 
-$$TOA_i = T_{tx,i} + \frac{\eta \cdot d_i}{c} + SF(d_i) + ASF_i + b_{rx} + \varepsilon_i$$
+$
+\mathrm{TOA}_i = T_{tx,i} + \frac{\eta \cdot d_i}{c} + \mathrm{SF}(d_i) + \mathrm{ASF}_i + b_{rx} + \varepsilon_i
+$
 
 Observed pseudorange:
 
-$$\rho_i = c \cdot (TOA_i - T_{tx,i}) = d_i + c \cdot b_{rx} + c \cdot \left( \frac{\eta - 1}{c} d_i + SF_i + ASF_i \right) + \tilde{\varepsilon}_i$$
+$
+\rho_i = c \cdot (\mathrm{TOA}_i - T_{tx,i}) = d_i + c \cdot b_{rx} + c \cdot \left( \frac{\eta - 1}{c} d_i + \mathrm{SF}_i + \mathrm{ASF}_i \right) + \tilde{\varepsilon}_i
+$
 
 State vector: $\mathbf{x} = [x, y, c \cdot b_{rx}]^T$.
 
 Normal Equations (Gauss-Newton):
 
-$$\Delta \mathbf{x} = (H^T W H)^{-1} H^T W \mathbf{r}$$
+$
+\Delta \mathbf{x} = (H^T W H)^{-1} H^T W \mathbf{r}
+$
 
 where the $i$-th row of design matrix $H$ is:
 
-$$H_i = \left[ \frac{x - x_i}{d_i}, \quad \frac{y - y_i}{d_i}, \quad 1 \right]$$
+$
+H_i = \left[ \frac{x - x_i}{d_i}, \quad \frac{y - y_i}{d_i}, \quad 1 \right]
+$
 
 ### 4. Dilution of Precision (DOP)
-Covariance matrix: $Q = (H^T H)^{-1}$.
-- $HDOP = \sqrt{Q_{11} + Q_{22}}$
-- $TDOP = \sqrt{Q_{33}}$
-- $GDOP = \sqrt{\text{trace}(Q)} = \sqrt{Q_{11} + Q_{22} + Q_{33}}$
+
+Covariance matrix:
+
+$
+Q = (H^T H)^{-1}
+$
+
+Dilution of precision metrics:
+
+- Horizontal Dilution of Precision:
+
+  $
+  \mathrm{HDOP} = \sqrt{Q_{11} + Q_{22}}
+  $
+
+- Time Dilution of Precision:
+
+  $
+  \mathrm{TDOP} = \sqrt{Q_{33}}
+  $
+
+- Geometric Dilution of Precision:
+
+  $
+  \mathrm{GDOP} = \sqrt{\mathrm{Tr}(Q)} = \sqrt{Q_{11} + Q_{22} + Q_{33}}
+  $
 
 ### 5. Measurement Noise & Cycle Slip Criteria
 
-$$\sigma_i^2 = \sigma_{\text{jitter}}^2 + \frac{337.5^2}{N_{\text{pulses}} \cdot SNR_i}$$
+$
+\sigma_i^2 = \sigma_{\text{jitter}}^2 + \frac{337.5^2}{N_{\text{pulses}} \cdot \mathrm{SNR}_i}
+$
 
 - Baseline transmitter timing jitter: Prior literature assumed baseline uncertainty on the order of $4\text{–}6\text{ meters}$, corresponding to approximately $13\text{–}20\text{ ns}$ in one-way propagation time.
 - Wrong-Cycle Selection: Occurs when tracking error exceeds $|\Delta TOA| > 10\ \mu\text{s}$, shifting the measurement by $\pm 1$ carrier cycle ($\sim 2,998\text{ meters} \approx 3\text{ km}$).
 
-
 ### 6. Phase Code Interval (PCI) Signal Synthesis (CheolJ 2020)
+
 The radiated continuous-time signal $s_{\text{PCI}}(t)$ over a Phase Code Interval (PCI) encompassing group intervals $GRI_A$ and $GRI_B$ ($T_{\text{PCI}} = 2 \times T_{\text{GRI}}$) is given by:
 
-$$s_{\text{PCI}}(t) = \sum_{p \in \{A, B\}} \sum_{s \in \mathcal{S}} \sum_{k=0}^{K_s - 1} c_{s, p}[k] \cdot E\left(t - t_{s, p}[k]\right) \cdot \sin\left(2\pi f_0 (t - t_{s, p}[k])\right)$$
+$
+s_{\text{PCI}}(t) = \sum_{p \in \{A, B\}} \sum_{s \in \mathcal{S}} \sum_{k=0}^{K_s - 1} c_{s, p}[k] \cdot E\left(t - t_{s, p}[k]\right) \cdot \sin\left(2\pi f_0 (t - t_{s, p}[k])\right)
+$
 
 where:
 - $\mathcal{S}$ is the set of transmitting stations in the chain (Master $M$ and secondaries $X, Y, Z, \dots$).

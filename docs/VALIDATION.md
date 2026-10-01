@@ -38,8 +38,12 @@ The Korean testbed utilizes a 4-station cross-border chain configuration across 
 All 4 transmitters and 7 field evaluation sites lie strictly within the regional Natural Earth 10m high-resolution GIS polygon coverage (`bohai_yellow_sea` boundary).
 
 ### 2.3 Mathematical Model & Formulation
+
 In accordance with Rhee et al. (2021) Section III, the user-equivalent pseudorange error variance is dominated by transmitter baseline jitter:
-$$\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + \frac{K^2}{N_{\text{pulses}} \cdot \text{SNR}_i}$$
+
+$
+\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + \frac{K^2}{N_{\text{pulses}} \cdot \mathrm{SNR}_i}
+$
 
 Where:
 - $K = 337.5\text{ m}$ (scaling factor for 100 kHz pulse tracking).
@@ -47,17 +51,33 @@ Where:
 
 **Three jitter modes are evaluated:**
 
-**Mode 1 — Flat jitter baseline (prior-art reference):** $\sigma_{\text{flat}} = 4.0\text{ m}$ for all stations. This matches the UK simulator fixed assumption quoted verbatim in Rhee §I: *"Previous studies assumed a fixed jitter (e.g., 6 m [US] or 4 m [UK])..."* It is a prior-art baseline for historical comparison.
+**Mode 1 — Flat jitter baseline (prior-art reference):** $\sigma_{\text{flat}} = 4.0\text{ m}$ for all stations. This matches the UK simulator fixed assumption quoted verbatim in Rhee §I: *"Previous studies assumed a fixed jitter (e.g., 6 m [US] or 4 m [UK])..."* It is a prior-art baseline for historical comparison:
 
-$$R_{95}^{\text{flat}} = 2 \cdot HDOP \cdot \sigma_{\text{flat}}$$
+$
+R_{95}^{\text{flat}} = 2 \cdot \mathrm{HDOP} \cdot \sigma_{\text{flat}}
+$
 
 **Mode 2 — Best-fit flat constant:** $\sigma_{\text{flat}} = 3.5\text{ m}$ minimizes MAE/RMSE against Rhee Table 5 field measurements. This is the numerically best-fitting single uniform value but requires tuning against the validation target and assumes equal jitter across all transmitters (a simplification Rhee §I explicitly criticizes).
 
 **Mode 3 — Per-station jitter (Rhee Table 3):** Each transmitter's jitter is taken from the TOR measurement estimates in Rhee Table 3: Pohang 2.11 m, Gwangju 3.21 m, Rongcheng 2.13 m, Xuancheng 5.38 m. Position error is propagated via the full weighted covariance formula:
 
-$$R_{95}^{\text{per-station}} = 2 \cdot \sqrt{\operatorname{trace}\!\left[\left(H^T H\right)^{-1} H^T \Sigma_\tau H \left(H^T H\right)^{-1}\right]}$$
+$
+R_{95}^{\text{per-station}} = 2 \cdot \sqrt{\mathrm{Tr}\left[\left(H^T H\right)^{-1} H^T \Sigma_\tau H \left(H^T H\right)^{-1}\right]}
+$
 
-where $\Sigma_\tau = \operatorname{diag}(\sigma_1^2, \ldots, \sigma_n^2)$ and $H$ is the direction-cosine geometry matrix. When all $\sigma_i$ are equal, this formula reduces to $2 \cdot HDOP \cdot \sigma$ (verified within 0.04 m rounding tolerance).
+where the transmitter timing covariance matrix $\Sigma_\tau$ is:
+
+$
+\Sigma_\tau = \mathrm{diag}\left(\sigma_1^2, \ldots, \sigma_n^2\right)
+$
+
+and $H$ is the direction-cosine geometry matrix. When all $\sigma_i$ are equal, this formula reduces to:
+
+$
+R_{95} = 2 \cdot \mathrm{HDOP} \cdot \sigma
+$
+
+(verified within $0.04\text{ m}$ rounding tolerance).
 
 ### 2.4 Empirical Field Comparison (No Parameter Tuning)
 
@@ -88,7 +108,7 @@ The table below compares all three modes against published empirical measurement
 > - Implements full weighted covariance propagation (no uniform-jitter simplification)
 > - Resolves the "which flat σ?" debate by not using a flat σ at all
 >
-> Per-station is NOT the best-fitting number against this dataset, but it is the correct approach when real per-station measurements exist. While Rhee et al. (2021) formulate total error variance as $\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + \frac{K^2}{N_{\text{pulses}} \cdot \text{SNR}_i}$ (Section II-B, Eq. 1), per-site receiver SNR and pulse accumulation parameters ($N_{\text{pulses}}$) are not published in the paper for the 7 evaluation sites, so that term cannot be computed directly from published data. The cause of the remaining −1.14 m undershoot has not been investigated.
+> Per-station is NOT the best-fitting number against this dataset, but it is the correct approach when real per-station measurements exist. While Rhee et al. (2021) formulate total error variance as $\sigma_i^2 = \sigma_{\text{jitter}, i}^2 + K^2 / (N_{\text{pulses}} \cdot \mathrm{SNR}_i)$ (Section II-B, Eq. 1), per-site receiver SNR and pulse accumulation parameters ($N_{\text{pulses}}$) are not published in the paper for the 7 evaluation sites, so that term cannot be computed directly from published data. The cause of the remaining −1.14 m undershoot has not been investigated.
 
 ---
 
@@ -169,7 +189,7 @@ SIMULORAN cross-references established industrial simulation architectures and r
 
 4. **Industrial Multi-Channel Timing Backup (Spectracom / Safran SecureSync, 2016)**:
    - *Citation*: Inside GNSS (2016). *Spectracom Introduces GSG-6 Series GNSS Simulators with eLoran Backup for Timing Reference*.
-   - *Cross-Verification Relevance*: Corroborates the multi-receiver clock bias tracking ($Delta t_{rx}$) and nanosecond-accuracy timing synchronization modeled in SIMULORAN's eLoran PNT solver.
+   - *Cross-Verification Relevance*: Corroborates the multi-receiver clock bias tracking ($\Delta t_{\text{rx}}$) and nanosecond-accuracy timing synchronization modeled in SIMULORAN's eLoran PNT solver.
 
 5. **Open Source Reference Signal & SDR Receiver Lineage**:
    - *CheolJ/Loran-c-reference-code* (2020): Verifies standard USCG Phase Code Interval (PCI) and emission delay sequences across 9930, 7430, and 8390 chains.

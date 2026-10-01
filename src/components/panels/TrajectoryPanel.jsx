@@ -6,10 +6,8 @@ import {
   Compass,
   Navigation,
   Activity,
-  Gauge,
   Radio,
   AlertTriangle,
-  CheckCircle2,
   Ship,
   Clock,
   ShieldCheck,
@@ -33,6 +31,7 @@ const TRAJECTORY_PRESETS = [
     id: 'rotterdam',
     name: 'Rotterdam Europort Harbor Approach',
     shortName: 'Rotterdam Europort',
+    subtitle: '18kt → 6kt HEA Fairway',
     waypoints: ROTTERDAM_APPROACH_WAYPOINTS,
     description: 'Deep-water approach from Maas Center Buoy past Hook of Holland into Maasvlakte container basin.',
   },
@@ -40,6 +39,7 @@ const TRAJECTORY_PRESETS = [
     id: 'dover',
     name: 'Dover Strait Traffic Separation Scheme',
     shortName: 'Dover Strait TSS',
+    subtitle: '16kt TSS Lane Fairway',
     waypoints: DOVER_STRAIT_TSS_WAYPOINTS,
     description: 'High-density commercial passage through the narrow English Channel Dover TSS fairway.',
   },
@@ -47,6 +47,7 @@ const TRAJECTORY_PRESETS = [
     id: 'yellow_sea',
     name: 'Incheon Yellow Sea Coastal Corridor',
     shortName: 'Incheon Yellow Sea',
+    subtitle: '20kt → 8kt Coastal Channel',
     waypoints: YELLOW_SEA_CORRIDOR_WAYPOINTS,
     description: 'Incheon Port approach fairway subject to severe regional satellite GNSS jamming.',
   },
@@ -88,22 +89,24 @@ export default function TrajectoryPanel() {
   const playheadRef = useRef(playheadSec);
   playheadRef.current = playheadSec;
 
-  // Initialize EKF on trajectory or preset change
+  // Initialize EKF on trajectory change
   useEffect(() => {
     const startPos = sampleTrajectory(trajectory, 0);
     ekfRef.current = createEkf(startPos.lat, startPos.lng);
     setPlayheadSec(0);
     setIsPlaying(false);
 
-    // Sync selected receiver position to start of trajectory
-    if (selectedReceiver) {
-      updateStation(selectedReceiver, {
+    // Sync selected receiver position to start of trajectory without re-triggering effect
+    const store = useSimulationStore.getState();
+    const rxLabel = selectedReceiver || store.receivers?.[0]?.label;
+    if (rxLabel) {
+      store.updateStation(rxLabel, {
         lat: startPos.lat,
         lng: startPos.lng,
       });
-      recalculateFixes();
+      store.recalculateFixes();
     }
-  }, [trajectory, selectedReceiver, updateStation, recalculateFixes]);
+  }, [trajectory, selectedReceiver]);
 
   // Current kinematic sample at playhead
   const currentSample = useMemo(
@@ -131,7 +134,7 @@ export default function TrajectoryPanel() {
       const sample = sampleTrajectory(trajectory, nextPlayhead);
 
       // 1. Move receiver on map
-      const rxLabel = selectedReceiver || receivers[0]?.label;
+      const rxLabel = selectedReceiver || receivers?.[0]?.label;
       if (rxLabel) {
         updateStation(rxLabel, {
           lat: sample.lat,
@@ -260,7 +263,7 @@ export default function TrajectoryPanel() {
     const targetSec = (val / 100) * trajectory.totalDurationSec;
     setPlayheadSec(targetSec);
     const sample = sampleTrajectory(trajectory, targetSec);
-    const rxLabel = selectedReceiver || receivers[0]?.label;
+    const rxLabel = selectedReceiver || receivers?.[0]?.label;
     if (rxLabel) {
       updateStation(rxLabel, {
         lat: sample.lat,
@@ -277,7 +280,7 @@ export default function TrajectoryPanel() {
     if (ekfRef.current) {
       ekfRef.current.reset(startPos.lat, startPos.lng);
     }
-    const rxLabel = selectedReceiver || receivers[0]?.label;
+    const rxLabel = selectedReceiver || receivers?.[0]?.label;
     if (rxLabel) {
       updateStation(rxLabel, {
         lat: startPos.lat,
@@ -299,26 +302,33 @@ export default function TrajectoryPanel() {
   };
 
   return (
-    <div className="space-y-4 text-xs font-mono">
+    <div className="space-y-3.5 text-xs font-mono">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border-default/50 pb-2.5">
-        <div className="flex items-center gap-2">
-          <Navigation className="w-4 h-4 text-accent-eloran" />
-          <span className="font-semibold text-text-primary text-sm tracking-wide">
-            Kinematic Trajectory & 6-State EKF
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+          <Navigation size={14} className="text-[var(--accent-eloran)] shrink-0" />
+          <span>Kinematic Trajectory &amp; EKF</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
+            6-State DWNA
           </span>
         </div>
-        <span className="px-2 py-0.5 rounded text-[10px] bg-accent-eloran/10 text-accent-eloran border border-accent-eloran/20">
-          6-State DWNA Filter
-        </span>
+        <InfoTooltip
+          align="right"
+          title="Kinematic Trajectory & 6-State EKF"
+          text="Real-time vessel dynamic waypoint trajectory generator integrated with discrete white noise acceleration (DWNA) 6-state Extended Kalman Filter."
+        />
       </div>
 
       {/* Trajectory Preset Selector */}
-      <div className="space-y-1.5">
-        <label className="text-text-secondary text-[11px] font-medium flex items-center justify-between">
-          <span>Active Vessel Corridor</span>
-          <InfoTooltip text="Select calibrated marine entrance fairway or transit lane with predefined waypoints and dynamic speed profiles." />
-        </label>
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2 shadow-xs">
+        <div className="flex items-center justify-between">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">
+            Active Vessel Corridor
+          </label>
+          <span className="text-[10px] text-[var(--accent-eloran)] font-semibold">
+            {activePreset.shortName}
+          </span>
+        </div>
         <div className="grid grid-cols-3 gap-1.5">
           {TRAJECTORY_PRESETS.map((p) => {
             const isSelected = p.id === activePresetId;
@@ -326,68 +336,68 @@ export default function TrajectoryPanel() {
               <button
                 key={p.id}
                 onClick={() => setActivePresetId(p.id)}
-                className={`px-2 py-1.5 rounded text-left transition-all border text-[11px] ${
+                className={`px-2 py-1.5 rounded-lg text-left transition-all border text-[10.5px] cursor-pointer ${
                   isSelected
-                    ? 'bg-accent-eloran/15 border-accent-eloran text-text-primary shadow-sm'
-                    : 'bg-surface-elevated/40 border-border-default text-text-muted hover:text-text-secondary hover:bg-surface-elevated'
+                    ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
+                    : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:border-[var(--border-default)]'
                 }`}
               >
-                <div className="font-semibold truncate">{p.shortName}</div>
-                <div className="text-[9px] text-text-muted truncate mt-0.5">
-                  {p.id === 'rotterdam' && '18kt → 6kt HEA'}
-                  {p.id === 'dover' && '16kt TSS Lane'}
-                  {p.id === 'yellow_sea' && '20kt → 8kt Channel'}
+                <div className="truncate font-semibold">{p.shortName.split(' ')[0]}</div>
+                <div className="text-[9px] text-[var(--text-muted)] truncate mt-0.5">
+                  {p.subtitle}
                 </div>
               </button>
             );
           })}
         </div>
-        <p className="text-[10px] text-text-muted leading-tight mt-1">{activePreset.description}</p>
+        <p className="text-[10px] text-[var(--text-muted)] leading-relaxed pt-0.5">
+          {activePreset.description}
+        </p>
       </div>
 
-      {/* Playback Controls & Scrubber */}
-      <div className="p-3 bg-surface-elevated/50 border border-border-default rounded-lg space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      {/* Playback Controls & Scrubber Deck */}
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2.5 shadow-xs">
+        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className={`px-3 py-1.5 rounded-md font-medium text-xs flex items-center gap-1.5 transition-all shadow-sm ${
+              className={`px-3 py-1.5 rounded-md font-semibold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
                 isPlaying
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-                  : 'bg-accent-eloran text-white hover:bg-accent-eloran/90'
+                  ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] hover:opacity-90'
+                  : 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] hover:opacity-90'
               }`}
             >
-              {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              {isPlaying ? <Pause size={13} /> : <Play size={13} />}
               <span>{isPlaying ? 'Pause' : 'Play Corridor'}</span>
             </button>
 
             <button
               onClick={handleReset}
-              className="p-1.5 rounded-md border border-border-default hover:bg-surface-hover text-text-muted hover:text-text-primary transition-colors"
+              className="p-1.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer"
               title="Reset to Start"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw size={13} />
             </button>
           </div>
 
           {/* Time Counter */}
-          <div className="flex items-center gap-1.5 text-text-secondary bg-surface-base px-2.5 py-1 rounded border border-border-default/60">
-            <Clock className="w-3 h-3 text-text-muted" />
+          <div className="flex items-center gap-1.5 text-[var(--text-secondary)] bg-[var(--bg-subtle)] px-2.5 py-1 rounded-md border border-[var(--border-subtle)] font-mono text-[11px]">
+            <Clock size={12} className="text-[var(--text-muted)]" />
             <span>
               {formatTime(playheadSec)} / {formatTime(trajectory.totalDurationSec)}
             </span>
           </div>
 
           {/* Speed Multiplier Pills */}
-          <div className="flex items-center gap-1 bg-surface-base p-0.5 rounded border border-border-default/60">
+          <div className="flex items-center gap-0.5 bg-[var(--bg-subtle)] p-0.5 rounded-md border border-[var(--border-subtle)] font-mono">
             {SPEED_PRESETS.map((spd) => (
               <button
                 key={spd}
                 onClick={() => setPlaybackSpeed(spd)}
-                className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${
+                className={`px-1.5 py-0.5 rounded text-[9.5px] transition cursor-pointer ${
                   playbackSpeed === spd
-                    ? 'bg-accent-eloran text-white font-semibold'
-                    : 'text-text-muted hover:text-text-secondary'
+                    ? 'bg-[var(--accent-eloran)] text-[var(--btn-eloran-text)] font-bold'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {spd}x
@@ -412,14 +422,14 @@ export default function TrajectoryPanel() {
 
       {/* Cycle Slip Notification */}
       {cycleSlipNotification && (
-        <div className="p-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-start justify-between gap-2">
+        <div className="p-2.5 rounded-lg bg-[var(--status-ok-subtle)] border border-[var(--status-ok-border)] text-[var(--status-ok)] flex items-start justify-between gap-2 shadow-xs">
           <div className="flex items-start gap-1.5">
-            <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="text-[11px] leading-tight">{cycleSlipNotification.msg}</span>
+            <ShieldCheck size={14} className="shrink-0 mt-0.5" />
+            <span className="text-[11px] leading-tight font-mono">{cycleSlipNotification.msg}</span>
           </div>
           <button
             onClick={() => setCycleSlipNotification(null)}
-            className="text-text-muted hover:text-text-primary text-[10px]"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs cursor-pointer"
           >
             ✕
           </button>
@@ -427,103 +437,105 @@ export default function TrajectoryPanel() {
       )}
 
       {/* Kinematics & EKF Telemetry 2-Column Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {/* Vessel Kinematics Card */}
-        <div className="p-2.5 bg-surface-elevated/40 border border-border-default rounded-lg space-y-2">
-          <div className="flex items-center justify-between text-text-secondary font-medium">
-            <span className="flex items-center gap-1.5">
-              <Ship className="w-3.5 h-3.5 text-accent-eloran" />
+        <div className="p-2.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 font-bold text-[11px] text-[var(--accent-eloran)]">
+              <Ship size={13} />
               <span>Vessel Motion</span>
             </span>
-            <span className="text-[10px] text-text-muted">Ground Truth</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+              Ground Truth
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="bg-surface-base/80 p-1.5 rounded border border-border-default/40">
-              <div className="text-[9px] text-text-muted">Speed</div>
-              <div className="text-sm font-bold text-text-primary">
+            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
+              <div className="text-[9px] text-[var(--text-muted)]">Speed</div>
+              <div className="text-xs font-bold text-[var(--text-primary)]">
                 {currentSample.speedKts.toFixed(1)}{' '}
-                <span className="text-[10px] font-normal text-text-muted">kt</span>
+                <span className="text-[9px] font-normal text-[var(--text-muted)]">kt</span>
               </div>
-              <div className="text-[9px] text-text-muted">({currentSample.speedMs.toFixed(1)} m/s)</div>
+              <div className="text-[9px] text-[var(--text-dim)]">({currentSample.speedMs.toFixed(1)} m/s)</div>
             </div>
 
-            <div className="bg-surface-base/80 p-1.5 rounded border border-border-default/40">
-              <div className="text-[9px] text-text-muted">Heading</div>
-              <div className="text-sm font-bold text-text-primary flex items-center gap-1">
-                <Compass className="w-3 h-3 text-accent-eloran" />
+            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
+              <div className="text-[9px] text-[var(--text-muted)]">Heading</div>
+              <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1">
+                <Compass size={11} className="text-[var(--accent-eloran)]" />
                 <span>{currentSample.headingDeg.toFixed(0)}°</span>
-                <span className="text-[10px] font-normal text-accent-eloran">
+                <span className="text-[9px] font-semibold text-[var(--accent-eloran)]">
                   {getCompassDirection(currentSample.headingDeg)}
                 </span>
               </div>
-              <div className="text-[9px] text-text-muted">Ground Track</div>
+              <div className="text-[9px] text-[var(--text-dim)]">Ground Track</div>
             </div>
           </div>
 
-          <div className="space-y-1 text-[10px]">
+          <div className="space-y-0.5 text-[9.5px]">
             <div className="flex justify-between">
-              <span className="text-text-muted">Coordinates:</span>
-              <span className="text-text-secondary font-mono">
-                {currentSample.lat.toFixed(5)}°, {currentSample.lng.toFixed(5)}°
+              <span className="text-[var(--text-muted)]">Coordinates:</span>
+              <span className="text-[var(--text-secondary)] font-mono">
+                {currentSample.lat.toFixed(4)}°, {currentSample.lng.toFixed(4)}°
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-muted">Distance Traveled:</span>
-              <span className="text-text-secondary">
-                {(currentSample.distanceM / 1000).toFixed(2)} km / {(trajectory.totalDistanceM / 1000).toFixed(2)} km
+              <span className="text-[var(--text-muted)]">Distance:</span>
+              <span className="text-[var(--text-secondary)]">
+                {(currentSample.distanceM / 1000).toFixed(1)} / {(trajectory.totalDistanceM / 1000).toFixed(1)} km
               </span>
             </div>
           </div>
         </div>
 
         {/* 6-State EKF Filter Card */}
-        <div className="p-2.5 bg-surface-elevated/40 border border-border-default rounded-lg space-y-2">
-          <div className="flex items-center justify-between text-text-secondary font-medium">
-            <span className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="p-2.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 font-bold text-[11px] text-[var(--status-ok)]">
+              <Activity size={13} />
               <span>6-State EKF PNT</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)]">
               Locked
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="bg-surface-base/80 p-1.5 rounded border border-border-default/40">
-              <div className="text-[9px] text-text-muted">1-σ Position</div>
-              <div className="text-sm font-bold text-emerald-400">
+            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
+              <div className="text-[9px] text-[var(--text-muted)]">1-σ Position</div>
+              <div className="text-xs font-bold text-[var(--status-ok)]">
                 {ekfState ? ekfState.posSigmaM.toFixed(1) : '--'}{' '}
-                <span className="text-[10px] font-normal text-text-muted">m</span>
+                <span className="text-[9px] font-normal text-[var(--text-muted)]">m</span>
               </div>
-              <div className="text-[9px] text-text-muted">
-                HPL: {ekfState ? ekfState.hplMeters.toFixed(1) : '--'} m
+              <div className="text-[9px] text-[var(--text-dim)]">
+                HPL: {ekfState ? ekfState.hplMeters.toFixed(1) : '--'}m
               </div>
             </div>
 
-            <div className="bg-surface-base/80 p-1.5 rounded border border-border-default/40">
-              <div className="text-[9px] text-text-muted">Clock Bias</div>
-              <div className="text-sm font-bold text-text-primary">
+            <div className="bg-[var(--bg-subtle)] p-1.5 rounded-lg border border-[var(--border-subtle)]">
+              <div className="text-[9px] text-[var(--text-muted)]">Clock Bias</div>
+              <div className="text-xs font-bold text-[var(--text-primary)]">
                 {ekfState ? (ekfState.clockBiasSec * 1e9).toFixed(0) : '--'}{' '}
-                <span className="text-[10px] font-normal text-text-muted">ns</span>
+                <span className="text-[9px] font-normal text-[var(--text-muted)]">ns</span>
               </div>
-              <div className="text-[9px] text-text-muted">
-                ({ekfState ? ekfState.clockBiasM.toFixed(1) : '--'} m)
+              <div className="text-[9px] text-[var(--text-dim)]">
+                ({ekfState ? ekfState.clockBiasM.toFixed(1) : '--'}m)
               </div>
             </div>
           </div>
 
-          <div className="space-y-1 text-[10px]">
+          <div className="space-y-0.5 text-[9.5px]">
             <div className="flex justify-between">
-              <span className="text-text-muted">Vel Uncertainty:</span>
-              <span className="text-text-secondary">
+              <span className="text-[var(--text-muted)]">Vel Uncertainty:</span>
+              <span className="text-[var(--text-secondary)]">
                 ±{ekfState ? ekfState.velSigmaMs.toFixed(2) : '--'} m/s
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-muted">Outliers Rejected:</span>
-              <span className="text-emerald-400 font-semibold">
-                {ekfState ? ekfState.totalRejectedCount : 0} epochs (NIS Gated)
+              <span className="text-[var(--text-muted)]">Outliers Rejected:</span>
+              <span className="text-[var(--status-ok)] font-semibold">
+                {ekfState ? ekfState.totalRejectedCount : 0} NIS gated
               </span>
             </div>
           </div>
@@ -531,92 +543,92 @@ export default function TrajectoryPanel() {
       </div>
 
       {/* Cycle Slip Injection Action */}
-      <div className="p-2.5 rounded-lg bg-surface-elevated/30 border border-border-default flex items-center justify-between">
+      <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex items-center justify-between shadow-xs">
         <div>
-          <div className="font-semibold text-text-primary flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+          <div className="font-semibold text-[11px] text-[var(--text-primary)] flex items-center gap-1.5">
+            <AlertTriangle size={13} className="text-[var(--status-warn)] shrink-0" />
             <span>Integrity Fault Injection</span>
           </div>
-          <div className="text-[10px] text-text-muted mt-0.5">
+          <div className="text-[9.5px] text-[var(--text-muted)] mt-0.5 leading-tight">
             Injects 10 µs (+3000 m) cycle slip into transmitter channel to verify NIS rejection.
           </div>
         </div>
         <button
           onClick={handleTriggerCycleSlip}
-          className="px-2.5 py-1.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-[11px] font-medium transition-all"
+          className="px-2.5 py-1 rounded-md bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] hover:opacity-90 text-[10.5px] font-semibold transition cursor-pointer shrink-0 ml-2"
         >
           Inject +3000m Slip
         </button>
       </div>
 
       {/* Live Carrier Doppler Shift Breakdown */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-text-secondary text-[11px] font-medium">
-          <span className="flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-accent-eloran" />
-            <span>Carrier Doppler Shift Breakdown (100 kHz)</span>
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2 shadow-xs">
+        <div className="flex items-center justify-between text-[11px] font-semibold">
+          <span className="flex items-center gap-1.5 text-[var(--text-primary)]">
+            <Radio size={13} className="text-[var(--accent-eloran)]" />
+            <span>Carrier Doppler Shift (100 kHz)</span>
           </span>
-          <span className="text-[10px] text-text-muted">Δf = -f₀ · (v_los / c)</span>
+          <span className="text-[9.5px] text-[var(--text-muted)] font-mono">Δf = -f₀ · (v_los / c)</span>
         </div>
 
-        <div className="border border-border-default/60 rounded-lg overflow-hidden bg-surface-base">
+        <div className="border border-[var(--border-subtle)] rounded-lg overflow-hidden bg-[var(--bg-subtle)]">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-elevated text-text-muted border-b border-border-default/50 text-[10px]">
-                <th className="py-1 px-2.5">Transmitter</th>
-                <th className="py-1 px-2 text-right">Distance</th>
-                <th className="py-1 px-2 text-right">LOS Rate</th>
-                <th className="py-1 px-2 text-right">Doppler Δf</th>
-                <th className="py-1 px-2.5 text-right">Received Freq</th>
+              <tr className="bg-[var(--bg-canvas)] text-[var(--text-dim)] border-b border-[var(--border-subtle)] text-[9.5px]">
+                <th className="py-1 px-2">Transmitter</th>
+                <th className="py-1 px-1.5 text-right">Distance</th>
+                <th className="py-1 px-1.5 text-right">LOS Rate</th>
+                <th className="py-1 px-1.5 text-right">Doppler Δf</th>
+                <th className="py-1 px-2 text-right">Rx Freq</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-default/30 text-[11px]">
+            <tbody className="divide-y divide-[var(--border-subtle)]/40 text-[10px]">
               {dopplerList.map((d) => {
                 const isReceding = d.rangeRateMs > 0.05;
                 const isApproaching = d.rangeRateMs < -0.05;
                 return (
-                  <tr key={d.station} className="hover:bg-surface-hover/50">
-                    <td className="py-1 px-2.5 font-medium flex items-center gap-1">
+                  <tr key={d.station} className="hover:bg-[var(--bg-canvas)]/50 transition">
+                    <td className="py-1 px-2 font-medium flex items-center gap-1 text-[var(--text-primary)]">
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          d.isMaster ? 'bg-accent-eloran' : 'bg-accent-loran-c'
+                          d.isMaster ? 'bg-[var(--accent-eloran)]' : 'bg-[var(--accent-loran-c)]'
                         }`}
                       />
-                      <span className="truncate max-w-[100px]">{d.station}</span>
+                      <span className="truncate max-w-[80px]">{d.station}</span>
                     </td>
-                    <td className="py-1 px-2 text-right text-text-muted">
+                    <td className="py-1 px-1.5 text-right text-[var(--text-muted)]">
                       {(d.distanceMeters / 1000).toFixed(1)} km
                     </td>
-                    <td className="py-1 px-2 text-right font-mono">
+                    <td className="py-1 px-1.5 text-right font-mono">
                       <span
                         className={
                           isReceding
-                            ? 'text-amber-400'
+                            ? 'text-[var(--status-warn)]'
                             : isApproaching
-                            ? 'text-cyan-400'
-                            : 'text-text-muted'
+                            ? 'text-[var(--accent-eloran)]'
+                            : 'text-[var(--text-muted)]'
                         }
                       >
                         {d.rangeRateMs > 0 ? '+' : ''}
                         {d.rangeRateMs.toFixed(1)} m/s
                       </span>
                     </td>
-                    <td className="py-1 px-2 text-right font-mono font-semibold">
+                    <td className="py-1 px-1.5 text-right font-mono font-semibold">
                       <span
                         className={
                           d.dopplerShiftHz > 0
-                            ? 'text-cyan-400'
+                            ? 'text-[var(--accent-eloran)]'
                             : d.dopplerShiftHz < 0
-                            ? 'text-amber-400'
-                            : 'text-text-muted'
+                            ? 'text-[var(--status-warn)]'
+                            : 'text-[var(--text-muted)]'
                         }
                       >
                         {d.dopplerShiftHz > 0 ? '+' : ''}
-                        {(d.dopplerShiftHz * 1000).toFixed(2)} mHz
+                        {(d.dopplerShiftHz * 1000).toFixed(1)} mHz
                       </span>
                     </td>
-                    <td className="py-1 px-2.5 text-right font-mono text-text-muted text-[10px]">
-                      {(d.receivedFreqHz / 1000).toFixed(6)} kHz
+                    <td className="py-1 px-2 text-right font-mono text-[var(--text-dim)] text-[9.5px]">
+                      {(d.receivedFreqHz / 1000).toFixed(5)} kHz
                     </td>
                   </tr>
                 );

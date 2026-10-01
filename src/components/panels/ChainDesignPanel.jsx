@@ -77,19 +77,15 @@ export default function ChainDesignPanel() {
             <span>Chain Design & Planning</span>
             <InfoTooltip
               align="left"
-              text="Design station layouts, compute baseline travel times (Tb), emission delays (ED = Tb + CD), and verify minimum feasible GRI against USCG COMDTINST M16562.4A standards before activating."
+              text="Design station layouts, compute baseline travel times (Tb), emission delays (ED = Tb + CD), and verify minimum feasible GRI and emission delay budgets before activating."
             />
           </div>
-          <span
-            className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border"
-            style={{
-              background: 'var(--accent-loran-c-subtle)',
-              color: 'var(--accent-loran-c)',
-              borderColor: 'var(--accent-loran-c-border)',
-            }}
+          <a
+            href="/learn#hyperbolic"
+            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--accent-loran-c-border)] bg-[var(--accent-loran-c-subtle)] text-[var(--accent-loran-c)] hover:opacity-80 transition"
           >
-            Engineering Tool
-          </span>
+            Theory &rarr;
+          </a>
         </div>
 
         {/* Quick Presets with Provenance Badges */}
@@ -121,10 +117,10 @@ export default function ChainDesignPanel() {
               }}
               title="Golden 400-mile worked example from USCG Loran-C User Handbook §2.B"
             >
-              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>USCG 400-mi</div>
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>400-Mile Triad</div>
               <div className="flex items-center gap-1 mt-1">
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
-                  Textbook Benchmark
+                  Standard Triad
                 </span>
               </div>
             </button>
@@ -155,10 +151,10 @@ export default function ChainDesignPanel() {
               }}
               title="Historical Northeast U.S. Chain (GRI 9960) — illustrative parameters"
             >
-              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Northeast Chain (9960)</div>
               <div className="flex items-center gap-1 mt-1">
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
-                  Illustrative — unverified this session
+                  Regional Chain
                 </span>
               </div>
             </button>

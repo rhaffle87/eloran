@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Download, Plus, Trash2, FileCode, RotateCcw } from 'lucide-react';
+import { Upload, Download, Plus, Trash2, FileCode, RotateCcw, Save, FolderOpen } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import { PRESET_SCENARIOS } from '../../state/presets.js';
 import { parseStationsCsv, exportStationsCsv, exportScenarioGeoJson } from '../../lib/stations.js';
@@ -20,6 +20,74 @@ export default function StationEditor({ isELoran = false }) {
   const [newLabel, setNewLabel] = useState('');
   const [newLat, setNewLat] = useState('-6.25');
   const [newLng, setNewLng] = useState('106.85');
+
+  const jsonInputRef = useRef(null);
+  const [hasSavedChain, setHasSavedChain] = useState(() => {
+    try { return Boolean(localStorage.getItem('simuloran:custom-chain')); } catch { return false; }
+  });
+
+  const handleExportJson = () => {
+    const payload = {
+      version: '1.5.1',
+      exportedAt: new Date().toISOString(),
+      masters,
+      slaves,
+      receivers,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `simuloran-custom-chain-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleJsonUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result);
+        if (Array.isArray(data.masters) && Array.isArray(data.slaves)) {
+          setStations(data.masters, data.slaves, data.receivers || []);
+          setTimeout(() => evaluateReceivers(), 50);
+        } else {
+          alert('Invalid format: file must contain masters and slaves arrays.');
+        }
+      } catch (err) {
+        alert('Failed to load JSON file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleSaveToLocalStorage = () => {
+    try {
+      const payload = { masters, slaves, receivers };
+      localStorage.setItem('simuloran:custom-chain', JSON.stringify(payload));
+      setHasSavedChain(true);
+      alert('Custom chain saved to browser storage!');
+    } catch (err) {
+      alert('Could not save to browser storage: ' + err.message);
+    }
+  };
+
+  const handleLoadFromLocalStorage = () => {
+    try {
+      const raw = localStorage.getItem('simuloran:custom-chain');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.masters) && Array.isArray(data.slaves)) {
+        setStations(data.masters, data.slaves, data.receivers || []);
+        setTimeout(() => evaluateReceivers(), 50);
+      }
+    } catch (err) {
+      alert('Could not load saved chain: ' + err.message);
+    }
+  };
 
   const {
     masters, slaves, receivers, activePresetId,
@@ -111,6 +179,19 @@ export default function StationEditor({ isELoran = false }) {
 
   return (
     <div className="space-y-4">
+      {/* Header bar with Theory link */}
+      <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+        <div>
+          <span className="text-xs font-mono font-bold text-[var(--text-primary)]">Custom Station Network</span>
+          <span className="text-[10px] block text-[var(--text-dim)]">Interactive Transmitter Sandbox</span>
+        </div>
+        <a
+          href="/learn#hyperbolic"
+          className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--accent-loran-c-border)] bg-[var(--accent-loran-c-subtle)] text-[var(--accent-loran-c)] hover:opacity-80 transition"
+        >
+          Theory &rarr;
+        </a>
+      </div>
       {/* Preset selector */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
@@ -168,7 +249,42 @@ export default function StationEditor({ isELoran = false }) {
         >
           <Download size={14} /> Export CSV
         </button>
+                <button
+          onClick={handleExportJson}
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Download custom transmitter chain as JSON"
+        >
+          <Download size={14} /> Export JSON
+        </button>
         <button
+          onClick={() => jsonInputRef.current?.click()}
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Upload custom transmitter chain from JSON"
+        >
+          <Upload size={14} /> Import JSON
+        </button>
+        <input ref={jsonInputRef} type="file" accept=".json" onChange={handleJsonUpload} className="hidden" />
+
+        <button
+          onClick={handleSaveToLocalStorage}
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--accent-eloran)' }}
+          title="Save custom chain to browser storage"
+        >
+          <Save size={14} /> Save Chain
+        </button>
+        <button
+          onClick={handleLoadFromLocalStorage}
+          disabled={!hasSavedChain}
+          className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+          title="Load custom chain from browser storage"
+        >
+          <FolderOpen size={14} /> Load Saved
+        </button>
+<button
           onClick={handleExportGeoJson}
           className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition"
           style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}

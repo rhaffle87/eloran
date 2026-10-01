@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Layers, Thermometer, Database, ExternalLink, ChevronDown, Radio, Activity } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertCircle, Wrench, ShieldAlert, Waves, Thermometer, Database, Radio, Activity } from 'lucide-react';
 import { getColormapCssGradient } from '../../lib/heatmapColormap.js';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import {
@@ -148,12 +147,12 @@ export default function AsfPanel() {
   const engineMethod = settings.asfEngineMethod || 'grwave';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3.5">
       {/* Mode Switcher Tabs */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
-            ASF Propagation Model Mode
+          <label className="text-[11px] font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+            ASF Propagation Model
           </label>
           <InfoTooltip
             title="ASF Propagation Models"
@@ -161,13 +160,13 @@ export default function AsfPanel() {
             align="right"
           />
         </div>
-        <div className="grid grid-cols-3 gap-1.5 text-xs font-mono">
+        <div className="grid grid-cols-3 gap-1 bg-[var(--bg-subtle)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs font-mono">
           <button
             onClick={() => updateSettings({ asfModelMode: 'millington' })}
-            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-1.5 px-2 rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
               asfMode === 'millington'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                ? 'bg-[var(--bg-canvas)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
+                : 'text-[var(--text-dim)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
             title="Physical mixed-path delay model based on ITU-R P.832 ground conductivity mapping."
           >
@@ -177,10 +176,10 @@ export default function AsfPanel() {
 
           <button
             onClick={() => updateSettings({ asfModelMode: 'temporal' })}
-            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-1.5 px-2 rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
               asfMode === 'temporal'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                ? 'bg-[var(--bg-canvas)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
+                : 'text-[var(--text-dim)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
             title="Atmospheric refractivity model with seasonal drift calibrated from Song & Son (2025)."
           >
@@ -190,10 +189,10 @@ export default function AsfPanel() {
 
           <button
             onClick={() => updateSettings({ asfModelMode: 'formula' })}
-            className={`p-2 rounded border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-1.5 px-2 rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
               asfMode === 'formula'
-                ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
-                : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
+                ? 'bg-[var(--bg-canvas)] border border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold shadow-xs'
+                : 'text-[var(--text-dim)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
             title="Manual sandboxed mathematical formula evaluation for synthetic delay profiles."
           >
@@ -206,11 +205,11 @@ export default function AsfPanel() {
       {/* Live ASF & Groundwave Attenuation Heatmap Controls */}
       <div
         data-testid="asf-heatmap-controls-card"
-        className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3.5 space-y-3 font-mono text-xs shadow-sm"
+        className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2.5 font-mono text-xs shadow-xs"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-[var(--accent-eloran)]" />
+            <Radio className="w-4 h-4 text-[var(--accent-eloran)] shrink-0" />
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
                 <span>Live Heatmap Overlay</span>
@@ -219,7 +218,7 @@ export default function AsfPanel() {
                 </span>
               </div>
               <div className="text-[10px] text-[var(--text-dim)]">
-                ITU-R P.368-10 / Sommerfeld groundwave rasterization
+                ITU-R P.368-10 / Sommerfeld groundwave raster
               </div>
             </div>
           </div>
@@ -227,15 +226,14 @@ export default function AsfPanel() {
             label=""
             checked={Boolean(settings.asfHeatmapEnabled)}
             onChange={(checked) => updateSettings({ asfHeatmapEnabled: checked })}
-            tooltip="Toggle real-time geographic heatmap overlay across map view"
           />
         </div>
 
         {settings.asfHeatmapEnabled && (
-          <div className="space-y-3 pt-2.5 border-t border-[var(--border-subtle)]">
+          <div className="space-y-2.5 pt-2 border-t border-[var(--border-subtle)]">
             {/* Quantity Selector: µs vs dB */}
-            <div>
-              <div className="flex items-center justify-between text-[11px] mb-1 font-semibold text-[var(--text-secondary)]">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] font-semibold text-[var(--text-secondary)]">
                 <span>Physical Quantity:</span>
                 <span className="text-[10px] text-[var(--accent-eloran)]">
                   {settings.asfHeatmapMode === 'db' ? 'Groundwave Loss (dB)' : 'ASF Excess Delay (µs)'}
@@ -246,7 +244,7 @@ export default function AsfPanel() {
                   type="button"
                   data-testid="btn-heatmap-mode-us"
                   onClick={() => updateSettings({ asfHeatmapMode: 'us' })}
-                  className={`p-1.5 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px] ${
+                  className={`py-1 px-2 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[10px] font-mono ${
                     (settings.asfHeatmapMode || 'us') === 'us'
                       ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                       : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
@@ -259,7 +257,7 @@ export default function AsfPanel() {
                   type="button"
                   data-testid="btn-heatmap-mode-db"
                   onClick={() => updateSettings({ asfHeatmapMode: 'db' })}
-                  className={`p-1.5 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[11px] ${
+                  className={`py-1 px-2 rounded border text-center transition flex items-center justify-center gap-1 cursor-pointer text-[10px] font-mono ${
                     settings.asfHeatmapMode === 'db'
                       ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                       : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
@@ -304,8 +302,8 @@ export default function AsfPanel() {
             />
 
             {/* Color Scale Legend */}
-            <div className="pt-1">
-              <div className="flex justify-between text-[10px] mb-1 text-[var(--text-dim)]">
+            <div className="pt-0.5">
+              <div className="flex justify-between text-[9.5px] mb-1 text-[var(--text-dim)] font-mono">
                 <span>Scale: {settings.asfHeatmapMode === 'db' ? '0 dB' : '0.0 µs'}</span>
                 <span className="uppercase text-[9px] font-semibold text-[var(--accent-eloran)]">
                   {settings.asfHeatmapMode === 'db' ? 'Viridis' : 'Jet'}
@@ -313,7 +311,7 @@ export default function AsfPanel() {
                 <span>{settings.asfHeatmapMode === 'db' ? '60 dB' : '3.0 µs'}</span>
               </div>
               <div
-                className="h-2.5 w-full rounded border border-[var(--border-subtle)] shadow-inner"
+                className="h-2 w-full rounded border border-[var(--border-subtle)] shadow-inner"
                 style={{
                   background: getColormapCssGradient(settings.asfHeatmapMode === 'db' ? 'viridis' : 'jet'),
                 }}
@@ -324,57 +322,50 @@ export default function AsfPanel() {
       </div>
 
       {/* Terrain Masking & Knife-Edge Diffraction (ITU-R P.526) */}
-      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-3 font-mono text-xs">
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
-          <div className="flex items-center gap-2">
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2.5 font-mono text-xs shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-semibold text-[var(--text-primary)]">
-              Terrain Masking & Obstacle Diffraction
+              Terrain Masking Overlay
             </span>
             <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
               ITU-R P.526
             </span>
           </div>
-          <InfoTooltip
-            align="right"
-            text="Single knife-edge diffraction calculation across Great-Circle elevation profiles (Open-Elevation API). Identifies masked transmitter-receiver links (>15 dB loss) with excess propagation delay."
-          />
+          <div className="flex items-center gap-2">
+            <InfoTooltip
+              align="right"
+              text="Single knife-edge diffraction calculation across Great-Circle elevation profiles (Open-Elevation API). Identifies masked transmitter-receiver links (>15 dB loss) with excess propagation delay."
+            />
+            <Toggle
+              label=""
+              checked={Boolean(settings.terrainMaskingEnabled)}
+              onChange={(checked) => updateSettings({ terrainMaskingEnabled: checked })}
+            />
+          </div>
         </div>
-
-        <Toggle
-          label="Enable Terrain Masking Overlay"
-          description="Evaluate knife-edge obstacle loss along Tx-Rx paths and draw clear (green) vs masked (dashed red) vectors on the map."
-          checked={Boolean(settings.terrainMaskingEnabled)}
-          onChange={(checked) => updateSettings({ terrainMaskingEnabled: checked })}
-        />
 
         {Boolean(settings.terrainMaskingEnabled) && (
           <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2 text-[11px]">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
-                <span className="text-[10px] text-[var(--text-dim)] uppercase block">Tx Tower Height</span>
-                <span className="text-xs font-semibold text-[var(--text-primary)]">30 m AGL</span>
-              </div>
-              <div className="p-2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
-                <span className="text-[10px] text-[var(--text-dim)] uppercase block">Rx Mast Height</span>
-                <span className="text-xs font-semibold text-[var(--text-primary)]">5 m AGL</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] px-1">
-              <span>Wavelength &lambda; (100 kHz): ~2998 m</span>
-              <span className="text-[var(--status-ok)]">API: Open-Elevation + Cache</span>
+            <div className="flex items-center justify-between text-[10px] bg-[var(--bg-subtle)] px-2.5 py-1.5 rounded-lg border border-[var(--border-subtle)] font-mono">
+              <span className="text-[var(--text-secondary)]">Tx: <strong className="text-[var(--text-primary)]">30m AGL</strong></span>
+              <span className="text-[var(--border-default)]">|</span>
+              <span className="text-[var(--text-secondary)]">Rx: <strong className="text-[var(--text-primary)]">5m AGL</strong></span>
+              <span className="text-[var(--border-default)]">|</span>
+              <span className="text-[var(--text-secondary)]">&lambda;: <strong className="text-[var(--text-primary)]">~3 km</strong></span>
             </div>
             <button
               onClick={handleInspectFresnel}
               disabled={isAnalyzingFresnel || !master || !rx}
-              className="w-full mt-2 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition hover:opacity-90 cursor-pointer"
+              className="w-full py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition hover:opacity-90 cursor-pointer"
               style={{
                 background: 'var(--accent-eloran-subtle)',
                 borderColor: 'var(--accent-eloran-border)',
                 color: 'var(--accent-eloran)',
               }}
             >
-              <Activity size={14} className={isAnalyzingFresnel ? 'animate-spin' : ''} />
-              {isAnalyzingFresnel ? 'Querying Elevation Profile...' : `Inspect ${master?.label || 'M'} → ${rx?.label || 'R'} Cross-Section`}
+              <Activity size={13} className={isAnalyzingFresnel ? 'animate-spin' : ''} />
+              {isAnalyzingFresnel ? 'Querying Elevation...' : `Inspect ${master?.label || 'M'} → ${rx?.label || 'R'} Cross-Section`}
             </button>
           </div>
         )}
@@ -382,9 +373,9 @@ export default function AsfPanel() {
 
       {/* Mode 1: Physical Mixed-Path Millington Model */}
       {asfMode === 'millington' && (
-        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-4 font-mono text-xs">
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-3 font-mono text-xs shadow-xs">
           {/* Status Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-semibold text-[var(--text-primary)]">
               Millington Mixed-Path Terrain Model
             </span>
@@ -395,17 +386,15 @@ export default function AsfPanel() {
           </div>
 
           {/* Groundwave Calculation Engine Selector */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[var(--text-secondary)] text-xs font-semibold block">
-                Propagation Calculation Engine
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+          <div className="space-y-1.5">
+            <label className="text-[var(--text-secondary)] text-[11px] font-semibold block">
+              Propagation Calculation Engine
+            </label>
+            <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
               <button
                 type="button"
                 onClick={() => updateSettings({ asfEngineMethod: 'grwave' })}
-                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-md border text-center transition cursor-pointer text-[11px] ${
                   engineMethod === 'grwave'
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
@@ -416,7 +405,7 @@ export default function AsfPanel() {
               <button
                 type="button"
                 onClick={() => updateSettings({ asfEngineMethod: 'empirical' })}
-                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-md border text-center transition cursor-pointer text-[11px] ${
                   engineMethod === 'empirical'
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
@@ -428,26 +417,26 @@ export default function AsfPanel() {
 
             {/* Split Provenance Status Bar */}
             {engineMethod === 'grwave' ? (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between gap-2">
-                <span className="text-[var(--text-dim)] flex items-center gap-1">
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-[10px] flex items-center justify-between gap-1">
+                <span className="text-[var(--text-dim)] flex items-center gap-1 truncate">
                   <span>ITU-R P.368 / Sommerfeld</span>
                   <InfoTooltip
                     align="left"
                     title="Phase Delay Verification Status"
-                    text="Note: Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only; NOT independently validated against GRWAVE or empirical data."
+                    text="Phase delay directly feeds the simulator's TDOA/pseudo-range positioning solution. It is cross-checked between Python and JS implementations only."
                   />
                 </span>
-                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap inline-flex items-center gap-1">
-                  SOURCED (ITU-R P.368 GRWAVE)
+                <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap inline-flex items-center gap-0.5 shrink-0">
+                  SOURCED (GRWAVE)
                   <InfoTooltip
                     align="right"
                     title="Groundwave Attenuation Standard"
-                    text="Field strength and groundwave attenuation curve generation is SOURCED from local GRWAVE Fortran reference outputs; ITU-R P.368-10 is not machine-verified upstream."
+                    text="Field strength and groundwave attenuation curve generation is SOURCED from local GRWAVE Fortran reference outputs."
                   />
                 </span>
               </div>
             ) : (
-              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between">
+              <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded px-2.5 py-1 text-[10px] flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] inline-flex items-center gap-1">
                   <ShieldAlert size={10} /> UNVERIFIED — Empirical k_asf
                 </span>
@@ -462,7 +451,7 @@ export default function AsfPanel() {
 
           {/* Land Conductivity Selector */}
           <div className="space-y-1.5">
-            <label className="text-[var(--text-secondary)] text-xs font-semibold block">
+            <label className="text-[var(--text-secondary)] text-[11px] font-semibold block">
               Land Terrain Conductivity Preset (ITU-R P.832)
             </label>
             <select
@@ -477,7 +466,7 @@ export default function AsfPanel() {
                   updateSettings({ asfLandSigma: preset.sigma });
                 }
               }}
-              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-xs text-[var(--text-primary)] font-mono"
             >
               {Object.values(ITU_R_P832_CONDUCTIVITIES).map((c) => (
                 <option key={c.id} value={c.id}>
@@ -485,18 +474,18 @@ export default function AsfPanel() {
                 </option>
               ))}
             </select>
-            <div className="text-[10px] text-[var(--text-muted)] flex justify-between">
-              <span>Seawater reference: 5.0 S/m</span>
+            <div className="text-[10px] text-[var(--text-muted)] flex justify-between px-0.5">
+              <span>Seawater: 5.0 S/m</span>
               <span className="text-[var(--accent-eloran)] font-bold">
-                Selected σ = {settings.asfLandSigma ?? 0.003} S/m
+                σ = {settings.asfLandSigma ?? 0.003} S/m
               </span>
             </div>
           </div>
 
           {/* Coastline Path Segmentation Mode */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[var(--text-secondary)] text-xs font-semibold block">
+              <label className="text-[var(--text-secondary)] text-[11px] font-semibold block">
                 Coastline Path Segmentation Mode
               </label>
               <InfoTooltip
@@ -505,26 +494,26 @@ export default function AsfPanel() {
                 text="Switches between geodesic ray-tracing against real Natural Earth 10m coastline vector geometry and an illustrative manual land-fraction ratio."
               />
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
               <button
                 type="button"
                 data-testid="asf-pathmode-geo"
                 data-active={pathMode === 'geo' ? 'true' : 'false'}
                 onClick={() => updateSettings({ asfMillingtonPathMode: 'geo' })}
-                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-md border text-center transition cursor-pointer text-[10.5px] ${
                   pathMode === 'geo'
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
                 }`}
               >
-                Geodesic GIS (Real Coastline)
+                Geodesic GIS (Real)
               </button>
               <button
                 type="button"
                 data-testid="asf-pathmode-manual"
                 data-active={pathMode === 'manual' ? 'true' : 'false'}
                 onClick={() => updateSettings({ asfMillingtonPathMode: 'manual' })}
-                className={`p-1.5 rounded border text-center transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-md border text-center transition cursor-pointer text-[10.5px] ${
                   pathMode === 'manual'
                     ? 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)] font-bold'
                     : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
@@ -567,7 +556,7 @@ export default function AsfPanel() {
                         Land: {geoResult.landDistKm.toFixed(1)} km ({(geoResult.landFraction * 100).toFixed(1)}%)
                       </span>
                       <span className="text-[var(--text-muted)]">
-                        {geoResult.transitions} boundary crossing{geoResult.transitions === 1 ? '' : 's'}
+                        {geoResult.transitions} crossing{geoResult.transitions === 1 ? '' : 's'}
                       </span>
                       <span className="text-[var(--accent-eloran)] font-medium">
                         Sea: {geoResult.seaDistKm.toFixed(1)} km ({(geoResult.seaFraction * 100).toFixed(1)}%)
@@ -576,11 +565,11 @@ export default function AsfPanel() {
                   </div>
 
                   {/* Individual Segments Display */}
-                  <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1.5">
+                  <div className="pt-1 border-t border-[var(--border-subtle)] space-y-1">
                     <div className="text-[10px] text-[var(--text-muted)] flex justify-between items-center">
                       <span>Path Segments (Tx → Rx):</span>
                       <span className="text-[var(--accent-eloran)] font-bold">
-                        Calculated ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
+                        ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
                       </span>
                     </div>
                     {geoResult.segments?.length > 0 && (
@@ -600,7 +589,7 @@ export default function AsfPanel() {
                                   : 'bg-[var(--accent-eloran-subtle)] border-[var(--accent-eloran-border)] text-[var(--accent-eloran)]'
                               }`}
                             >
-                              {s.medium.toUpperCase()} {s.distKm.toFixed(1)} km ({s.startKm.toFixed(0)}–{s.endKm.toFixed(0)} km)
+                              {s.medium.toUpperCase()}: {s.distKm.toFixed(1)} km
                             </span>
                           ))}
                         </div>
@@ -609,95 +598,48 @@ export default function AsfPanel() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-[var(--bg-subtle)] border border-[var(--status-warn-border)] rounded-lg p-2.5 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-[var(--status-warn)]">
-                    <span className="font-semibold flex items-center gap-1 font-mono">
-                      ⚠️ Outside Bundled Coastlines
-                    </span>
-                    <InfoTooltip
-                      title="Geodesic Path Fallback"
-                      text={`Path (${master?.label || 'Tx'} → ${rx?.label || 'Rx'}) is outside bundled coastline regions (${Object.values(COASTLINE_MANIFEST).map((m) => m.name.split('—')[0].trim()).join(', ')}). Falling back to manual land fraction.`}
-                      align="right"
-                    />
+                <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--status-warn-border)] space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--status-warn)] font-semibold">
+                    <AlertCircle size={13} />
+                    <span>Path Outside Vector Bounds</span>
                   </div>
-                  <div className="text-[10px] text-[var(--text-dim)] font-mono">
-                    Using manual fallback ratio ({Math.round((settings.asfLandFraction ?? 0.5) * 100)}%).
+                  <div className="text-[10px] text-[var(--text-muted)]">
+                    Tx or Rx is outside bundled vector polygons ({COASTLINE_MANIFEST.map(m => m.regionName).join(', ')}). Falling back to manual land-fraction ratio.
                   </div>
-                  <Slider
-                    label="Manual Land Fraction"
-                    value={settings.asfLandFraction ?? 0.5}
-                    min={0.0}
-                    max={1.0}
-                    step={0.05}
-                    unit=""
-                    tooltip="Illustrative uniform land fraction applied when path is outside bundled coastline data"
-                    onChange={(val) => updateSettings({ asfLandFraction: val })}
-                  />
                 </div>
               )
             ) : (
-              <div className="space-y-1">
+              <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-2">
                 <Slider
-                  label="Manual Land Fraction (Illustrative, Any Region)"
-                  value={settings.asfLandFraction ?? 0.5}
-                  min={0.0}
-                  max={1.0}
-                  step={0.05}
-                  unit=""
-                  tooltip="Uniform land fraction applied to any geometry regardless of coastline vector data"
-                  onChange={(val) => updateSettings({ asfLandFraction: val })}
+                  label="Land Path Fraction"
+                  value={Math.round((settings.asfLandFraction ?? 0.5) * 100)}
+                  onChange={(v) => updateSettings({ asfLandFraction: v / 100 })}
+                  min={0}
+                  max={100}
+                  step={5}
+                  unit="%"
+                  tooltip="Proportion of total Great-Circle distance over ground terrain vs sea water"
                 />
-                
+                <div className="text-[10px] text-[var(--text-muted)] flex justify-between font-mono pt-1 border-t border-[var(--border-subtle)]">
+                  <span>Land: {((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%</span>
+                  <span>Sea: {((1 - (settings.asfLandFraction ?? 0.5)) * 100).toFixed(0)}%</span>
+                  <span className="text-[var(--accent-eloran)] font-bold">
+                    ASF: {((settings.asfLandFraction ?? 0.5) * DEFAULT_MILLINGTON_SCALE).toFixed(1)} m
+                  </span>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Engine Parameters / Empirical Scale Slider */}
-          {engineMethod === 'grwave' ? (
-            <div className="bg-[var(--bg-subtle)] rounded-lg px-2.5 py-2 border border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
-              <span className="flex items-center gap-1.5 font-semibold">
-                <span>Sommerfeld Impedance</span>
-                <InfoTooltip
-                  align="center"
-                  title="Sommerfeld & Millington Theory"
-                  text="Numerical distance p = (πd/λ)|η|² with multi-boundary reciprocal Millington (1949) averaging. Field strength verified against GRWAVE reference; phase delay uses analytical Sommerfeld-Norton formulation."
-                />
-              </span>
-              <Link
-                to="/learn"
-                className="text-[10px] text-[var(--accent-eloran)] hover:underline flex items-center gap-1 font-semibold"
-              >
-                <span>Derivations in Theory →</span>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <Slider
-                label="Empirical Scale Constant (k_asf)"
-                value={settings.asfMillingtonScale ?? DEFAULT_MILLINGTON_SCALE}
-                min={0.0001}
-                max={0.0030}
-                step={0.0001}
-                unit=""
-                tooltip="UNVERIFIED empirical phase lag scaling factor"
-                onChange={(val) => updateSettings({ asfMillingtonScale: val })}
-              />
-              <div className="text-[10px] px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] flex items-center justify-between">
-                <span>Status: UNVERIFIED parameter</span>
-                <span>Default: 0.0008</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Mode 3: Temporal ASF — Atmospheric Refractivity + Seasonal Drift */}
+      {/* Mode 2: Temporal ASF — Atmospheric Refractivity + Seasonal Drift */}
       {asfMode === 'temporal' && (
-        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-4 space-y-4 font-mono text-xs">
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-3 font-mono text-xs shadow-xs">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-semibold text-[var(--text-primary)]">
-              Temporal ASF — Atmospheric Refractivity
+              Temporal Atmospheric Refractivity
             </span>
             <InfoTooltip
               align="right"
@@ -706,19 +648,19 @@ export default function AsfPanel() {
           </div>
 
           {/* Split Provenance Status Bar */}
-          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1.5 text-[10px] flex items-center justify-between gap-2">
+          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-[10px] flex items-center justify-between gap-1">
             <span className="text-[var(--text-dim)] flex items-center gap-1">
-              <span>Smith &amp; Weintraub 1953</span>
+              <span>Smith &amp; Weintraub</span>
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] whitespace-nowrap">
                 SOURCED
               </span>
             </span>
             <span className="text-[var(--text-dim)] flex items-center gap-1">
-              <span>Song &amp; Son 2025</span>
+              <span>Song &amp; Son</span>
               <InfoTooltip
                 align="right"
                 title="Empirical Drift Calibration"
-                text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea. Not validated against other paths or seasons."
+                text="Drift coefficients calibrated from Song &amp; Son (2025), arXiv:2509.26020 — a single 12-day eLoran measurement campaign in Korea."
               />
               <span className="px-1.5 py-0.5 rounded font-bold bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] whitespace-nowrap">
                 UNVERIFIED
@@ -727,7 +669,7 @@ export default function AsfPanel() {
           </div>
 
           {/* Weather Inputs */}
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <Slider
               label={`Temperature: ${tempC.toFixed(1)} °C`}
               value={tempC}
@@ -769,7 +711,7 @@ export default function AsfPanel() {
               onChange={setDayOfYear}
             />
             <Slider
-              label={`Reference Path Length: ${temporalDist} km`}
+              label={`Reference Path: ${temporalDist} km`}
               value={temporalDist}
               min={50}
               max={1500}
@@ -781,7 +723,7 @@ export default function AsfPanel() {
           </div>
 
           {/* Live Preview Breakdown */}
-          <div className="bg-[var(--bg-subtle)] rounded-lg p-3 border border-[var(--border-subtle)] space-y-2">
+          <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--border-subtle)] space-y-2">
             <div className="text-[11px] font-bold text-[var(--text-secondary)]">Delay Breakdown at {temporalDist} km</div>
             <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
               <div className="bg-[var(--bg-canvas)] p-1.5 rounded border border-[var(--status-ok-border)]">
@@ -800,40 +742,40 @@ export default function AsfPanel() {
                 <div className="text-[9px] text-[var(--text-dim)] mt-0.5">UNVERIFIED</div>
               </div>
             </div>
-            <div className="border-t border-[var(--border-subtle)] pt-2 flex items-center justify-between text-[11px]">
+            <div className="border-t border-[var(--border-subtle)] pt-1.5 flex items-center justify-between text-[11px]">
               <span className="text-[var(--text-muted)]">Total Temporal ASF:</span>
               <span className="font-bold text-[var(--accent-eloran)] font-mono">
                 {temporalMeters.toFixed(2)} m ({(temporalResult.totalMicroseconds * 1000).toFixed(2)} ns)
               </span>
             </div>
             <div className="text-[9.5px] text-[var(--text-muted)] leading-tight">
-              N = {temporalResult.N.toFixed(1)} N-units &nbsp;|&nbsp; Δτ feeds reference table only — not wired to positioning solver in this version.
+              N = {temporalResult.N.toFixed(1)} N-units &nbsp;|&nbsp; Δτ feeds reference table only.
             </div>
           </div>
         </div>
       )}
 
-      {/* Mode 2: Safe AST Formula Override */}
+      {/* Mode 3: Safe AST Formula Override */}
       {asfMode === 'formula' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <label className="text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
+                <label className="text-[11px] font-semibold text-[var(--text-dim)] uppercase tracking-wider block">
                   Manual ASF Formula (AST)
                 </label>
                 <InfoTooltip text="Models arbitrary spatial land path delays in meters. Whitelisted variables: lat, lng, pi, e." />
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
+              <span className="text-[9.5px] font-mono px-1.5 py-0.5 rounded bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
                 UNVERIFIED
               </span>
             </div>
 
             <textarea
-              rows={3}
+              rows={2}
               value={formulaInput}
               onChange={(e) => handleFormulaChange(e.target.value)}
-              className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg p-2.5 text-xs text-[var(--text-primary)] font-mono focus:outline-hidden focus:border-[var(--accent-eloran-border)]"
+              className="w-full bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg p-2 text-xs text-[var(--text-primary)] font-mono focus:outline-hidden focus:border-[var(--accent-eloran-border)]"
               placeholder="e.g. 20 * sin((lat / 10) * pi)"
             />
 
@@ -861,7 +803,7 @@ export default function AsfPanel() {
                 <button
                   key={tmpl.name}
                   onClick={() => handleApplyTemplate(tmpl)}
-                  className="text-left px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] rounded-md text-xs text-[var(--text-secondary)] transition"
+                  className="text-left px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] rounded-md text-xs text-[var(--text-secondary)] transition cursor-pointer"
                 >
                   <div className="font-medium text-[var(--accent-eloran)] text-[11px]">{tmpl.name}</div>
                   <div className="text-[10px] text-[var(--text-muted)] font-mono truncate">{tmpl.formula}</div>
@@ -874,14 +816,14 @@ export default function AsfPanel() {
 
       {/* Differential Corrections Tuning */}
       {master && (
-        <div className="pt-2 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
+        <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3 space-y-2.5 font-mono text-xs shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider">
+            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px]">
               Differential eLoran (dLORAN)
             </span>
             <button
               onClick={handleAutoCalibrate}
-              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[var(--accent-eloran-subtle)] hover:bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]/30 rounded text-[11px] font-mono transition"
+              className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--accent-eloran-subtle)] hover:bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]/30 rounded text-[10.5px] font-mono transition cursor-pointer"
             >
               <Wrench size={11} /> Auto-Calibrate
             </button>
@@ -889,7 +831,7 @@ export default function AsfPanel() {
 
           <Toggle
             label="Enable Differential Corrections"
-            description="Broadcasts ASF calibration offsets to mobile receivers via DDS"
+            tooltip="Broadcasts ASF calibration offsets to mobile receivers via DDS"
             checked={master.diffCorrections?.enabled || false}
             onChange={(checked) =>
               updateStation(master.label, {
@@ -917,15 +859,15 @@ export default function AsfPanel() {
       )}
 
       {/* Empirical Field Trial Validation Benchmarks */}
-      <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3 font-mono text-xs">
-        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center gap-1.5 shrink-0">
+      <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2 font-mono text-xs">
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5">
             <Database size={13} className="text-[var(--accent-eloran)] shrink-0" />
-            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px] shrink-0">
+            <span className="font-semibold text-[var(--text-dim)] uppercase tracking-wider text-[11px]">
               Field Benchmarks
             </span>
             <span
-              className="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 font-semibold"
+              className="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold"
               style={{
                 background: 'var(--status-ok-subtle)',
                 borderColor: 'var(--status-ok-border)',
@@ -935,31 +877,30 @@ export default function AsfPanel() {
             >
               Tier 2 SOURCED
             </span>
-            <InfoTooltip
-              align="left"
-              title="Tier 2 Field Trial Validation Disclosure"
-              text="Validation in SIMULORAN is classified as Tier 2 (Published Empirical Summary Statistics). Published field test campaigns in navigation literature report multi-point summary statistics (e.g. 95% repeatable accuracy, RMSE, signal strength, and estimated jitter) rather than raw streaming TOA pulse time-series logs. Detailed methodology and known gaps are documented in docs/VALIDATION.md."
-            />
           </div>
-          <button
-            type="button"
-            data-testid="toggle-validation-benchmarks"
-            onClick={() => setShowValidation(!showValidation)}
-            className="text-[11px] hover:underline font-semibold cursor-pointer shrink-0 ml-auto"
-            style={{ color: 'var(--accent-eloran)' }}
-          >
-            {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
-          </button>
+          <div className="flex items-center gap-1">
+            <InfoTooltip
+              align="right"
+              title="Tier 2 Field Trial Validation"
+              text="Validation against published empirical summary statistics: 7-site Korean eLoran campaign (Rhee et al., 2021) and Maoming inland geodesic test (Gao et al., 2025). Detailed methodology in docs/VALIDATION.md."
+            />
+            <button
+              type="button"
+              data-testid="toggle-validation-benchmarks"
+              onClick={() => setShowValidation(!showValidation)}
+              className="text-[10.5px] px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--accent-eloran-border)] hover:text-[var(--accent-eloran)] font-semibold cursor-pointer transition"
+            >
+              {showValidation ? 'Hide Benchmarks' : 'View Benchmarks'}
+            </button>
+          </div>
         </div>
-        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-          Evaluated against 7-site Korean eLoran campaign (Rhee et al., 2021) and Maoming inland geodesic test (Gao et al., 2025).
-        </p>
         {showValidation && (
-          <div className="mt-3">
+          <div className="mt-2">
             <TrialValidationPanel compact={true} />
           </div>
         )}
       </div>
+
       {fresnelModalData && (
         <FresnelProfileViewer
           profile={fresnelModalData.profile}
@@ -972,4 +913,3 @@ export default function AsfPanel() {
     </div>
   );
 }
-

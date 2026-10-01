@@ -210,7 +210,7 @@ export default function TrackingPanel() {
       </div>
 
       {/* Control Strip */}
-      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-xl p-3.5 space-y-3">
+      <div className="bg-[var(--bg-canvas)] border border-[var(--border-subtle)] rounded-lg p-2.5 space-y-2.5">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1.5">
             <button
@@ -292,23 +292,25 @@ export default function TrackingPanel() {
         </div>
       </div>
 
-      {/* Physics / Theory Callout */}
-      <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-[10px] space-y-1.5 text-[var(--text-dim)]">
-        <div className="font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-          <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-eloran)]" />
-          <span>Loran-C Zero-Crossing Tracking Loop Theory</span>
+      {/* Collapsible Physics / Theory Disclosure */}
+      <details className="p-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-[10px] text-[var(--text-dim)] group cursor-pointer">
+        <summary className="font-semibold text-[var(--text-secondary)] flex items-center justify-between outline-none select-none">
+          <div className="flex items-center gap-1.5">
+            <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-eloran)]" />
+            <span>Zero-Crossing Tracking Theory</span>
+          </div>
+          <span className="text-[9px] text-[var(--text-dim)] group-open:rotate-180 transition-transform">▼</span>
+        </summary>
+        <div className="mt-2 pt-2 border-t border-[var(--border-subtle)] space-y-1.5 leading-relaxed">
+          <p>
+            Loran-C receivers track the <strong>Standard Zero Crossing (SZC)</strong> at precisely 30 µs
+            (positive-going zero crossing of 3rd carrier cycle, ~50% peak amplitude, preceding skywaves by &gt; 35 µs).
+          </p>
+          <p>
+            Wrong-cycle selection shifts tracking by integer cycles (<strong>±10 µs</strong>), inducing an immediate range error of <strong>~2,998 meters</strong>.
+          </p>
         </div>
-        <p>
-          Loran-C receivers track the <strong>Standard Zero Crossing (SZC)</strong> at precisely 30 µs
-          (the positive-going zero crossing of the 3rd carrier cycle). At this instant, the groundwave pulse
-          amplitude is approximately 50% of peak, preceding ionospheric skywave arrival by &gt; 35 µs.
-        </p>
-        <p>
-          A wrong-cycle selection error shifts the tracking point by an integer multiple of the 100 kHz period
-          (<strong>±10 µs</strong>), inducing an immediate geometric range error of <strong>~2,998 meters</strong>{' '}
-          on that station baseline.
-        </p>
-      </div>
+      </details>
     </div>
   );
 }

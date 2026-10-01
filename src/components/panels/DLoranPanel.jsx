@@ -13,9 +13,9 @@ import {
 } from '../../lib/dLoran.js';
 
 const DLORAN_MONITOR_PRESETS = [
-  { id: 'rotterdam', name: 'Hook of Holland / Europort Monitor', lat: 51.980, lng: 4.120, chain: 'North Sea (6731)' },
-  { id: 'dover', name: 'Dover Harbor Reference Station', lat: 51.127, lng: 1.320, chain: 'Lessay / Anthorn (6731)' },
-  { id: 'incheon', name: 'Incheon Port Reference Station', lat: 37.452, lng: 126.598, chain: 'Korea (9930)' },
+  { id: 'rotterdam', name: 'Hook of Holland / Europort', lat: 51.980, lng: 4.120, chain: 'North Sea (6731)' },
+  { id: 'dover', name: 'Dover Harbor Station', lat: 51.127, lng: 1.320, chain: 'Lessay / Anthorn (6731)' },
+  { id: 'incheon', name: 'Incheon Port Station', lat: 37.452, lng: 126.598, chain: 'Korea (9930)' },
 ];
 
 export default function DLoranPanel() {
@@ -30,9 +30,9 @@ export default function DLoranPanel() {
   } = useSimulationStore();
 
   const [selectedMonitorPreset, setSelectedMonitorPreset] = useState('rotterdam');
-  const [spatialCorrKm, setSpatialCorrKm] = useState(DEFAULT_SPATIAL_CORR_DISTANCE_M / 1000); // 120 km
-  const [temporalCorrHours, setTemporalCorrHours] = useState(DEFAULT_TEMPORAL_CORR_TIME_SEC / 3600); // 8 h
-  const [simulatedTemporalShiftUs, setSimulatedTemporalShiftUs] = useState(1.4); // 1.4 us atmospheric/weather shift
+  const [spatialCorrKm, setSpatialCorrKm] = useState(DEFAULT_SPATIAL_CORR_DISTANCE_M / 1000);
+  const [temporalCorrHours, setTemporalCorrHours] = useState(DEFAULT_TEMPORAL_CORR_TIME_SEC / 3600);
+  const [simulatedTemporalShiftUs, setSimulatedTemporalShiftUs] = useState(1.4);
 
   const activeMonitor = useMemo(() => {
     return DLORAN_MONITOR_PRESETS.find((m) => m.id === selectedMonitorPreset) || DLORAN_MONITOR_PRESETS[0];
@@ -54,11 +54,8 @@ export default function DLoranPanel() {
     const observedToasSec = {};
 
     allStations.forEach((st, i) => {
-      // Base nominal travel time ~ 1-3 ms
       const baseToa = 0.0015 + (i * 0.0004);
       nominalToasSec[st.label] = baseToa;
-
-      // Simulated unmodelled temporal shift (weather/ground conductivity delta)
       const perStationShift = simulatedTemporalShiftUs * 1e-6 * (1.0 + (i * 0.15) * (i % 2 === 0 ? 1 : -1));
       observedToasSec[st.label] = baseToa + perStationShift;
     });
@@ -94,20 +91,22 @@ export default function DLoranPanel() {
   const isEnabled = Boolean(settings.enableDLoran);
 
   return (
-    <div className="space-y-4 font-mono text-xs">
+    <div className="space-y-3 font-mono text-xs">
       {/* Header & Main Toggle */}
       <div
-        className="p-4 rounded-xl border space-y-3"
+        className="p-3 rounded-lg border space-y-2.5"
         style={{ background: 'var(--bg-canvas)', borderColor: 'var(--border-subtle)' }}
       >
-        <div className="flex items-center justify-between border-b pb-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
-          <div className="flex items-center gap-2">
-            <Radio size={16} style={{ color: 'var(--accent-eloran)' }} />
-            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+        <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="flex items-center gap-1.5">
+            <Radio size={15} style={{ color: 'var(--accent-eloran)' }} />
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
               Differential eLoran (d-Loran)
             </span>
+          </div>
+          <div className="flex items-center gap-1.5">
             <span
-              className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase"
+              className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
               style={{
                 background: isEnabled ? 'var(--status-ok-subtle)' : 'var(--bg-subtle)',
                 color: isEnabled ? 'var(--status-ok)' : 'var(--text-dim)',
@@ -116,13 +115,17 @@ export default function DLoranPanel() {
             >
               {isEnabled ? 'ACTIVE DDC' : 'STANDALONE'}
             </span>
+            <InfoTooltip
+              align="right"
+              title="Differential Loran (d-Loran)"
+              text="Broadcasts real-time temporal ASF and transmitter clock deltas from surveyed reference monitor stations via Eurofix or 9th-pulse channels, cancelling common-mode errors for harbor-entrance (<10 m) navigation."
+            />
           </div>
-          <InfoTooltip content="Differential eLoran broadcasts real-time temporal ASF and transmitter clock deltas from surveyed reference monitor stations via Eurofix or 9th-pulse channels, cancelling common-mode errors for harbor-entrance (<10 m) navigation." />
         </div>
 
         <Toggle
-          label="Enable Differential Corrections"
-          description="Apply real-time DDC/Eurofix delta corrections at the receiver with spatial and temporal decorrelation."
+          label="Differential Corrections"
+          description="Applies real-time DDC delta corrections with spatial and temporal decorrelation."
           checked={isEnabled}
           onChange={(checked) => updateSettings({ enableDLoran: checked })}
         />
@@ -130,58 +133,58 @@ export default function DLoranPanel() {
 
       {/* Monitor Station Selector & Status */}
       <div
-        className="p-4 rounded-xl border space-y-3"
+        className="p-3 rounded-lg border space-y-2.5"
         style={{ background: 'var(--bg-canvas)', borderColor: 'var(--border-subtle)' }}
       >
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
-            Reference Monitor Station
+          <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
+            Reference Monitor
           </label>
           <span className="text-[10px] flex items-center gap-1 font-semibold" style={{ color: 'var(--status-ok)' }}>
-            <Wifi size={12} /> DDC Broadcast 100 kHz
+            <Wifi size={11} /> 100 kHz DDC
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-2">
-          {DLORAN_MONITOR_PRESETS.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setSelectedMonitorPreset(m.id)}
-              className="p-2.5 rounded-lg border text-left transition cursor-pointer"
-              style={{
-                background: selectedMonitorPreset === m.id ? 'var(--accent-eloran-subtle)' : 'var(--bg-subtle)',
-                borderColor: selectedMonitorPreset === m.id ? 'var(--accent-eloran-border)' : 'var(--border-subtle)',
-                color: selectedMonitorPreset === m.id ? 'var(--accent-eloran)' : 'var(--text-primary)',
-              }}
-            >
-              <div className="font-bold text-[11px] truncate">{m.name}</div>
-              <div className="text-[10px] opacity-75 mt-0.5">{m.lat.toFixed(3)}°N, {m.lng.toFixed(3)}°E</div>
-              <div className="text-[9px] mt-1 text-[var(--text-dim)]">{m.chain}</div>
-            </button>
-          ))}
+        {/* Clean Monitor Dropdown Selector */}
+        <div className="space-y-1">
+          <select
+            value={selectedMonitorPreset}
+            onChange={(e) => setSelectedMonitorPreset(e.target.value)}
+            className="w-full text-xs p-2 rounded border bg-[var(--bg-surface)] text-[var(--text-primary)] border-[var(--border-subtle)] focus:border-[var(--accent-eloran)] outline-none cursor-pointer"
+          >
+            {DLORAN_MONITOR_PRESETS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} ({m.chain})
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center justify-between text-[10px] text-[var(--text-dim)] px-1">
+            <span>{activeMonitor.lat.toFixed(3)}°N, {activeMonitor.lng.toFixed(3)}°E</span>
+            <span>{activeMonitor.chain}</span>
+          </div>
         </div>
 
-        {/* Live Broadcast Telemetry Frame */}
+        {/* Live Broadcast Telemetry Strip */}
         {broadcastPacket && (
           <div
-            className="p-2.5 rounded-lg border space-y-1.5 text-[11px]"
+            className="p-2 rounded border space-y-1.5 text-[10px]"
             style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-subtle)' }}
           >
-            <div className="flex justify-between items-center text-[10px] border-b pb-1" style={{ borderColor: 'var(--border-subtle)' }}>
-              <span className="font-bold uppercase" style={{ color: 'var(--accent-eloran)' }}>
-                Eurofix / 9th-Pulse LDC Packet
+            <div className="flex justify-between items-center text-[9px] border-b pb-1" style={{ borderColor: 'var(--border-subtle)' }}>
+              <span className="font-bold uppercase tracking-wider" style={{ color: 'var(--accent-eloran)' }}>
+                Eurofix / 9th-Pulse Frame
               </span>
-              <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)]">
+              <span className="font-mono text-[9px] px-1 py-0.2 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] text-[var(--text-dim)]">
                 Seq: {broadcastPacket.seq} &bull; CRC-16: #{broadcastPacket.crc16}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+            <div className="grid grid-cols-3 gap-1.5 pt-0.5">
               {broadcastPacket.entries.map((e) => (
-                <div key={e.st} className="p-1.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] flex justify-between items-center">
-                  <span className="font-bold">Station {e.st}:</span>
-                  <span className={e.us >= 0 ? 'text-[var(--accent-loran-c)]' : 'text-[var(--accent-eloran)]'}>
-                    {e.us >= 0 ? `+${e.us.toFixed(2)}` : e.us.toFixed(2)} µs
+                <div key={e.st} className="p-1 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)] text-center">
+                  <span className="text-[9px] text-[var(--text-dim)] block">{e.st}</span>
+                  <span className={"font-bold " + (e.us >= 0 ? "text-[var(--accent-loran-c)]" : "text-[var(--accent-eloran)]")}>
+                    {e.us >= 0 ? "+" + e.us.toFixed(2) : e.us.toFixed(2)} µs
                   </span>
                 </div>
               ))}
@@ -193,95 +196,91 @@ export default function DLoranPanel() {
       {/* Receiver Differential Performance */}
       {userCorrectionResult && activeRx && (
         <div
-          className="p-4 rounded-xl border space-y-3"
+          className="p-3 rounded-lg border space-y-2.5"
           style={{ background: 'var(--bg-canvas)', borderColor: 'var(--border-subtle)' }}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>
-              Receiver Differential Reception: {activeRx.label}
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-bold text-[var(--text-primary)] truncate">
+              {activeRx.label}
             </span>
-            <span className="text-[10px] font-bold" style={{ color: isEnabled ? 'var(--status-ok)' : 'var(--text-dim)' }}>
-              Distance: {userCorrectionResult.distanceToMonitorKm} km
+            <span className="text-[10px] font-mono" style={{ color: isEnabled ? 'var(--status-ok)' : 'var(--text-dim)' }}>
+              Dist: {userCorrectionResult.distanceToMonitorKm} km
             </span>
           </div>
 
-          {/* Spatial & Temporal Weights */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-lg border space-y-1" style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-subtle)' }}>
-              <div className="flex justify-between text-[10px]">
-                <span style={{ color: 'var(--text-dim)' }}>Spatial Correlation:</span>
-                <span className="font-bold">{(userCorrectionResult.spatialWeight * 100).toFixed(1)}%</span>
+          {/* Spatial & Freshness Progress */}
+          <div className="grid grid-cols-2 gap-2 text-[10px]">
+            <div className="p-2 rounded border space-y-1" style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-subtle)' }}>
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--text-dim)' }}>Spatial Corr:</span>
+                <span className="font-bold">{(userCorrectionResult.spatialWeight * 100).toFixed(0)}%</span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-[var(--bg-canvas)] overflow-hidden">
+              <div className="h-1 w-full rounded-full bg-[var(--bg-canvas)] overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[var(--accent-eloran)] transition-all"
                   style={{ width: `${Math.min(100, userCorrectionResult.spatialWeight * 100)}%` }}
                 />
               </div>
-              <span className="text-[9px] text-[var(--text-dim)] block">
-                Scale: {spatialCorrKm} km radius
-              </span>
+              <span className="text-[9px] text-[var(--text-dim)]">Radius: {spatialCorrKm} km</span>
             </div>
 
-            <div className="p-2.5 rounded-lg border space-y-1" style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-subtle)' }}>
-              <div className="flex justify-between text-[10px]">
-                <span style={{ color: 'var(--text-dim)' }}>Correction Freshness:</span>
-                <span className="font-bold">{(userCorrectionResult.temporalWeight * 100).toFixed(1)}%</span>
+            <div className="p-2 rounded border space-y-1" style={{ background: 'var(--bg-subtle)', borderColor: 'var(--border-subtle)' }}>
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--text-dim)' }}>Freshness:</span>
+                <span className="font-bold">{(userCorrectionResult.temporalWeight * 100).toFixed(0)}%</span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-[var(--bg-canvas)] overflow-hidden">
+              <div className="h-1 w-full rounded-full bg-[var(--bg-canvas)] overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[var(--status-ok)] transition-all"
                   style={{ width: `${Math.min(100, userCorrectionResult.temporalWeight * 100)}%` }}
                 />
               </div>
-              <span className="text-[9px] text-[var(--text-dim)] block">
-                Age: {userCorrectionResult.ageSec.toFixed(0)}s &bull; tau: {temporalCorrHours}h
-              </span>
+              <span className="text-[9px] text-[var(--text-dim)]">Age: {userCorrectionResult.ageSec.toFixed(0)}s</span>
             </div>
           </div>
 
-          {/* Accuracy Impact Comparison Badge */}
+          {/* Accuracy Impact Badge */}
           <div
-            className="p-3 rounded-lg border flex items-center justify-between"
+            className="p-2.5 rounded border flex items-center justify-between gap-2"
             style={{
               background: isEnabled ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-subtle)',
               borderColor: isEnabled ? 'var(--status-ok-border)' : 'var(--border-subtle)',
             }}
           >
-            <div className="flex items-center gap-2.5">
-              {isEnabled ? <ShieldCheck size={20} className="text-[var(--status-ok)] shrink-0" /> : <ShieldAlert size={20} className="text-[var(--text-dim)] shrink-0" />}
+            <div className="flex items-center gap-2">
+              {isEnabled ? <ShieldCheck size={16} className="text-[var(--status-ok)] shrink-0" /> : <ShieldAlert size={16} className="text-[var(--text-dim)] shrink-0" />}
               <div>
-                <span className="font-bold text-[11px] block" style={{ color: isEnabled ? 'var(--status-ok)' : 'var(--text-primary)' }}>
-                  {isEnabled ? 'Harbor-Entrance Grade Accuracy (< 10 m)' : 'Standard Standalone Positioning (~45 m)'}
+                <span className="font-bold text-[10px] block" style={{ color: isEnabled ? 'var(--status-ok)' : 'var(--text-primary)' }}>
+                  {isEnabled ? 'Harbor-Grade (< 10 m)' : 'Standalone (~45 m)'}
                 </span>
-                <span className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                <span className="text-[9px] text-[var(--text-dim)]">
                   {isEnabled
-                    ? `Estimated 2drms: ~${(userCorrectionResult.userCorrections?.M?.residualSigmaM * 2.45 || 4.2).toFixed(1)} m (Common-mode error canceled)`
-                    : 'Uncorrected seasonal ASF delay and transmitter clock offsets remain active.'}
+                    ? `Est. 2drms: ~${(userCorrectionResult.userCorrections?.M?.residualSigmaM * 2.45 || 4.2).toFixed(1)} m`
+                    : 'Uncorrected seasonal ASF active'}
                 </span>
               </div>
             </div>
             <span
-              className="text-[10px] font-bold px-2 py-1 rounded uppercase border"
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border shrink-0"
               style={{
                 background: isEnabled ? 'var(--status-ok-subtle)' : 'var(--bg-canvas)',
                 borderColor: isEnabled ? 'var(--status-ok-border)' : 'var(--border-subtle)',
                 color: isEnabled ? 'var(--status-ok)' : 'var(--text-dim)',
               }}
             >
-              {isEnabled ? 'CORRECTED' : 'UNCORRECTED'}
+              {isEnabled ? 'CORRECTED' : 'STANDALONE'}
             </span>
           </div>
         </div>
       )}
 
-      {/* Atmospheric / Seasonal Variation & Parameters Sliders */}
+      {/* Atmospheric & Channel Sliders */}
       <div
-        className="p-4 rounded-xl border space-y-3"
+        className="p-3 rounded-lg border space-y-2.5"
         style={{ background: 'var(--bg-canvas)', borderColor: 'var(--border-subtle)' }}
       >
-        <span className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--text-dim)' }}>
-          d-Loran Propagation & Channel Parameters
+        <span className="text-[10px] font-semibold uppercase tracking-wider block" style={{ color: 'var(--text-dim)' }}>
+          Atmospheric & Channel Parameters
         </span>
         <Slider
           label="Atmospheric Temporal Shift"

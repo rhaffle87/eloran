@@ -97,7 +97,7 @@ export default function TrajectoryPanel() {
 
     // Sync selected receiver position to start of trajectory
     if (selectedReceiver) {
-      updateStation('receiver', selectedReceiver, {
+      updateStation(selectedReceiver, {
         lat: startPos.lat,
         lng: startPos.lng,
       });
@@ -133,7 +133,7 @@ export default function TrajectoryPanel() {
       // 1. Move receiver on map
       const rxLabel = selectedReceiver || receivers[0]?.label;
       if (rxLabel) {
-        updateStation('receiver', rxLabel, {
+        updateStation(rxLabel, {
           lat: sample.lat,
           lng: sample.lng,
         });
@@ -262,7 +262,7 @@ export default function TrajectoryPanel() {
     const sample = sampleTrajectory(trajectory, targetSec);
     const rxLabel = selectedReceiver || receivers[0]?.label;
     if (rxLabel) {
-      updateStation('receiver', rxLabel, {
+      updateStation(rxLabel, {
         lat: sample.lat,
         lng: sample.lng,
       });
@@ -279,7 +279,7 @@ export default function TrajectoryPanel() {
     }
     const rxLabel = selectedReceiver || receivers[0]?.label;
     if (rxLabel) {
-      updateStation('receiver', rxLabel, {
+      updateStation(rxLabel, {
         lat: startPos.lat,
         lng: startPos.lng,
       });

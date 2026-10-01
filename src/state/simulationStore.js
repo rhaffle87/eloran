@@ -474,7 +474,9 @@ export const useSimulationStore = create((set, get) => {
     }
   },
 
-  updateStation: (label, updates) => {
+  updateStation: (typeOrLabel, labelOrUpdates, maybeUpdates) => {
+    const label = maybeUpdates !== undefined ? labelOrUpdates : typeOrLabel;
+    const updates = maybeUpdates !== undefined ? maybeUpdates : labelOrUpdates;
     set((state) => ({
       masters: state.masters.map((s) => (s.label === label ? { ...s, ...updates } : s)),
       slaves: state.slaves.map((s) => (s.label === label ? { ...s, ...updates } : s)),
@@ -493,6 +495,8 @@ export const useSimulationStore = create((set, get) => {
 
   setGridStatus: (gridStatus) => set({ gridStatus }),
   setContours: (contours) => set({ contours }),
+
+  recalculateFixes: () => get().evaluateReceivers(),
 
   // Calculates estimated position and integrity metrics for all receivers
   evaluateReceivers: () => {

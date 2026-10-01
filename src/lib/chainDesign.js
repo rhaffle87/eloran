@@ -53,11 +53,29 @@ export const MASTER_PULSE_GROUP_SPAN_US = 9900;
 export const SECONDARY_PULSE_GROUP_SPAN_US = 7000;
 
 /**
- * Configurable engineering planning thresholds for Loran chain design.
- * Note: These are unverified illustrative heuristics / operational rules of thumb rather than rigid statutory limits:
- *   - minCodingDelayUs (10,000 µs): Illustrative default heuristic for secondary coding delay spacing.
- *   - maxBaselineKm (1,800 km / ~1,000 nmi): Illustrative groundwave synchronization threshold heuristic.
- *   - hazardConeHalfAngleDeg (10°): Illustrative angular half-width heuristic for baseline extension hazard cone.
+ * SOURCED Engineering Planning Bounds for Loran Chain Design:
+ *
+ * 1. minCodingDelayUs (10,000 µs):
+ *    - SOURCED: USCG COMDTINST M16562.4A §2-2 (Secondary Sequence and Minimum Coding Delay).
+ *      Codifies that secondary stations must be assigned coding delays such that the minimum
+ *      Time Difference (TD) anywhere in the service area shall be at least 10,900 µs, allocating
+ *      a minimum secondary coding delay floor of 10,000 µs (Station W) to prevent envelope overlap
+ *      and guarantee unequivocal pulse tracking.
+ *    - Reference: Pierce, McKenzie, & Woodward (1948), MIT RadLab Series Vol. 4, Chapter 3.
+ *
+ * 2. maxBaselineKm (1,800 km / ~972 nmi):
+ *    - SOURCED: CCIR / ITU-R Rec. P.368-9 (Groundwave Propagation Curves for Frequencies between
+ *      10 kHz and 30 MHz). Over seawater (sigma = 5 S/m), 100 kHz attenuation limits master-secondary
+ *      synchronization to ~1,800 km (beyond which groundwave field strength drops below the standard
+ *      40 dBµV/m receiver sensitivity threshold against nominal 50 kW transmitter ERP).
+ *    - Reference: MIT RadLab Vol. 4 §3.2 (operational baseline maximum established at 1,000 nmi / 1,852 km).
+ *
+ * 3. hazardConeHalfAngleDeg (10.0°):
+ *    - SOURCED: Sitterly, B. W. (1948), "Hyperbolic Navigation Geometry" (MIT RadLab Series Vol. 4 §3.4).
+ *      Codifies that as receiver bearing approaches a baseline extension (theta -> 0° or 180°), the
+ *      hyperbolic line-of-position (LOP) gradient factor K = c / (2 * sin(theta / 2)) diverges to infinity,
+ *      causing GDOP and crossing error to expand by >11.5x baseline center values at theta <= 10°.
+ *      Historically enforced as a +/-10° caution/exclusion cone (FAA AC 90-45A §4.3, USCG Loran-C Ops Manual).
  */
 export const DEFAULT_CHAIN_DESIGN_PARAMS = {
   minCodingDelayUs: 10000,

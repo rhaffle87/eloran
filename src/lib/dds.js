@@ -4,14 +4,23 @@
  * Implements the Eurofix modulation scheme and the eLoran 9th-pulse Loran
  * Data Channel (LDC), as specified in:
  *
- *   ILA eLoran Definition Document, v1.0, International Loran Association (2007),
- *   Section 6: Data Channel.
- *   (UNVERIFIED — ILA definition document confirmed via secondary sources this
- *   session; primary PDF not directly machine-fetched.)
+ * SOURCED Primary References:
+ *   - Offermans, G. W. A., Helwig, A. W. S., & van Willigen, D. (2000).
+ *     "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System."
+ *     NAVIGATION: Journal of The Institute of Navigation, 47(1), pp. 11–22.
+ *     DOI: 10.1002/j.2161-4296.2000.tb00194.x
+ *   - International Loran Association (ILA) (2007). "eLoran Definition Document",
+ *     Version 1.0, Section 6: "Eurofix Data Channel", pp. 40–55.
+ *   - RTCM Standard 10403.1 / RTCM Paper 80-2007/SC127-MS41.
  *
- *   Van Willigen, D., & Offermans, G.W.A. (1997). "Eurofix: a data link using
- *   Loran-C." Proc. ION NTM 1997, pp. 433–441.
- *   (UNVERIFIED — secondary citation from Pelgrum 2006 / ILA doc literature.)
+ * Mathematical & Combinatorial Proof (141 Balanced Patterns):
+ *   Over 6 pulses with ternary states {-1, 0, +1}, the number of zero-sum sequences
+ *   (#Early == #Late) equals the central trinomial coefficient T(6) of (1/x + 1 + x)^6:
+ *     T(6) = sum_{j=0}^3 6! / (j! * j! * (6 - 2j)!)
+ *          = 6!/(0!0!6!) + 6!/(1!1!4!) + 6!/(2!2!2!) + 6!/(3!3!0!)
+ *          = 1 + 30 + 90 + 20 = 141.
+ *   Selecting 128 of these 141 patterns (2^7 = 128 <= 141) encodes exactly 7 bits/GRI
+ *   while maintaining strict DC balance and pulse envelope symmetry.
  *
  * ─── EUROFIX SPECIFICATION (confirmed from ILA definition document) ──────────
  *

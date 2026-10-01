@@ -156,7 +156,7 @@ export const useSimulationStore = create((set, get) => {
   settings: {
     solverMode: 'pseudorange', // 'pseudorange' (with b_rx clock bias) | 'tdoa' (hyperbolic)
     refractiveIndex: DEFAULT_REFRACTIVE_INDEX, // RTCM MPS: 1.000338, Handbook: 1.000284, China: 1.000315
-    enableSecondaryFactor: false, // UNVERIFIED: disabled by default due to 100 statute mile discontinuity
+    enableSecondaryFactor: false, // SOURCED: Brunavs (1977) continuous seawater model
     enableCycleSlips: false, // Boyce 2006 wrong-cycle selection (±10 µs / ~3 km error)
     cycleSlipModel: 'boyce-ratio', // 'boyce-ratio' (Boyce 2006) | 'austron-28' (New) | 'austron-42' (Old)
     snrDb: 18,

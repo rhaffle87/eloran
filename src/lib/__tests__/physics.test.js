@@ -10,6 +10,7 @@ import {
   isValidLngLat,
   SPEED_OF_LIGHT,
   computeSecondaryFactorSec,
+  computeBrunavsSecondaryFactorSec,
 } from '../geodesy.js';
 import {
   computeTDOAPair,
@@ -382,18 +383,21 @@ describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () =
     expect(diffSec * 1e6).toBeCloseTo(0.18, 1);
   });
 
-  it('computes Seawater Secondary Factor (SF) delay according to Brunavs / USCG empirical model', () => {
+  it('computes Seawater Secondary Factor (SF) delay according to Brunavs (1977) continuous physical model', () => {
     // 50 statute miles (~80.4 km)
     const d50sm = 50 * 1609.344;
-    const sf50 = computeSecondaryFactorSec(d50sm);
-    expect(sf50).toBeGreaterThan(0);
-    // Typical SF at 50 statute miles is ~0.27 microseconds
-    expect(sf50 * 1e6).toBeCloseTo(0.27, 1);
+    const sf50Brunavs = computeBrunavsSecondaryFactorSec(d50sm);
+    expect(sf50Brunavs).toBeGreaterThan(0);
+    // SOURCED Brunavs 1977 model delay at 50 sm is ~0.116 µs (~34.7 m phase correction)
+    expect(sf50Brunavs * 1e6).toBeCloseTo(0.12, 1);
 
-    // 200 statute miles (~321.8 km)
-    const d200sm = 200 * 1609.344;
-    const sf200 = computeSecondaryFactorSec(d200sm);
-    expect(sf200).toBeGreaterThan(sf50);
+    // Default computeSecondaryFactorSec uses Brunavs continuous model
+    const sf50Default = computeSecondaryFactorSec(d50sm);
+    expect(sf50Default).toBe(sf50Brunavs);
+
+    // Legacy USCG piecewise polynomial evaluated via optional model flag
+    const sf50Legacy = computeSecondaryFactorSec(d50sm, 'legacy');
+    expect(sf50Legacy * 1e6).toBeCloseTo(0.27, 1);
   });
 
   it('detects cycle slip and applies ±10 µs carrier period offset (~3 km)', () => {
@@ -443,21 +447,27 @@ describe('Standards & Advanced Physics: PF, SF, Cycle Slips & Pseudorange', () =
     expect(solution.gdop).toBeGreaterThan(0);
   });
 
-  it.fails('expects physical continuity of the Secondary Factor (SF) polynomial across the 100 statute mile boundary (expected failure until continuous coefficients are implemented)', () => {
+  it('verifies physical continuity of the SOURCED Brunavs (1977) Secondary Factor (SF) across the 100 statute mile boundary', () => {
     const sm100Meters = 100 * 1609.344;
-    // Evaluate just below 100 statute miles (short-range branch)
+    // Evaluate just below 100 statute miles
     const sfBelow = computeSecondaryFactorSec(sm100Meters - 1);
-    // Evaluate at/above 100 statute miles (long-range branch)
+    // Evaluate at/above 100 statute miles
     const sfAbove = computeSecondaryFactorSec(sm100Meters + 1);
 
     const sfBelowUs = sfBelow * 1e6;
     const sfAboveUs = sfAbove * 1e6;
     const jumpUs = Math.abs(sfBelowUs - sfAboveUs);
 
-    // A physically continuous model must have jump < 0.001 µs (< 0.3 m) across the 100 sm threshold.
-    // In the historical polynomial, this jump is ~0.236 µs (~71 m), which fails this assertion.
-    // Marked as it.fails: when continuous Brunavs coefficients are implemented, this will turn green.
-    expect(jumpUs).toBeLessThan(0.001);
+    // SOURCED Brunavs (1977) continuous closed-form model exhibits zero boundary step discontinuity (< 0.0001 µs)
+    expect(jumpUs).toBeLessThan(0.0001);
+  });
+
+  it('documents the ~0.236 µs historical step discontinuity in the legacy USCG piecewise polynomial', () => {
+    const sm100Meters = 100 * 1609.344;
+    const sfBelowLegacy = computeSecondaryFactorSec(sm100Meters - 1, 'legacy') * 1e6;
+    const sfAboveLegacy = computeSecondaryFactorSec(sm100Meters + 1, 'legacy') * 1e6;
+    const jumpUs = Math.abs(sfBelowLegacy - sfAboveLegacy);
+    expect(jumpUs).toBeCloseTo(0.236, 1);
   });
 });
 

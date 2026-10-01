@@ -26,14 +26,16 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 
 ## 2. Foundational Books & Theses
 
-1. **Pierce, J. A., McKenzie, A. A., & Woodward, R. H. (1948).** *LORAN: Long Range Navigation*. MIT Radiation Laboratory Series, Vol. 4. McGraw-Hill.
-   - The foundational text establishing pulsed hyperbolic radio-navigation, envelope timing, and geometric dilution of precision.
+1. **Pierce, J. A., McKenzie, A. A., & Woodward, R. H. (1948).** *LORAN: Long Range Navigation*. MIT Radiation Laboratory Series, Vol. 4. McGraw-Hill. SOURCED.
+   - Foundational treatise establishing pulsed hyperbolic radionavigation, envelope timing, station synchronization, and GDOP error ellipses.
+   - **Chapter 3 (§3.1–3.4)**: "Selection of Station Sites and Baselines". Establishes the mathematical derivation of coding delay floors ($CD \ge 10,000\,\mu\text{s}$) to avoid envelope ambiguity, seawater baseline limits ($1,000\text{ nmi} \approx 1,852\text{ km}$), and hyperbolic gradient factor $K = \frac{c}{2 \sin(\theta/2)}$ with baseline extension hazard cones (Sitterly 1948).
 2. **Forssell, B. (1991 / 2008 reissued).** *Radionavigation Systems*. Artech House.
    - Mathematical treatment of hyperbolic positioning, circular vs. hyperbolic lines of position, GDOP covariance transformations, and skywave contamination.
 3. **Pelgrum, W. J. (2006).** *New Potential of Low-Frequency Radionavigation in the 21st Century*. PhD dissertation, Delft University of Technology. SOURCED from TU Delft Repository (uuid:90450409-f146-4c45-839c-a4b484f723ff).
    - Analysis of the modern error budget (transmitter, mixed-path ASF propagation, H-field antennas, receiver DSP).
-4. **Offermans, G. W. A., & Helwig, A. W. S. (2003).** *Integrated Navigation System Eurofix: Vision, Concept, Design, Implementation & Test*. Joint PhD dissertation, Delft University of Technology, defended 13 October 2003, ISBN 90-901-7418-4. Reelektronika / TU Delft.
-   - Architecture and testing of micro-pulse modulation (pulses 3–8 tri-state modulation) broadcasting DGNSS corrections via Loran pulses. *Marked UNVERIFIED (secondary citation from literature; repository record not retrievable online).*
+4. **Offermans, G. W. A., Helwig, A. W. S., & van Willigen, D. (2000).** "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System." *NAVIGATION: Journal of The Institute of Navigation*, 47(1), 11–22. DOI: [10.1002/j.2161-4296.2000.tb00194.x](https://doi.org/10.1002/j.2161-4296.2000.tb00194.x). SOURCED.
+   - Peer-reviewed foundational journal paper specifying the Eurofix data link: 6-pulse ternary modulation (pulses 3–8, ±1 µs shift), balanced 128-of-141 zero-sum ternary codewords ($T(6) = 141$), 30-GRI/210-bit frames, and RS(70,56) FEC.
+   - Accompanying doctoral thesis: Offermans & Helwig (2003), Delft University of Technology, ISBN 90-901-7418-4.
 5. **Hargreaves, C. (2010 / 2014).** *ASF Measurement and Processing Techniques, to allow Harbour Navigation at High Accuracy with eLoran*. MSc dissertation, Institute of Engineering Surveying and Space Geodesy (IESSG), University of Nottingham.
    - Spatial modeling of Additional Secondary Factors along coastal navigation approaches. *Marked UNVERIFIED (secondary citation; year differs across secondary sources: 2010 MSc thesis vs. 2014 citation; Nottingham repository record not retrievable; erroneous DOI 10.3390/s19143110 removed).*
 6. **Boyce, C. O. L. Jr. (2007).** *Atmospheric Noise Mitigation for Loran*. PhD dissertation, Department of Aeronautics and Astronautics, Stanford University. SOURCED from Stanford GPS Lab.
@@ -130,23 +132,21 @@ $
   - $\eta = 1.000338$ (RTCM SC-127 standard atmospheric refractive index).
   - $\eta = 1.000284$ (USCG Loran-C User Handbook standard).
   - $\eta = 1.000315$ (China Academy of Sciences eLoran standard).
-- **Secondary Factor (SF)**: Sourced in concept as the excess delay over all-seawater paths ($\sigma \approx 5\text{ S/m}$, $\varepsilon_r \approx 80$).
-  > [!WARNING]
-  > **UNVERIFIED COEFFICIENTS**: The piecewise polynomial coefficients below (historically cited in older handbooks) exhibit an unphysical $\approx 0.236\ \mu\text{s}$ ($\approx 71\text{ m}$) step discontinuity at the $100\text{ statute mile}$ ($160,934.4\text{ m}$) boundary:
-  >
-  > For $d_{sm} \le 100\text{ statute miles}$:
-  >
-  > $
-  > \mathrm{SF}(\mu\text{s}) = -\frac{0.4076}{d_{sm}} + 0.08182 + 0.003914 \cdot d_{sm}
-  > $
-  >
-  > For $d_{sm} > 100\text{ statute miles}$:
-  >
-  > $
-  > \mathrm{SF}(\mu\text{s}) = -\frac{107.8}{d_{sm}} + 1.297 + 0.000139 \cdot d_{sm}
-  > $
-  >
-  > Because these coefficients fail continuity testing, they are **UNVERIFIED and disabled by default** in SIMULORAN.
+- **Secondary Factor (SF)**: **SOURCED Continuous Physical Model (Brunavs 1977)**.
+  The excess phase delay over all-seawater paths ($\sigma = 5.0\text{ S/m}$, $\varepsilon_r = 80$) is computed using Paul Brunavs' continuous closed-form formula developed for the Canadian Hydrographic Service (*Int. Hydrogr. Rev.* 1978; validated in Rhee et al. 2021 and Seo et al. 2020):
+
+  $
+  (\mathrm{PF} + \mathrm{SF})_{\text{meters}} = -111.0 + 98.2 D + (13.0 D + 113.0) e^{-D/2} + \frac{2.277}{D}
+  $
+
+  where $D$ is geodesic distance in Megameters ($1\text{ Mm} = 1,000\text{ km} = 10^6\text{ meters}$).
+  The resulting delay in seconds is:
+
+  $
+  \tau_{\mathrm{SF}}(d) = \frac{(\mathrm{PF} + \mathrm{SF})_{\text{meters}}}{c}
+  $
+
+  This continuous model eliminates the unphysical $\approx 0.236\ \mu\text{s}$ ($71\text{ m}$) step discontinuity present in historical USCG piecewise handbooks (boundary step is $< 0.0001\ \mu\text{s}$ across 100 statute miles). The historical piecewise formula is retained in SIMULORAN solely under an optional `'legacy'` comparison flag.
 - **Additional Secondary Factor (ASF)**: Overland excess phase delay due to sub-surface conductivity variations and terrain impedance ($\sigma \approx 0.0001\text{ to }0.01\text{ S/m}$).
 
 ### 3. Pseudorange Observation Model

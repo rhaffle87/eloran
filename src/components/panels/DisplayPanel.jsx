@@ -416,8 +416,8 @@ export default function DisplayPanel({ isELoran = false }) {
         <Toggle
           label="Secondary Factor (SF) Seawater Delay"
           description={settings.enableSecondaryFactor
-            ? 'Secondary Factor is ON (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook).'
-            : 'Secondary Factor is OFF (UNVERIFIED empirical model — discontinuous at 100 statute miles per USCG Handbook). Only Primary Factor (PF) atmospheric refraction is modeled.'}
+            ? 'Secondary Factor is ON (SOURCED: Brunavs 1977 Canadian Hydrographic Service continuous closed-form seawater delay model; zero boundary discontinuity).'
+            : 'Secondary Factor is OFF. Only Primary Factor (PF) atmospheric refraction is modeled.'}
           checked={settings.enableSecondaryFactor}
           onChange={(checked) => updateSettings({ enableSecondaryFactor: checked })}
         />

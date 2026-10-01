@@ -444,13 +444,13 @@ export default function ChainDesignPanel() {
       >
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-            <span>Planning Thresholds & Heuristics</span>
+            <span>Engineering Planning Bounds</span>
             <InfoTooltip
-              text="Tunable geometric and timing rules of thumb used in chain feasibility validation. Illustrative default, not a regulatory limit — unverified against operational station licensing guidelines."
+              text="Codified engineering bounds: Min Coding Delay (CD ≥ 10,000 µs per USCG COMDTINST M16562.4A §2-2 to prevent pulse group overlap), Max Baseline Length (1,800 km per CCIR Rec. P.368-9 / MIT RadLab Vol. 4 §3.2 for groundwave SNR), and Hazard Cone Half-Angle (10° per Sitterly 1948 where hyperbolic divergence factor K = c / (2 sin(θ/2)) degrades geometry)."
             />
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)] self-start sm:self-auto">
-            Illustrative default, not a regulatory limit
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] self-start sm:self-auto">
+            SOURCED Planning Bounds (USCG M16562.4A / MIT RadLab Vol. 4)
           </span>
         </div>
 

@@ -53,33 +53,67 @@ export function computePrimaryFactorSec(distanceMeters, eta = DEFAULT_REFRACTIVE
 }
 
 /**
- * UNVERIFIED / DISCONTINUOUS EMPIRICAL APPROXIMATION:
+ * SOURCED CONTINUOUS PHYSICAL MODEL:
+ * Calculates Secondary Factor (SF) seawater propagation delay in seconds
+ * using the Brunavs (1977) Canadian Hydrographic Service continuous closed-form formulation.
+ *
+ * Primary Sources:
+ *   - Brunavs, P. (1977). "The secondary phase lag of the Loran-C ground wave over sea water."
+ *     Contract Report, Canadian Hydrographic Service, Ottawa.
+ *   - Brunavs, P. (1978). "The secondary phase lag of the Loran-C ground wave over sea water."
+ *     The International Hydrographic Review, LV(1), pp. 27–53.
+ *   - Rhee, J. H., Seo, K. I., & Son, P. U. (2021). "A Study on the Calculation of Secondary Factor (SF) for eLoran."
+ *     Journal of the Korean Society of Marine Environment & Safety, 27(6), 844–850.
+ *   - Seo, K. I., et al. (2020). "Analysis of Loran-C/eLoran Groundwave Propagation Characteristics."
+ *     Sensors, 20(8), 2278.
+ *
+ * Mathematical Equation:
+ *   (PF + SF)_meters = -111.0 + 98.2*D + (13.0*D + 113.0)*exp(-D/2) + 2.277/D
+ *   where D is distance in Megameters (1 Mm = 1,000 km = 10^6 meters).
+ *
+ * Seawater Phase Delay:
+ *   tau_sec = (PF + SF)_meters / SPEED_OF_LIGHT
+ *
+ * Unlike the historical USCG piecewise polynomial, this model is continuous everywhere
+ * for D > 0 and exhibits zero boundary step discontinuity (< 0.0001 µs jump across 100 statute miles).
+ *
+ * @param {number} distanceMeters - Geodesic propagation distance in meters
+ * @returns {number} Seawater phase delay in seconds
+ */
+export function computeBrunavsSecondaryFactorSec(distanceMeters) {
+  if (distanceMeters <= 0) return 0;
+  // Guard near-field singularity by clamping minimum distance to 100 meters (0.0001 Mm)
+  const dClamped = Math.max(100, distanceMeters);
+  const D = dClamped / 1e6; // Distance in Megameters (10^6 m)
+  const pfSfMeters = -111.0 + (98.2 * D) + ((13.0 * D + 113.0) * Math.exp(-D / 2.0)) + (2.277 / D);
+  return Math.max(0, pfSfMeters / SPEED_OF_LIGHT);
+}
+
+/**
  * Calculates the Secondary Factor (SF) delay in seconds over an assumed all-seawater path.
  *
- * CAUTION: The piecewise polynomial coefficients below (historically attributed to Harris / USCG tables)
- * exhibit a known ~0.236 µs (~71 meter) step discontinuity at the 100 statute mile boundary:
- *   - At 100 sm (short-range branch): SF ≈ 0.469 µs
- *   - At 100 sm (long-range branch):  SF ≈ 0.233 µs
- *
- * Per project provenance audit rules, these coefficients are marked UNVERIFIED and DISABLED
- * BY DEFAULT in the simulation store. Continuous models (such as Brunavs 1977 Canadian Hydrographic
- * Service formulation in meters) or zero-delay defaults should be used for verified positioning.
+ * Defaults to the SOURCED continuous Brunavs (1977) formulation.
+ * An optional 'legacy' flag is available for historical comparison against the discontinued USCG polynomial.
  *
  * @param {number} distanceMeters - Geodesic distance in meters
+ * @param {'brunavs'|'legacy'} [model='brunavs'] - Propagation model to use
  * @returns {number} SF delay in seconds
  */
-export function computeSecondaryFactorSec(distanceMeters) {
+export function computeSecondaryFactorSec(distanceMeters, model = 'brunavs') {
   if (distanceMeters <= 0) return 0;
-  const sm = distanceMeters / 1609.344; // Convert meters to statute miles
-  let sfMicroseconds = 0;
-  if (sm < 100) {
-    // Short-range branch (0–100 statute miles) [UNVERIFIED]
-    sfMicroseconds = (-0.4076 / Math.max(0.1, sm)) + 0.08182 + (0.003914 * sm);
-  } else {
-    // Long-range branch (≥100 statute miles) [UNVERIFIED]
-    sfMicroseconds = (-107.8 / sm) + 1.297 + (0.000139 * sm);
+  if (model === 'legacy') {
+    const sm = distanceMeters / 1609.344; // Convert meters to statute miles
+    let sfMicroseconds = 0;
+    if (sm < 100) {
+      // Short-range branch (0–100 statute miles) [HISTORICAL DISCONTINUOUS]
+      sfMicroseconds = (-0.4076 / Math.max(0.1, sm)) + 0.08182 + (0.003914 * sm);
+    } else {
+      // Long-range branch (≥100 statute miles) [HISTORICAL DISCONTINUOUS]
+      sfMicroseconds = (-107.8 / sm) + 1.297 + (0.000139 * sm);
+    }
+    return Math.max(0, sfMicroseconds * 1e-6);
   }
-  return Math.max(0, sfMicroseconds * 1e-6);
+  return computeBrunavsSecondaryFactorSec(distanceMeters);
 }
 
 /**

@@ -598,13 +598,30 @@ export default function AsfPanel() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--status-warn-border)] space-y-1">
+                <div className="bg-[var(--bg-subtle)] rounded-lg p-2.5 border border-[var(--status-warn-border)] space-y-2">
                   <div className="flex items-center gap-1.5 text-[11px] text-[var(--status-warn)] font-semibold">
                     <AlertCircle size={13} />
                     <span>Path Outside Vector Bounds</span>
                   </div>
-                  <div className="text-[10px] text-[var(--text-muted)]">
-                    Tx or Rx is outside bundled vector polygons ({COASTLINE_MANIFEST.map(m => m.regionName).join(', ')}). Falling back to manual land-fraction ratio.
+                  <div className="text-[10px] text-[var(--text-muted)] leading-relaxed">
+                    Tx or Rx is outside bundled coastline vector regions ({Object.values(COASTLINE_MANIFEST || {}).map((m) => m.name.split('—')[0].trim()).join(', ')}).
+                  </div>
+                  <Slider
+                    label="Manual Land Fraction (Fallback)"
+                    value={Math.round((settings.asfLandFraction ?? 0.5) * 100)}
+                    onChange={(v) => updateSettings({ asfLandFraction: v / 100 })}
+                    min={0}
+                    max={100}
+                    step={5}
+                    unit="%"
+                    tooltip="Proportion of total Great-Circle distance over ground terrain vs sea water"
+                  />
+                  <div className="text-[10px] text-[var(--text-muted)] flex justify-between font-mono pt-1 border-t border-[var(--border-subtle)]">
+                    <span>Land: {((settings.asfLandFraction ?? 0.5) * 100).toFixed(0)}%</span>
+                    <span>Sea: {((1 - (settings.asfLandFraction ?? 0.5)) * 100).toFixed(0)}%</span>
+                    <span className="text-[var(--accent-eloran)] font-bold">
+                      ASF: {((settings.asfLandFraction ?? 0.5) * DEFAULT_MILLINGTON_SCALE).toFixed(1)} m
+                    </span>
                   </div>
                 </div>
               )

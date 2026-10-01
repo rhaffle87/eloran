@@ -135,6 +135,7 @@ export default function LoranC() {
       className="relative w-full h-full flex overflow-hidden"
       style={{ background: 'var(--bg-canvas)' }}
     >
+      <h1 className="sr-only">Loran-C Hyperbolic Multilateration Simulator</h1>
       {/* Map hero */}
       <div className="flex-1 relative h-full min-w-0">
         <MapView onMapClick={handleMapClick} isELoran={false} />

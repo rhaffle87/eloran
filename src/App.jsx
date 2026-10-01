@@ -1,3 +1,4 @@
+import SEOHead from './components/seo/SEOHead.jsx';
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
@@ -37,6 +38,7 @@ export default function App() {
       }`}
       style={{ background: 'var(--surface-base)', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
     >
+      <SEOHead />
       <EducationalDisclaimerBanner />
       <SystemCapabilityBanner />
       <MultiMasterWarningBanner masterCount={masterCount} />
@@ -51,6 +53,7 @@ export default function App() {
               <Route path="/eloran"     element={<ELoran />} />
               <Route path="/waveforms"  element={<Waveforms />} />
               <Route path="/learn"      element={<Learn />} />
+              <Route path="/theory"     element={<Navigate to="/learn" replace />} />
               <Route path="/about"      element={<About />} />
               <Route path="*"           element={<Navigate to="/" replace />} />
             </Routes>

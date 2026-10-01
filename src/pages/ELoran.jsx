@@ -158,6 +158,7 @@ export default function ELoran() {
       className="relative w-full h-full flex overflow-hidden"
       style={{ background: 'var(--bg-canvas)' }}
     >
+      <h1 className="sr-only">eLoran Precision Suite — Sovereign Assured PNT Testbed</h1>
       {/* Map hero */}
       <div className="flex-1 relative h-full min-w-0">
         <MapView onMapClick={handleMapClick} isELoran={true} />

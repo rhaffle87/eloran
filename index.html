@@ -38,7 +38,7 @@
     <meta name="theme-color" content="#09090b" />
 
     <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
+    <script id="simuloran-route-schema" type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -58,6 +58,21 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body class="antialiased font-sans min-h-screen transition-colors duration-200" style="background-color: var(--bg-canvas); color: var(--text-primary);">
+        <noscript>
+      <div style="padding: 2rem; max-width: 900px; margin: 0 auto; font-family: sans-serif; line-height: 1.6;">
+        <h1>SIMULORAN &mdash; Loran-C &amp; eLoran Hyperbolic Radionavigation Simulator</h1>
+        <p>SIMULORAN is a high-precision, web-native engineering simulator for 100 kHz Loran-C and eLoran terrestrial radionavigation systems. Designed for maritime navigators, aerospace engineers, and PNT researchers evaluating sovereign GNSS-resilient positioning, navigation, and timing solutions.</p>
+        <h2>Core Simulation Modules</h2>
+        <ul>
+          <li><a href="/loran-c"><strong>Loran-C Hyperbolic Positioning</strong></a>: Time Difference of Arrival (TDOA) multilateration, hyperbolic Lines of Position (LOP), baseline extension singularities, and real-time Geometric Dilution of Precision (GDOP) heatmaps.</li>
+          <li><a href="/eloran"><strong>eLoran Precision Suite</strong></a>: Additional Secondary Factor (ASF) spatial grid modeling using Millington mixed-path theory, Differential Loran (d-Loran) pseudorange corrections, 6-state Kinematic Extended Kalman Filtering (EKF), and GNSS/eLoran sensor fusion.</li>
+          <li><a href="/waveforms"><strong>100 kHz RF Waveform Lab</strong></a>: USCG standard pulse synthesis, 3rd Standard Zero Crossing (SZC) tracking, envelope-to-cycle ratio (ECR), phase code interval (PCI) sequences, and Boyce (2006) wrong-cycle tracking risk analysis.</li>
+          <li><a href="/learn"><strong>Radionavigation Theory &amp; Mathematical Formulations</strong></a>: Complete mathematical derivations for Brunavs (1977) seawater phase lag, Sommerfeld numerical distance, Millington groundwave conductivity, Bancroft closed-form TDOA, and Chi-square RAIM integrity monitoring.</li>
+          <li><a href="/about"><strong>System Specifications &amp; Empirical Provenance</strong></a>: Validation benchmarks against CheolJ (2020) Korean eLoran trials, ITU-R P.368 groundwave propagation standards, and USCG Loran-C specifications.</li>
+        </ul>
+        <p><em>Note: Interactive real-time simulation requires JavaScript enabled.</em></p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -21,6 +21,7 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ## 2. Documentation & Research Standards
 
+- [**WHITEPAPER.md**](docs/WHITEPAPER.md) — Comprehensive technical whitepaper & mathematical specification (Version 1.6.0) formalizing RF pulse physics, ellipsoidal geodesics, Millington mixed-path ASF, 6-state EKF tracking, and RAIM integrity.
 - [**VALIDATION.md**](docs/VALIDATION.md) — Empirical field trial benchmarks (Korean Nationwide eLoran Testbed 2021 & Maoming Inland Geodesic Test 2025), validation tiers, and verification harness.
 - [**REFERENCES.md**](docs/REFERENCES.md) — Sourced literature compendium of primary standards (USCG COMDTINST M16562.4A, Loran-C User Handbook, Peterson 2006, RTCM MPS, ITU-R P.368/P.832), foundational textbooks, dissertations (Pelgrum 2006, Offermans & Helwig 2003, Hargreaves 2010), and physics formulas.
 - [**PROVENANCE.md**](docs/PROVENANCE.md) — Provenance tracking, retrievable URLs/DOIs for all literature, and register of items marked UNVERIFIED.
@@ -56,6 +57,7 @@ simuloran/
 │   │   ├── terrainMasking.js    # ITU-R P.526 knife-edge obstacle diffraction & excess delay
 │   │   ├── trackingLoop.js      # PLL/DLL carrier tracking, SZC lock & Boyce cycle slip model
 │   │   ├── contours.js          # Marching squares 2D contouring + RDP simplification
+│   │   ├── scenarioPack.js      # Portable .simuloran.json schema validation & scenario packager
 │   │   ├── stations.js          # Station schema, validation, boundary guards, CSV/GeoJSON
 │   │   └── tiles.js             # Centralized tile provider config with offline radar fallback
 │   ├── workers/                 # Off-thread Web Workers for high-density compute
@@ -125,6 +127,13 @@ $$
 - **Vector Map Visualization**: Highlights clear paths in solid emerald green and obstructed links (>15 dB loss) in dashed high-visibility red.
 
 ---
+
+
+### 6. Portable Scenario Packaging & Mission Packs (.simuloran.json)
+- **Open Schema Specification**: Compliant with `https://simuloran.org/schema/mission-pack-v1.json`.
+- **Reproducible Testbeds**: Bundles transmitter chains (masters, secondaries, GRI, coding delays, coordinates), receivers, and environmental propagation physics into an importable/exportable JSON format.
+- **Built-in Benchmark Missions**: Includes sovereign eLoran flight trials (Korea 2021) and high-density maritime corridors (Dover TSS).
+- **1-Click Export & Drag-and-Drop Ingestion**: Built-in modal in the navigation bar supporting live JSON previews, clipboard copying, and file drag-and-drop validation.
 
 ## 5. Development & Testing
 

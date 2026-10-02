@@ -164,7 +164,7 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Locate primary RF waveform polyline
-    const polyline = page.locator('svg polyline').first();
+    const polyline = page.locator('svg.cursor-crosshair polyline, svg:not(.lucide) polyline').first();
     await expect(polyline).toBeVisible({ timeout: 10000 });
 
     const initialPoints = await polyline.getAttribute('points');

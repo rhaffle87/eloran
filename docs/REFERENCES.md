@@ -101,17 +101,17 @@ $$
 Where:
 - $t$: Time in microseconds ($\mu\text{s}$).
 - Carrier frequency: $f_0 = 100\text{ kHz} = 0.1\text{ cycles}/\mu\text{s}$ (carrier period $T_c = 10\ \mu\text{s}$).
-- When time $t_s$ is expressed in **seconds**:
+When time $t_s$ is expressed in **seconds**:
 
-  $$
-  \sin(2\pi \cdot f_0 \cdot t_s + PC) = \sin(2\pi \cdot 10^5 \cdot t_s + PC)
-  $$
+$$
+\sin(2\pi \cdot f_0 \cdot t_s + PC) = \sin(2\pi \cdot 10^5 \cdot t_s + PC)
+$$
 
-- Peak envelope amplitude occurs at $t = 65\ \mu\text{s}$:
+Peak envelope amplitude occurs at $t = 65\ \mu\text{s}$:
 
-  $$
-  \frac{d}{dt}\left(t^2 e^{-2t/65}\right) = \left(2t - \frac{2t^2}{65}\right) e^{-2t/65} = 0 \implies t = 65\ \mu\text{s}
-  $$
+$$
+\frac{d}{dt}\left(t^2 e^{-2t/65}\right) = \left(2t - \frac{2t^2}{65}\right) e^{-2t/65} = 0 \implies t = 65\ \mu\text{s}
+$$
 
 - Standard Zero Crossing (SZC): 3rd positive-going zero crossing at $t = 30\ \mu\text{s}$ (3 × 10 µs).
 - $PC$: Phase code ($0$ or $\pi$ radians).
@@ -122,29 +122,28 @@ $$
 t = \mathrm{PF} + \mathrm{SF} + \mathrm{ASF}
 $$
 
-- **Primary Factor (PF)**: Propagation delay through the standard atmosphere:
+**Primary Factor (PF)**: Propagation delay through the standard atmosphere:
 
-  $$
-  \mathrm{PF} = \frac{\eta \cdot d}{c}
-  $$
+$$
+\mathrm{PF} = \frac{\eta \cdot d}{c}
+$$
 
-  - $c = 299,792,458\text{ m/s}$ (vacuum speed of light).
+- $c = 299,792,458\text{ m/s}$ (vacuum speed of light).
   - $\eta = 1.000338$ (RTCM SC-127 standard atmospheric refractive index).
   - $\eta = 1.000284$ (USCG Loran-C User Handbook standard).
   - $\eta = 1.000315$ (China Academy of Sciences eLoran standard).
-- **Secondary Factor (SF)**: **SOURCED Continuous Physical Model (Brunavs 1977)**.
-  The excess phase delay over all-seawater paths ($\sigma = 5.0\text{ S/m}$, $\varepsilon_r = 80$) is computed using Paul Brunavs' continuous closed-form formula developed for the Canadian Hydrographic Service (*Int. Hydrogr. Rev.* 1978; validated in Rhee et al. 2021 and Seo et al. 2020):
+**Secondary Factor (SF)**: **SOURCED Continuous Physical Model (Brunavs 1977)**.
+The excess phase delay over all-seawater paths ($\sigma = 5.0\text{ S/m}$, $\varepsilon_r = 80$) is computed using Paul Brunavs' continuous closed-form formula developed for the Canadian Hydrographic Service (*Int. Hydrogr. Rev.* 1978; validated in Rhee et al. 2021 and Seo et al. 2020):
 
-  $$
-  (\mathrm{PF} + \mathrm{SF})_{\text{meters}} = -111.0 + 98.2 D + (13.0 D + 113.0) e^{-D/2} + \frac{2.277}{D}
-  $$
+$$
+(\mathrm{PF} + \mathrm{SF})_{\text{meters}} = -111.0 + 98.2 D + (13.0 D + 113.0) e^{-D/2} + \frac{2.277}{D}
+$$
 
-  where $D$ is geodesic distance in Megameters (1 Mm = 1,000 km = $10^6$ m).
-  The resulting delay in seconds is:
+where $D$ is geodesic distance in Megameters (1 Mm = 1,000 km = $10^6$ m). The resulting delay in seconds is:
 
-  $$
-  \tau_{\mathrm{SF}}(d) = \frac{(\mathrm{PF} + \mathrm{SF})_{\text{meters}}}{c}
-  $$
+$$
+\tau_{\mathrm{SF}}(d) = \frac{(\mathrm{PF} + \mathrm{SF})_{\text{meters}}}{c}
+$$
 
   This continuous model eliminates the unphysical ~0.236 µs (71 m) step discontinuity present in historical USCG piecewise handbooks (boundary step is < 0.0001 µs across 100 statute miles). The historical piecewise formula is retained in SIMULORAN solely under an optional `'legacy'` comparison flag.
 - **Additional Secondary Factor (ASF)**: Overland excess phase delay due to sub-surface conductivity variations and terrain impedance ($\sigma \approx 0.0001\text{ to }0.01\text{ S/m}$).
@@ -185,23 +184,23 @@ $$
 
 Dilution of precision metrics:
 
-- Horizontal Dilution of Precision:
+Horizontal Dilution of Precision:
 
-  $$
-  \mathrm{HDOP} = \sqrt{Q_{11} + Q_{22}}
-  $$
+$$
+\mathrm{HDOP} = \sqrt{Q_{11} + Q_{22}}
+$$
 
-- Time Dilution of Precision:
+Time Dilution of Precision:
 
-  $$
-  \mathrm{TDOP} = \sqrt{Q_{33}}
-  $$
+$$
+\mathrm{TDOP} = \sqrt{Q_{33}}
+$$
 
-- Geometric Dilution of Precision:
+Geometric Dilution of Precision:
 
-  $$
-  \mathrm{GDOP} = \sqrt{\mathrm{Tr}(Q)} = \sqrt{Q_{11} + Q_{22} + Q_{33}}
-  $$
+$$
+\mathrm{GDOP} = \sqrt{\mathrm{Tr}(Q)} = \sqrt{Q_{11} + Q_{22} + Q_{33}}
+$$
 
 ### 5. Measurement Noise & Cycle Slip Criteria
 

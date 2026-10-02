@@ -110,11 +110,12 @@ Simulates wrong-cycle selection where degraded SNR or skywave interference shift
 - **Hazard Coverage Overlay**: Automatically renders a 250 km hatched red loss-of-coverage exclusion circle centered on failed transmitters.
 
 ### 7. Multi-Sensor GNSS / eLoran BLUE Fusion & Error Ellipses
-- **Best Linear Unbiased Estimator (BLUE)**: Fuses independent eLoran and GNSS positioning solutions via inverse-covariance weighting:
+**Best Linear Unbiased Estimator (BLUE)**: Fuses independent eLoran and GNSS positioning solutions via inverse-covariance weighting:
 
-  $$
-  \mathbf{P}_{\text{fused}} = \left( \mathbf{P}_{\text{eLoran}}^{-1} + \mathbf{P}_{\text{GNSS}}^{-1} \right)^{-1}, \quad \hat{\mathbf{x}}_{\text{fused}} = \mathbf{P}_{\text{fused}} \left( \mathbf{P}_{\text{eLoran}}^{-1} \hat{\mathbf{x}}_{\text{eLoran}} + \mathbf{P}_{\text{GNSS}}^{-1} \hat{\mathbf{x}}_{\text{GNSS}} \right)
-  $$
+$$
+\mathbf{P}_{\text{fused}} = \left( \mathbf{P}_{\text{eLoran}}^{-1} + \mathbf{P}_{\text{GNSS}}^{-1} \right)^{-1}, \quad \hat{\mathbf{x}}_{\text{fused}} = \mathbf{P}_{\text{fused}} \left( \mathbf{P}_{\text{eLoran}}^{-1} \hat{\mathbf{x}}_{\text{eLoran}} + \mathbf{P}_{\text{GNSS}}^{-1} \hat{\mathbf{x}}_{\text{GNSS}} \right)
+$$
+
 - **2.45σ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
 - **Aviation Horizontal Protection Level (HPL)**: Continuous HPL calculation with real-time RNAV RNP 0.3 (556 m) and APV approach (40 m) alert limit threshold compliance gauges.
 

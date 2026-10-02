@@ -17,25 +17,26 @@ All core physics, timing models, geospatial transforms, and numerical solvers fr
 - Projections: EPSG:4326 (WGS84 Lat/Lng degrees) and EPSG:3857 (Spherical Mercator meters)
 
 ### 2.2 Geodesics & Distance
-- **Haversine Distance**:
 
-  $$
-  \Delta\sigma = 2 \arcsin \sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}
-  $$
+**Haversine Distance**:
 
-  $$
-  d = R \cdot \Delta\sigma
-  $$
+$$
+\Delta\sigma = 2 \arcsin \sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}
+$$
 
-- **Local Cartesian Projection** (for fast planar solver iterations around reference latitude $\phi_0$):
+$$
+d = R \cdot \Delta\sigma
+$$
 
-  $$
-  x = (\lambda - \lambda_0) \cdot \frac{\pi}{180} \cdot R \cos\left(\phi_0 \frac{\pi}{180}\right)
-  $$
+**Local Cartesian Projection** (for fast planar solver iterations around reference latitude $\phi_0$):
 
-  $$
-  y = (\phi - \phi_0) \cdot \frac{\pi}{180} \cdot R
-  $$
+$$
+x = (\lambda - \lambda_0) \cdot \frac{\pi}{180} \cdot R \cos\left(\phi_0 \frac{\pi}{180}\right)
+$$
+
+$$
+y = (\phi - \phi_0) \cdot \frac{\pi}{180} \cdot R
+$$
 
 ### 2.3 Signal Propagation & Arrival Timing (eLoran)
 For a station $i$ (master $M$ or secondary/slave $S$) emitting at time $t_{emit}$ to a receiver at $(\phi, \lambda)$:
@@ -47,13 +48,13 @@ $$
 Where:
 - Geometric Delay: $t_{prop} = \frac{d}{c}$
 - Station Emission/Coding Delay: $t_{offset}$ (e.g. secondary coding delays)
-- Clock Bias & Drift Model:
+**Clock Bias & Drift Model**:
 
-  $$
-  \Delta t_{clock}(t) = \text{biasSec} + \text{driftPerSec} \times t
-  $$
+$$
+\Delta t_{clock}(t) = \text{biasSec} + \text{driftPerSec} \times t
+$$
 
-  - **Cesium**: bias $\approx 10^{-9}\text{ s}$, drift $\approx 10^{-13}\text{ s/s}$
+- **Cesium**: bias $\approx 10^{-9}\text{ s}$, drift $\approx 10^{-13}\text{ s/s}$
   - **GPS-Disciplined**: bias $\approx 10^{-8}\text{ s}$, drift $\approx 10^{-12}\text{ s/s}$
   - **Local Quartz/OCXO**: bias $\approx 10^{-6}\text{ s}$, drift $\approx 10^{-8}\text{ s/s}$
 - **ASF (Additional Secondary Factor)**: Delay in meters caused by land-path conductivity and topography.
@@ -99,42 +100,42 @@ $$
 Iteration continues until $\|\Delta \mathbf{x}\| < 10^{-6}\text{ m}$ or $\text{iter} \ge 30$.
 
 ### 2.6 Covariance, GDOP & Horizontal Protection Level (HPL)
-- Residual variance:
+Residual variance:
 
-  $$
-  \sigma^2 = \frac{1}{\max(1, K - 2)} \sum_{k=1}^K r_k^2
-  $$
+$$
+\sigma^2 = \frac{1}{\max(1, K - 2)} \sum_{k=1}^K r_k^2
+$$
 
-- Error Covariance Matrix ($\text{m}^2$):
+Error Covariance Matrix ($\text{m}^2$):
 
-  $$
-  \mathbf{C} = \sigma^2 (J^T J)^{-1}
-  $$
+$$
+\mathbf{C} = \sigma^2 (J^T J)^{-1}
+$$
 
-- **GDOP (Geometric Dilution of Precision)**:
+**GDOP (Geometric Dilution of Precision)**:
 
-  $$
-  H = c \cdot J \quad (\text{unitless directional gradients})
-  $$
+$$
+H = c \cdot J \quad (\text{unitless directional gradients})
+$$
 
-  $$
-  \mathrm{GDOP} = \sqrt{\mathrm{Tr}\left((H^T H)^{-1}\right)}
-  $$
+$$
+\mathrm{GDOP} = \sqrt{\mathrm{Tr}\left((H^T H)^{-1}\right)}
+$$
   
-  $$
-  \mathrm{HDOP} = \sqrt{(H^T H)^{-1}_{11} + (H^T H)^{-1}_{22}}
-  $$
+$$
+\mathrm{HDOP} = \sqrt{(H^T H)^{-1}_{11} + (H^T H)^{-1}_{22}}
+$$
 
 - **HPL (Horizontal Protection Level)**:
   Let $\lambda_1$ be the maximum eigenvalue of the horizontal covariance $\mathbf{C}_{2 \times 2}$:
 
-  $$
-  \lambda_{1,2} = \frac{\mathrm{Tr}(\mathbf{C})}{2} \pm \sqrt{\left(\frac{\mathrm{Tr}(\mathbf{C})}{2}\right)^2 - \det(\mathbf{C})}
-  $$
+$$
+\lambda_{1,2} = \frac{\mathrm{Tr}(\mathbf{C})}{2} \pm \sqrt{\left(\frac{\mathrm{Tr}(\mathbf{C})}{2}\right)^2 - \det(\mathbf{C})}
+$$
 
-  $$
-  \mathrm{HPL} = 3 \sqrt{\max(0, \lambda_1)} \quad (3\sigma \approx 99.7\% \text{ integrity bound})
-  $$
+$$
+\mathrm{HPL} = 3 \sqrt{\max(0, \lambda_1)} \quad (3\sigma \approx 99.7\% \text{ integrity bound})
+$$
 
 ### 2.7 Marching Squares & Polyline Simplification
 - 2D scalar field evaluated over an $N_x \times N_y$ regular grid.
@@ -142,30 +143,31 @@ Iteration continues until $\|\Delta \mathbf{x}\| < 10^{-6}\text{ m}$ or $\text{i
 - Contours extracted as linked polylines and simplified via the Ramer–Douglas–Peucker (RDP) algorithm with perpendicular distance threshold $\epsilon$.
 
 ### 2.8 RF Signal Synthesis
-- Pulse Envelope (Raised Cosine / Hann):
 
-  $$
-  E(t) = \begin{cases} 0.5 \left(1 + \cos\left(\frac{\pi t}{T_p}\right)\right), & 0 \le t \le T_p \\ 0, & \text{otherwise} \end{cases}
-  $$
+**Pulse Envelope (Raised Cosine / Hann)**:
 
-- Full RF Carrier Synthesis:
+$$
+E(t) = \begin{cases} 0.5 \left(1 + \cos\left(\frac{\pi t}{T_p}\right)\right), & 0 \le t \le T_p \\ 0, & \text{otherwise} \end{cases}
+$$
 
-  $$
-  s(t) = E(t) \cdot \sin(2\pi f_0 t)
-  $$
+**Full RF Carrier Synthesis**:
+
+$$
+s(t) = E(t) \cdot \sin(2\pi f_0 t)
+$$
 
 - Group Repetition Interval (GRI): Periodic pulse bursts spaced by $GRI \times 10\,\mu\text{s}$ (e.g. GRI 8330 = $83.30\text{ ms}$).
 
 ### 2.9 GNSS-eLoran Fusion
-- Weighted least-squares fusion between eLoran estimated position $\mathbf{x}_E$ and simulated GNSS fix $\mathbf{x}_G$:
+Weighted least-squares fusion between eLoran estimated position $\mathbf{x}_E$ and simulated GNSS fix $\mathbf{x}_G$:
 
-  $$
-  \mathbf{x}_{\text{fused}} = w_E \mathbf{x}_E + w_G \mathbf{x}_G \quad (w_E = 0.6, w_G = 0.4)
-  $$
+$$
+\mathbf{x}_{\text{fused}} = w_E \mathbf{x}_E + w_G \mathbf{x}_G \quad (w_E = 0.6, w_G = 0.4)
+$$
   
-  $$
-  \mathbf{C}_{\text{fused}} = w_E^2 \mathbf{C}_E + w_G^2 \mathbf{C}_G
-  $$
+$$
+\mathbf{C}_{\text{fused}} = w_E^2 \mathbf{C}_E + w_G^2 \mathbf{C}_G
+$$
 
 ---
 

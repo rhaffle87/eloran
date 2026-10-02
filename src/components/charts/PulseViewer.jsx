@@ -870,6 +870,37 @@ export default function PulseViewer() {
               checked={settings.includeSkywave}
               onChange={(checked) => updateSettings({ includeSkywave: checked })}
             />
+            {settings.includeSkywave && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 pl-1 text-[11px] border-t border-[var(--border-subtle)]">
+                <span className="text-[var(--text-dim)] font-medium">Skywave Amp:</span>
+                {[0.2, 0.35, 0.5, 0.75].map((ratio) => (
+                  <button
+                    key={ratio}
+                    type="button"
+                    onClick={() => updateSettings({ skywaveAmpRatio: ratio })}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition ${(settings.skywaveAmpRatio ?? 0.35) === ratio ? 'bg-[var(--accent-eloran)] text-white font-bold' : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:bg-[var(--bg-canvas)]'}`}
+                  >
+                    {(ratio * 100).toFixed(0)}%
+                  </button>
+                ))}
+                <span className="text-[var(--text-dim)] ml-2 font-medium">Delay:</span>
+                {[
+                  { label: 'Auto (Geo)', val: 0 },
+                  { label: '0.5 ms', val: 0.5 },
+                  { label: '1.0 ms', val: 1.0 },
+                  { label: '1.5 ms', val: 1.5 },
+                ].map((d) => (
+                  <button
+                    key={d.label}
+                    type="button"
+                    onClick={() => updateSettings({ skywaveDelayMs: d.val })}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition ${(settings.skywaveDelayMs ?? 0) === d.val ? 'bg-[var(--accent-eloran)] text-white font-bold' : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:bg-[var(--bg-canvas)]'}`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <Toggle
               label="SZC & Peak Probes"
               description="Show 30 µs zero-crossing and 65 µs peak reference lines"

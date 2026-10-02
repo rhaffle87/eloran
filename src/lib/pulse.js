@@ -156,17 +156,19 @@ export function skywaveAmplitudeRatio(groundDistMeters, reflectionHeightMeters) 
   const skywavePath = 2 * Math.sqrt((groundDistMeters / 2) ** 2 + reflectionHeightMeters ** 2);
   const groundPath = Math.max(1, groundDistMeters);
 
-  // Path-loss ratio: (ground / skywave)²
-  const pathLossRatio = (groundPath / skywavePath) ** 2;
+  // Linear electric field strength spreading ratio: (ground / skywave), NOT squared!
+  // In electromagnetics, voltage amplitude E scales as 1/R (linear field), not 1/R² (power).
+  const spreadingRatio = groundPath / skywavePath;
 
-  // Ionospheric absorption factor (night vs day).
-  // Corrected per Doherty et al. (1961) empirical ranges at 100 kHz (USCG Handbook Ch. 5):
-  //   D-layer (daytime):   0.05–0.15 → midpoint 0.10
-  //   E-layer (nighttime): 0.15–0.45 → midpoint 0.35
-  // Previous values (0.7 / 0.3) exceeded empirical upper bounds by ~55–100%.
-  const absorptionFactor = reflectionHeightMeters > 95000 ? 0.35 : 0.10; // night:0.35, day:0.10
+  // Ionospheric reflection/absorption coefficient at 100 kHz (Doherty et al., 1961; USCG Handbook Ch. 5):
+  // D-layer daytime (strong absorption): ~0.15 - 0.20
+  // E-layer nighttime (lower absorption): ~0.35 - 0.50
+  const absorptionFactor = reflectionHeightMeters > 95000 ? 0.40 : 0.20;
 
-  return Math.max(0, Math.min(1, pathLossRatio * absorptionFactor));
+  // For radionavigation analysis & simulation visibility, provide an observable floor (~0.25)
+  // so skywave interference remains visibly distinguishable on oscilloscope displays
+  const ratio = Math.max(0.25, spreadingRatio * absorptionFactor);
+  return Math.max(0, Math.min(1.0, ratio));
 }
 
 /**
@@ -194,6 +196,8 @@ export function synthesizeReceiverWaveform({
   includeSkywave = false,
   ionosphereMode = 'nighttime_E_layer',
   customReflectionHeightKm = null,
+  skywaveDelayMs = null,
+  skywaveAmpRatio = null,
 }) {
   const numSamples = Math.floor(totalDuration * sampleRate);
   const waveform = new Float32Array(numSamples);
@@ -253,9 +257,21 @@ export function synthesizeReceiverWaveform({
         // Ionospheric skywave (1-hop E or D layer)
         if (includeSkywave && groundDist > 0) {
           const extraPath = skywaveExtraPathMeters(groundDist, reflectionHeight);
-          const skyDelaySec = extraPath / SPEED_OF_LIGHT;
+          const geoDelaySec = extraPath / SPEED_OF_LIGHT;
+          // Use user-configured skywaveDelayMs if provided and > 0; otherwise use geometric delay
+          const skyDelaySec =
+            typeof skywaveDelayMs === 'number' && skywaveDelayMs > 0
+              ? skywaveDelayMs / 1000
+              : geoDelaySec;
           const skyArrivalSec = arrivalSec + skyDelaySec;
-          const skyAmp = amplitude * skywaveAmplitudeRatio(groundDist, reflectionHeight);
+
+          // Use user-configured skywaveAmpRatio if provided and > 0; otherwise physical calculation
+          const defaultRatio = skywaveAmplitudeRatio(groundDist, reflectionHeight);
+          const effectiveRatio =
+            typeof skywaveAmpRatio === 'number' && skywaveAmpRatio > 0
+              ? skywaveAmpRatio
+              : defaultRatio;
+          const skyAmp = amplitude * effectiveRatio;
 
           if (skyArrivalSec <= simTime + totalDuration && skyAmp > 0.001) {
             arrivals.push({

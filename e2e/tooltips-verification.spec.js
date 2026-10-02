@@ -115,12 +115,12 @@ test.describe('Sidebar Tooltips & Decluttering Verification Suite', () => {
     await layersTab.click();
     await page.waitForTimeout(200);
 
-    // Item 1: Secondary Factor (SF) Toggle UNVERIFIED caveat tooltip
-    const sfTooltipInitial = page.locator('span[role="tooltip"][aria-label*="discontinuous at 100 statute miles per USCG Handbook"]').first();
+    // Item 1: Secondary Factor (SF) Toggle tooltip (SOURCED Brunavs 1977 model)
+    const sfTooltipInitial = page.locator('span[role="tooltip"][aria-label*="Secondary Factor is OFF"]').first();
     await expect(sfTooltipInitial).toBeVisible();
     await sfTooltipInitial.hover();
     await page.waitForTimeout(150);
-    const sfPopupInitial = page.locator('span[role="tooltip"] span.absolute').filter({ hasText: /discontinuous at 100 statute miles per USCG Handbook/i });
+    const sfPopupInitial = page.locator('span[role="tooltip"] span.absolute').filter({ hasText: /Secondary Factor is OFF/i });
     await expect(sfPopupInitial.first()).toBeVisible();
 
     // Toggle SF ON to verify dynamic active tooltip
@@ -128,7 +128,7 @@ test.describe('Sidebar Tooltips & Decluttering Verification Suite', () => {
     if (await sfLabel.isVisible()) {
       await sfLabel.click();
       await page.waitForTimeout(150);
-      const sfTooltipActive = page.locator('span[role="tooltip"][aria-label*="Secondary Factor is ON (UNVERIFIED empirical model"]').first();
+      const sfTooltipActive = page.locator('span[role="tooltip"][aria-label*="Secondary Factor is ON"]').first();
       await expect(sfTooltipActive).toBeVisible();
     }
 

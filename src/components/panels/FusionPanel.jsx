@@ -7,6 +7,7 @@ import { useSimulationStore } from '../../state/simulationStore.js';
 import Toggle from '../ui/Toggle.jsx';
 import InfoTooltip from '../ui/Tooltip.jsx';
 import StanfordDiagram from '../charts/StanfordDiagram.jsx';
+import ComparativeAnalysisPanel from './ComparativeAnalysisPanel.jsx';
 import {
   computeJammerToSignalRatio,
   computeEloranJammingAdvantage,
@@ -127,15 +128,16 @@ export default function FusionPanel() {
           <InfoTooltip
             align="right"
             title="BLUE Kalman & EW Suite"
-            text="Inverse-covariance weighting, Stanford safety containment matrix, and Electronic Warfare anti-spoofing countermeasures."
+            text="Turf.js Great-Circle coastline segmentation against 10m Natural Earth vector polygons, inverse-covariance weighting, Stanford safety containment matrix, and Electronic Warfare anti-spoofing countermeasures."
           />
         </div>
 
         {/* Sub-Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-[var(--bg-subtle)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs font-mono">
+        <div className="grid grid-cols-4 gap-1 bg-[var(--bg-subtle)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs font-mono">
           {[
             ['overview', 'Overview'],
-            ['stanford', 'Stanford Matrix'],
+            ['comparative', 'Comparative'],
+            ['stanford', 'Stanford'],
             ['ew', 'EW Defense'],
           ].map(([tab, label]) => (
             <button
@@ -173,6 +175,11 @@ export default function FusionPanel() {
             ))}
           </select>
         </div>
+      )}
+
+      {/* TAB: COMPARATIVE ANALYSIS */}
+      {activeTab === 'comparative' && (
+        <ComparativeAnalysisPanel />
       )}
 
       {/* TAB 1: OVERVIEW & SENSOR FUSION */}

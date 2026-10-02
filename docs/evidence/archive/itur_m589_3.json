@@ -1,0 +1,18 @@
+{
+  "id": "itur_m589_3",
+  "citation": "ITU-R M.589-3 (2001)",
+  "title": "Technical characteristics of methods of data transmission and interference protection for radionavigation systems in the frequency band between 70 and 130 kHz",
+  "recommendation": "ITU-R M.589-3",
+  "organization": "International Telecommunication Union",
+  "series": "M Series: Mobile, radiodetermination, amateur and related satellite services",
+  "date": "2001-02",
+  "upstreamUrl": "https://www.itu.int/rec/R-REC-M.589-3-200102-I/en",
+  "evidenceStrings": [
+    "Technical characteristics of methods of data transmission and interference protection for radionavigation systems in the frequency band between 70 and 130 kHz",
+    "Recommendation ITU-R M.589-3",
+    "International Telecommunication Union"
+  ],
+  "description": "Standardizes Loran-C / eLoran Eurofix data broadcast, 9th/10th pulse modulation masks, and CW cross-rate interference protection.",
+  "verificationType": "OFFICIAL_TELECOM_STANDARD",
+  "status": "AUTHENTICATED"
+}

@@ -186,6 +186,7 @@ export const useSimulationStore = create((set, get) => {
     includeSkywave: false,
     skywaveDelayMs: 1.5,
     skywaveAmpRatio: 0.3,
+    skywaveHourOfDay: 0.0, // Local solar hour: 0.0 (midnight) to 12.0 (solar noon)
     gnssStatus: 'nominal', // 'nominal' | 'jammed' | 'spoofed' | 'outage'
     gnssStdDevMeters: 8,
     gnssJammingNoiseMeters: 75,

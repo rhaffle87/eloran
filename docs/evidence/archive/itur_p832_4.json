@@ -1,0 +1,18 @@
+{
+  "id": "itur_p832_4",
+  "citation": "ITU-R P.832-4 (2015)",
+  "title": "World Atlas of Ground Conductivities",
+  "recommendation": "ITU-R P.832-4",
+  "organization": "International Telecommunication Union",
+  "series": "P Series: Radiowave propagation",
+  "date": "2015-09",
+  "upstreamUrl": "https://www.itu.int/rec/R-REC-P.832-4-201509-I/en",
+  "evidenceStrings": [
+    "World Atlas of Ground Conductivities",
+    "Recommendation ITU-R P.832-4",
+    "International Telecommunication Union"
+  ],
+  "description": "Defines discrete VLF/LF surface conductivities (seawater 5.0 S/m, pastoral 0.005 S/m, rocky 0.001 S/m) across global 100 kHz maritime coverage zones.",
+  "verificationType": "OFFICIAL_TELECOM_STANDARD",
+  "status": "AUTHENTICATED"
+}

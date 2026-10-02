@@ -18,6 +18,7 @@ describe('Receiver Tracking Loop Simulation', () => {
     expect(loop.history).toEqual([]);
     expect(loop.slipsCount).toBe(0);
     expect(loop.wrongCycleProb).toBeGreaterThanOrEqual(0);
+    expect(loop.skywave).toBeNull();
   });
 
   it('computes tracking sigma accurately per Rhee et al. (2021)', () => {
@@ -107,5 +108,83 @@ describe('Receiver Tracking Loop Simulation', () => {
     loop = reacquireTrackingLoop(loop);
     expect(loop.state).toBe(TRACKING_STATES.ACQUIRING);
     expect(loop.lockConfidence).toBeLessThan(1.0);
+  });
+
+  describe('Skywave & Ionospheric Tracking Degradation', () => {
+    it('populates skywave interference telemetry when skywave options provided', () => {
+      let loop = createTrackingLoop();
+      // Step with distant nighttime skywave (1200 km, 00:00 midnight)
+      loop = stepTrackingLoop(loop, 20.0, {
+        skywaveDistKm: 1200,
+        hourOfDay: 0.0,
+      }, () => 0.5);
+
+      expect(loop.skywave).not.toBeNull();
+      expect(loop.skywave.groundDistKm).toBe(1200);
+      expect(loop.skywave.isNight).toBe(true);
+      expect(typeof loop.skywave.ssrDb).toBe('number');
+      expect(typeof loop.skywave.timingShiftUs).toBe('number');
+      expect(['CRITICAL', 'HIGH', 'MODERATE', 'LOW', 'NONE']).toContain(loop.skywave.cycleSlipRisk);
+    });
+
+    it('tracks skywave zero-crossing phase shift in closed-loop PLL', () => {
+      let loop = createTrackingLoop();
+      // Lock first under nominal daylight
+      for (let i = 0; i < 4; i++) {
+        loop = stepTrackingLoop(loop, 25.0, {}, () => 0.5);
+      }
+      expect(loop.state).toBe(TRACKING_STATES.LOCKED);
+
+      const prePhase = loop.phaseOffsetUs;
+
+      // Now inject strong nighttime skywave with precomputed shift
+      const mockSkywave = {
+        ssrDb: -5.0,
+        ampRatio: 1.77,
+        cycleSlipRisk: 'CRITICAL',
+        cycleSlipProb: 0.65,
+        timingShiftUs: 0.28,
+        tauSkyUs: 42.0,
+        groundDistKm: 1300,
+        isNight: true,
+        phaseErrorDeg: 10.0,
+      };
+
+      for (let i = 0; i < 30; i++) {
+        loop = stepTrackingLoop(loop, 20.0, { skywaveInterference: mockSkywave }, () => 0.5);
+      }
+
+      // Phase offset must have tracked towards mockSkywave.timingShiftUs
+      expect(loop.phaseOffsetUs).toBeGreaterThan(prePhase);
+      expect(loop.phaseOffsetUs).toBeCloseTo(0.28, 1);
+    });
+
+    it('induces cycle slip when severe skywave elevates slip probability', () => {
+      let loop = createTrackingLoop();
+      for (let i = 0; i < 4; i++) {
+        loop = stepTrackingLoop(loop, 25.0, {}, () => 0.5);
+      }
+      expect(loop.state).toBe(TRACKING_STATES.LOCKED);
+
+      // Severe skywave: cycleSlipProb = 0.8
+      const severeSkywave = {
+        ssrDb: -8.0,
+        ampRatio: 2.5,
+        cycleSlipRisk: 'CRITICAL',
+        cycleSlipProb: 0.8,
+        timingShiftUs: 0.35,
+        tauSkyUs: 38.0,
+        groundDistKm: 1400,
+        isNight: true,
+        phaseErrorDeg: 12.0,
+      };
+
+      // With rng returning 0.05 (well below pSlipPerGri ~ 0.8 * 0.15 = 0.12), a slip must trigger
+      loop = stepTrackingLoop(loop, 25.0, { skywaveInterference: severeSkywave }, () => 0.05);
+
+      expect(loop.state).toBe(TRACKING_STATES.SLIPPED);
+      expect(loop.slipsCount).toBeGreaterThan(0);
+      expect([2, 4]).toContain(loop.cycleIndex);
+    });
   });
 });

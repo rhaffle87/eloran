@@ -295,8 +295,6 @@ export default function Learn() {
                   className="w-full py-2 px-3 rounded-lg text-xs font-mono font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
                   title={`Open ${c.title} scenario in simulator`}
                   aria-label={`Open ${c.title} scenario in simulator`}
-                  title={`Open ${c.title} scenario in simulator`}
-                  aria-label={`Open ${c.title} scenario in simulator`}
                   style={{
                     background: `var(${c.accentVar}-subtle, var(--accent-eloran-subtle))`,
                     color: `var(${c.accentVar}, var(--accent-eloran))`,

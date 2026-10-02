@@ -30,26 +30,32 @@ export default function Slider({
   onChange,
   disabled = false,
   tooltip = '',
+  ariaLabel,
 }) {
   const displayValue = formatSliderValue(value, step);
   const displayUnit = unit ? ` ${unit}` : '';
-  const testId = `slider-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+  const safeLabel = typeof label === 'string' && label.trim() ? label : (ariaLabel || 'slider');
+  const testId = `slider-${safeLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
   return (
     <div className={`space-y-1.5 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
-      <div className="flex justify-between items-center text-xs">
-        <div className="flex items-center gap-1.5">
-          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-            {label}
+      {(label || tooltip) ? (
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex items-center gap-1.5">
+            {label && (
+              <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                {label}
+              </span>
+            )}
+            {tooltip && <InfoTooltip content={tooltip} align="left" size={12} />}
+          </div>
+          <span
+            className="font-mono px-1.5 py-0.5 rounded text-[11px]"
+            style={{ color: 'var(--accent-eloran)', background: 'var(--accent-eloran-subtle)' }}
+          >
+            {displayValue}{displayUnit}
           </span>
-          {tooltip && <InfoTooltip content={tooltip} align="left" size={12} />}
         </div>
-        <span
-          className="font-mono px-1.5 py-0.5 rounded text-[11px]"
-          style={{ color: 'var(--accent-eloran)', background: 'var(--accent-eloran-subtle)' }}
-        >
-          {displayValue}{displayUnit}
-        </span>
-      </div>
+      ) : null}
       <input
         type="range"
         aria-label={label}

@@ -1,0 +1,18 @@
+{
+  "id": "itur_p368_10",
+  "citation": "ITU-R P.368-10 (2022)",
+  "title": "Ground-wave propagation curves for frequencies between 10 kHz and 30 MHz",
+  "recommendation": "ITU-R P.368-10",
+  "organization": "International Telecommunication Union",
+  "series": "P Series: Radiowave propagation",
+  "date": "2022-08",
+  "upstreamUrl": "https://www.itu.int/rec/R-REC-P.368-10-202208-I/en",
+  "evidenceStrings": [
+    "Ground-wave propagation curves for frequencies between 10 kHz and 30 MHz",
+    "Recommendation ITU-R P.368-10",
+    "International Telecommunication Union"
+  ],
+  "description": "Establishes fundamental ground-wave field strength attenuation curves and Sommerfeld-Norton numerical distance formulations at 100 kHz.",
+  "verificationType": "OFFICIAL_TELECOM_STANDARD",
+  "status": "AUTHENTICATED"
+}

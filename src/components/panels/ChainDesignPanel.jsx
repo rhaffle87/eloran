@@ -117,10 +117,10 @@ export default function ChainDesignPanel() {
               }}
               title="Golden 400-mile worked example from USCG Loran-C User Handbook §2.B"
             >
-              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>400-Mile Triad</div>
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>USCG 400-mi Triad</div>
               <div className="flex items-center gap-1 mt-1">
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--accent-eloran-subtle)] text-[var(--accent-eloran)] border border-[var(--accent-eloran-border)]">
-                  Standard Triad
+                  Textbook Benchmark
                 </span>
               </div>
             </button>
@@ -151,10 +151,10 @@ export default function ChainDesignPanel() {
               }}
               title="Historical Northeast U.S. Chain (GRI 9960) — illustrative parameters"
             >
-              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>Northeast Chain (9960)</div>
+              <div className="font-bold text-[10px]" style={{ color: 'var(--text-primary)' }}>US East (9960)</div>
               <div className="flex items-center gap-1 mt-1">
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border border-[var(--status-warn-border)]">
-                  Regional Chain
+                  Illustrative — unverified this session
                 </span>
               </div>
             </button>
@@ -443,14 +443,18 @@ export default function ChainDesignPanel() {
       >
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-            <span>Engineering Planning Bounds</span>
+            <span>Planning Thresholds &amp; Heuristics</span>
             <InfoTooltip
-              text="Codified engineering bounds: Min Coding Delay (CD ≥ 10,000 µs per USCG COMDTINST M16562.4A §2-2 to prevent pulse group overlap), Max Baseline Length (1,800 km per CCIR Rec. P.368-9 / MIT RadLab Vol. 4 §3.2 for groundwave SNR), and Hazard Cone Half-Angle (10° per Sitterly 1948 where hyperbolic divergence factor K = c / (2 sin(θ/2)) degrades geometry)."
+              title="Planning Thresholds & Heuristics"
+              text="Illustrative default, not a regulatory limit. Codified engineering bounds: Min Coding Delay (CD ≥ 10,000 µs per USCG COMDTINST M16562.4A §2-2), Max Baseline Length (1,800 km per CCIR Rec. P.368-9), and Hazard Cone Half-Angle (10° per Sitterly 1948). Refer to station licensing guidelines."
             />
           </div>
           <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border border-[var(--status-ok-border)] self-start sm:self-auto">
             SOURCED Planning Bounds (USCG M16562.4A / MIT RadLab Vol. 4)
           </span>
+          <div className="text-[9px] text-[var(--text-dim)]">
+            Illustrative default, not a regulatory limit
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-2.5">
@@ -548,7 +552,7 @@ export default function ChainDesignPanel() {
               : 'opacity-50 cursor-not-allowed bg-[var(--bg-subtle)] text-[var(--text-dim)] border border-[var(--border-subtle)]'
           }`}
           title="Apply and load current station design into simulation"
-          aria-label="Commit design to simulation"
+          aria-label="Commit Design to Active Simulation"
         >
           <span>Commit Design to Active Simulation</span>
           <ArrowRight size={14} aria-hidden="true" />

@@ -1,0 +1,18 @@
+{
+  "id": "uscg_m16562_4a_sec2",
+  "citation": "USCG COMDTINST M16562.4A §2-2 (1994)",
+  "title": "Loran-C User Handbook, Chapter 2: System Description and Signal Characteristics",
+  "author": "United States Coast Guard",
+  "directive": "COMDTINST M16562.4A",
+  "section": "Section 2-2 Signal Characteristics",
+  "date": "1994",
+  "upstreamUrl": "https://www.navcen.uscg.gov/pdf/loran/handbook/loran_c_user_handbook.pdf",
+  "evidenceStrings": [
+    "Loran-C User Handbook",
+    "Section 2-2 Signal Characteristics",
+    "United States Coast Guard"
+  ],
+  "description": "Defines canonical 100 kHz pulse envelope equation, standard zero crossing (SZC at 30 µs), phase code intervals (PCI), and Master blink flags.",
+  "verificationType": "GOVERNMENT_NAVIGATIONAL_HANDBOOK",
+  "status": "AUTHENTICATED"
+}

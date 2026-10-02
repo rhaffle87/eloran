@@ -6,16 +6,21 @@
  *   2. Envelope-to-Cycle Difference (ECD) monitoring via envelope ratio tests
  *   3. Wrong-cycle selection detection & cycle slip state machine (Boyce 2006)
  *   4. TOA tracking jitter injection (Rhee et al. 2021 empirical variance)
+ *   5. Spherical-Earth Skywave ionospheric interference & phase distortion tracking
  *
  * References:
  *   - US Coast Guard Loran-C User Handbook (COMDTINST M16562.4A)
  *   - Boyce, C. O. L. (2006): "Atmospheric Noise and Wrong Cycle Identification"
  *   - Rhee et al. (2021): "An Analysis of Loran-C/eLoran TOA Noise Characteristics"
+ *   - Doherty, R. H., Hefley, G., & Linfield, R. F. (1961): "Timing Potentials of Loran-C"
  */
 
 import {
   computeAustronWrongCycleProbability,
 } from './pulse.js';
+import {
+  evaluateSkywaveInterference,
+} from './skywave.js';
 
 export const TRACKING_STATES = {
   ACQUIRING: 'ACQUIRING',
@@ -54,6 +59,7 @@ export function createTrackingLoop(initialOptions = {}) {
     config,
     history: [],              // Last N GRIs
     wrongCycleProb: computeAustronWrongCycleProbability(18.0),
+    skywave: null,            // Latest skywave contamination telemetry
   };
 }
 
@@ -98,6 +104,11 @@ export function computeTrackingSigmaUs(snrDb, pulsesAveraged = 10) {
  * @param {number} snrDb - Current measured SNR in dB
  * @param {object} [options]
  * @param {number} [options.trueEcdUs=0.0] - External physical ECD (e.g. from ground dispersion)
+ * @param {object} [options.skywaveInterference=null] - Precomputed skywave interference object
+ * @param {number} [options.skywaveDistKm] - Ground distance to transmitter for dynamic skywave modeling
+ * @param {number} [options.hourOfDay] - Solar hour (0.0 to 24.0)
+ * @param {number} [options.powerKw] - Transmitter ERP in kW
+ * @param {number} [options.groundSigma] - Ground conductivity in S/m
  * @param {function} [rng=Math.random] - RNG function
  * @returns {object} Updated tracking loop state
  */
@@ -111,6 +122,17 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
   let cycleIndex = prevState.cycleIndex;
   let lockConfidence = prevState.lockConfidence;
   let slipsCount = prevState.slipsCount;
+
+  // Resolve skywave interference parameters
+  let skywave = options.skywaveInterference || null;
+  if (!skywave && typeof options.skywaveDistKm === 'number' && options.skywaveDistKm > 0) {
+    skywave = evaluateSkywaveInterference(
+      options.skywaveDistKm,
+      options.hourOfDay ?? 12.0,
+      options.powerKw ?? 50.0,
+      options.groundSigma ?? 0.005
+    );
+  }
 
   // 1. Loss of Lock check
   if (snrDb < config.thresholdSnrDb) {
@@ -129,7 +151,13 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
     if (lockConfidence >= 1.0) {
       // Check if initial lock lands on wrong cycle
       const totalSnrDb = snrDb + 10 * Math.log10(Math.max(1, config.pulsesAveraged));
-      const pWrong = computeAustronWrongCycleProbability(totalSnrDb);
+      let pWrong = computeAustronWrongCycleProbability(totalSnrDb);
+
+      // Severe skywave significantly elevates initial acquisition cycle slip risk
+      if (skywave && skywave.cycleSlipProb > 0) {
+        pWrong = Math.min(0.8, pWrong + skywave.cycleSlipProb * 0.4);
+      }
+
       const isWrong = rng() < pWrong;
       if (isWrong) {
         cycleIndex = rng() > 0.5 ? 4 : 2; // Slipped to 40 µs or 20 µs
@@ -146,27 +174,39 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
   if (state === TRACKING_STATES.LOCKED || state === TRACKING_STATES.SLIPPED) {
     lockConfidence = 1.0;
 
-    // Check spontaneous cycle slip probability
-    // Boyce 2006: cycle slips increase sharply at SNR < 5 dB
+    let pSlipPerGri = 0;
+    // Boyce 2006: cycle slips increase sharply at SNR < 10 dB
     if (snrDb < 10) {
-      const pSlipPerGri = Math.min(0.2, computeAustronWrongCycleProbability(snrDb) * 0.1);
-      if (rng() < pSlipPerGri) {
-        const slipDelta = rng() > 0.5 ? 1 : -1;
-        cycleIndex = Math.max(1, Math.min(6, cycleIndex + slipDelta));
-        slipsCount += 1;
-        state = cycleIndex === 3 ? TRACKING_STATES.LOCKED : TRACKING_STATES.SLIPPED;
-      }
+      pSlipPerGri += Math.min(0.2, computeAustronWrongCycleProbability(snrDb) * 0.1);
+    }
+
+    // Skywave contamination increases spontaneous cycle slip probability (Doherty 1961)
+    if (skywave && skywave.cycleSlipProb > 0) {
+      pSlipPerGri += skywave.cycleSlipProb * 0.15;
+    }
+
+    if (pSlipPerGri > 0 && rng() < Math.min(0.6, pSlipPerGri)) {
+      const slipDelta = rng() > 0.5 ? 1 : -1;
+      cycleIndex = Math.max(1, Math.min(6, cycleIndex + slipDelta));
+      slipsCount += 1;
+      state = cycleIndex === 3 ? TRACKING_STATES.LOCKED : TRACKING_STATES.SLIPPED;
     }
   }
 
   // 4. Closed-loop phase and ECD calculation
+  // Skywave zero-crossing shift directly pulls the tracking point (timingShiftUs)
+  const skywaveTimingShiftUs = skywave ? skywave.timingShiftUs : 0.0;
   const phaseNoise = gaussianRandom(sigmaUs, rng);
   const cycleOffsetUs = (cycleIndex - 3) * 10.0; // ±10 µs per cycle slip
-  const phaseOffsetUs = prevState.phaseOffsetUs * (1.0 - config.loopGain) + phaseNoise * config.loopGain;
 
-  // ECD tracking: tracks true physical ECD plus residual ratio error
+  const targetPhaseUs = skywaveTimingShiftUs + phaseNoise;
+  const phaseOffsetUs = prevState.phaseOffsetUs * (1.0 - config.loopGain) + targetPhaseUs * config.loopGain;
+
+  // ECD tracking: tracks true physical ECD plus residual ratio error plus skywave envelope distortion
+  const skywaveEcdShift = skywave ? (skywave.phaseErrorDeg / 36.0) : 0.0;
   const ecdNoise = gaussianRandom(sigmaUs * 1.5, rng);
-  const ecdUs = prevState.ecdUs * (1.0 - config.loopGain) + (trueEcd + ecdNoise) * config.loopGain;
+  const targetEcd = trueEcd + skywaveEcdShift + ecdNoise;
+  const ecdUs = prevState.ecdUs * (1.0 - config.loopGain) + targetEcd * config.loopGain;
 
   const estimatedSzcUs = config.nominalSzcUs + cycleOffsetUs + phaseOffsetUs;
   const totalSnrDb = snrDb + 10 * Math.log10(Math.max(1, config.pulsesAveraged));
@@ -180,6 +220,8 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
     phaseOffsetUs: parseFloat(phaseOffsetUs.toFixed(3)),
     estimatedSzcUs: parseFloat(estimatedSzcUs.toFixed(3)),
     snrDb: parseFloat(snrDb.toFixed(1)),
+    skywaveRisk: skywave?.cycleSlipRisk || 'NONE',
+    skywaveSsrDb: skywave?.ssrDb ?? null,
   };
 
   const maxHistory = config.maxHistoryGris || 50;
@@ -197,6 +239,16 @@ export function stepTrackingLoop(prevState, snrDb, options = {}, rng = Math.rand
     totalGris,
     slipsCount,
     wrongCycleProb: parseFloat(wrongCycleProb.toFixed(4)),
+    skywave: skywave ? {
+      ssrDb: skywave.ssrDb,
+      ampRatio: skywave.ampRatio,
+      cycleSlipRisk: skywave.cycleSlipRisk,
+      cycleSlipProb: skywave.cycleSlipProb,
+      timingShiftUs: skywave.timingShiftUs,
+      tauSkyUs: skywave.tauSkyUs,
+      groundDistKm: skywave.groundDistKm,
+      isNight: skywave.isNight,
+    } : null,
     history,
   };
 }

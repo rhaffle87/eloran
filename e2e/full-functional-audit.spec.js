@@ -229,6 +229,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // TEST 6: Chart Verification 3 — GDOP & Hyperbolic LOP Contours MapLibre Layer
   // ---------------------------------------------------------------------------
   test('GDOP & LOP Contours: compute off-thread marching squares contours and verify MapLibre rendering & telemetry', async ({ page }) => {
+    page.on("console", msg => console.log("BROWSER LOG [" + msg.type() + "]:", msg.text()));
+    page.on("pageerror", err => console.error("BROWSER ERROR:", err.message));
     test.setTimeout(45000);
     await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');

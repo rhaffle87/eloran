@@ -279,6 +279,32 @@ export default function TrackingPanel() {
           </div>
         </div>
 
+        {/* Skywave Ionospheric Telemetry if active */}
+        {trackingLoop.skywave && (
+          <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--text-dim)]">Skywave SSR:</span>
+              <span className="font-semibold text-[var(--text-primary)]">
+                {trackingLoop.skywave.ssrDb} dB
+              </span>
+              <span className="text-[10px] text-[var(--text-dim)]">
+                (Shift: {trackingLoop.skywave.timingShiftUs > 0 ? '+' : ''}{trackingLoop.skywave.timingShiftUs} µs)
+              </span>
+            </div>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                trackingLoop.skywave.cycleSlipRisk === 'CRITICAL'
+                  ? 'bg-[var(--status-danger-subtle)] text-[var(--status-danger)] border-[var(--status-danger-border)]'
+                  : trackingLoop.skywave.cycleSlipRisk === 'HIGH'
+                  ? 'bg-[var(--status-warn-subtle)] text-[var(--status-warn)] border-[var(--status-warn-border)]'
+                  : 'bg-[var(--status-ok-subtle)] text-[var(--status-ok)] border-[var(--status-ok-border)]'
+              }`}
+            >
+              {trackingLoop.skywave.cycleSlipRisk} RISK
+            </span>
+          </div>
+        )}
+
         {/* Live SNR override slider */}
         <div className="pt-2 border-t border-[var(--border-subtle)]">
           <Slider

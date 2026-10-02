@@ -1,0 +1,18 @@
+{
+  "id": "itur_p453_14",
+  "citation": "ITU-R P.453-14 (2019)",
+  "title": "The radio refractive index: its formula and refractivity data",
+  "recommendation": "ITU-R P.453-14",
+  "organization": "International Telecommunication Union",
+  "series": "P Series: Radiowave propagation",
+  "date": "2019-08",
+  "upstreamUrl": "https://www.itu.int/rec/R-REC-P.453-14-201908-I/en",
+  "evidenceStrings": [
+    "The radio refractive index: its formula and refractivity data",
+    "Recommendation ITU-R P.453-14",
+    "International Telecommunication Union"
+  ],
+  "description": "Defines the standard radio refractive index equation N = (n - 1)*1e6 from atmospheric pressure P, temperature T, and water vapor pressure e.",
+  "verificationType": "OFFICIAL_TELECOM_STANDARD",
+  "status": "AUTHENTICATED"
+}

@@ -372,7 +372,7 @@
   background-color: var(--bg-muted) !important;
 }
 
-/* --- MapLibre Bottom Controls � TelemetryConsole clearance --- */
+/* --- MapLibre Bottom Controls / TelemetryConsole clearance --- */
 /* Push the native zoom buttons and scale bar above the TelemetryConsole strip.
    The parent .relative div sets --map-bottom-clearance dynamically via JS.
    Collapsed console  ? 48px  (ribbon bar only)

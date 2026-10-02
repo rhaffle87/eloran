@@ -190,13 +190,24 @@ function numSegmentsClamped(len) {
  * @returns {Object} Doppler shift analysis
  */
 export function computeDopplerShiftHz(userPos, userVel, stationPos, carrierFreqHz = DEFAULT_ELORAN_CARRIER_HZ) {
-  if (!userPos || !stationPos) {
+  const hasCoordinates =
+    typeof userPos?.lat === 'number' &&
+    typeof userPos?.lng === 'number' &&
+    typeof stationPos?.lat === 'number' &&
+    typeof stationPos?.lng === 'number';
+
+  const bearingDeg = hasCoordinates ? initialBearing(userPos, stationPos) : 0;
+
+  if (!hasCoordinates) {
     return {
       dopplerShiftHz: 0,
+      dopplerHz: 0,
       receivedFreqHz: carrierFreqHz,
       rangeRateMs: 0,
       losUnitVector: { ux: 0, uy: 0 },
       distanceMeters: 0,
+      distanceM: 0,
+      bearingDeg: 0,
     };
   }
 
@@ -212,10 +223,13 @@ export function computeDopplerShiftHz(userPos, userVel, stationPos, carrierFreqH
   if (distanceMeters < 1.0) {
     return {
       dopplerShiftHz: 0,
+      dopplerHz: 0,
       receivedFreqHz: carrierFreqHz,
       rangeRateMs: 0,
       losUnitVector: { ux: 0, uy: 0 },
       distanceMeters,
+      distanceM: distanceMeters,
+      bearingDeg,
     };
   }
 
@@ -235,10 +249,13 @@ export function computeDopplerShiftHz(userPos, userVel, stationPos, carrierFreqH
 
   return {
     dopplerShiftHz,
+    dopplerHz: dopplerShiftHz,
     receivedFreqHz: carrierFreqHz + dopplerShiftHz,
     rangeRateMs,
     losUnitVector: { ux, uy },
     distanceMeters,
+    distanceM: distanceMeters,
+    bearingDeg,
   };
 }
 

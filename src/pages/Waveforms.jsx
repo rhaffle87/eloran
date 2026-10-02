@@ -6,6 +6,7 @@ import TrackingPanel from '../components/panels/TrackingPanel.jsx';
 import LdcDemodulatorPanel from '../components/panels/LdcDemodulatorPanel.jsx';
 import CheolJChainViewer from '../components/charts/CheolJChainViewer.jsx';
 import CustomWaveformSynthesizer from '../components/charts/CustomWaveformSynthesizer.jsx';
+import SkywavePanel from '../components/panels/SkywavePanel.jsx';
 import MathView from '../components/ui/MathView.jsx';
 
 export default function Waveforms() {
@@ -55,16 +56,15 @@ export default function Waveforms() {
               ['pci-chains', 'Pulse Group Timings'],
               ['tracking', 'Tracking Loop'],
               ['cycle-selection', 'Cycle Selection'],
+              ['skywave', 'Ionospheric Skywave'],
               ['ldc', 'LDC & Eurofix'],
             ].map(([tab, label]) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className="px-3 py-1.5 rounded transition cursor-pointer"
-                title={`Switch waveform view to ${label}`}
-                aria-label={`View ${label}`}
-                title={`Switch waveform view to ${label}`}
-                aria-label={`View ${label}`}
+                title={tab === 'cycle-selection' ? 'Switch waveform view to Cycle Selection (Boyce Monte Carlo)' : `Switch waveform view to ${label}`}
+                aria-label={tab === 'cycle-selection' ? 'View Cycle Selection (Boyce Monte Carlo)' : `View ${label}`}
                 style={
                   activeTab === tab
                     ? { background: 'var(--accent-eloran)', color: 'var(--btn-eloran-text)', fontWeight: 700 }
@@ -80,6 +80,7 @@ export default function Waveforms() {
 
       {/* Main Content Panels */}
       {(activeTab === 'all' || activeTab === 'oscilloscope') && <PulseViewer />}
+      {(activeTab === 'all' || activeTab === 'skywave') && <SkywavePanel />}
       {(activeTab === 'all' || activeTab === 'synthesizer') && <CustomWaveformSynthesizer />}
       {(activeTab === 'all' || activeTab === 'pci-chains') && <CheolJChainViewer />}
       {(activeTab === 'all' || activeTab === 'tracking') && <TrackingPanel />}

@@ -9,7 +9,7 @@ import {
   isInsideBaselineExtension,
   generateBaselineExtensionSectors,
 } from '../../lib/chainDesign.js';
-import { computeGDOPGrid } from '../../lib/gdop.js';
+import { computeGdopAsync } from '../../workers/workerClient.js';
 import { getMapLibreStyle, TILE_PROVIDERS, DEFAULT_TILE_PROVIDER, CARTO_API_KEY } from '../../lib/tiles.js';
 import AsfHeatmapLayer from './AsfHeatmapLayer.jsx';
 import { computeCovarianceEllipse } from '../../lib/fusion.js';
@@ -975,15 +975,18 @@ export default function MapView({ onMapClick, isELoran = false }) {
     if (!map) return;
 
     let cancelled = false;
-    const sourceId = 'loran-gdop-heatmap-source';
-    const layerId = 'loran-gdop-heatmap-layer';
+    const heatmapSourceId = 'loran-gdop-heatmap-source';
+    const heatmapLayerId = 'loran-gdop-heatmap-layer';
+    const contoursSourceId = 'loran-gdop-contours-source';
+    const contoursLayerId = 'loran-gdop-contours-layer';
 
     const activeMaster = isDesignMode ? designChain.master : masters[0];
     const activeSecondaries = isDesignMode ? designChain.secondaries : slaves;
 
     if (!gdopLayerVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
       overlayRenderersRef.current.gdop = null;
-      safeRemoveLayerAndSource(map, layerId, sourceId);
+      safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+      safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
       return;
     }
 
@@ -1002,89 +1005,102 @@ export default function MapView({ onMapClick, isELoran = false }) {
         const maxLng = Math.max(...lngs) + 4.5;
         const bbox = { minLat, maxLat, minLng, maxLng };
 
-        const nx = 35;
-        const ny = 35;
-        const grid = computeGDOPGrid(activeMaster, activeSecondaries, bbox, nx, ny);
+        // Offload GDOP grid & Iso-GDOP contour generation to dedicated physics worker
+        computeGdopAsync({
+          master: activeMaster,
+          secondaries: activeSecondaries,
+          bbox,
+          nx: 100,
+          ny: 100,
+          contourLevels: [1.5, 3.0, 7.7, 10.92],
+          includeHeatmap: true,
+        }).then((result) => {
+          if (cancelled || !isMapStyleReady(map) || !result) return;
 
-        const features = [];
-        const dLng = (bbox.maxLng - bbox.minLng) / (nx - 1);
-        const dLat = (bbox.maxLat - bbox.minLat) / (ny - 1);
+          const { contoursGeoJson, heatmapGeoJson } = result;
 
-        let idx = 0;
-        for (let j = 0; j < ny; j++) {
-          const lat = bbox.minLat + j * dLat;
-          for (let i = 0; i < nx; i++, idx++) {
-            const lng = bbox.minLng + i * dLng;
-            const gdop = grid.data[idx];
-            if (gdop < 50 && Number.isFinite(gdop)) {
-              features.push({
-                type: 'Feature',
-                geometry: {
-                  type: 'Point',
-                  coordinates: [lng, lat],
-                },
-                properties: {
-                  gdop,
-                },
-              });
-            }
+          if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
+            window.__gdopGeoJson = heatmapGeoJson;
+            window.__gdopContoursGeoJson = contoursGeoJson;
           }
-        }
 
-        const geojson = { type: 'FeatureCollection', features };
-        if (typeof window !== 'undefined' && (typeof __E2E_HOOKS__ !== 'undefined' ? __E2E_HOOKS__ : import.meta.env.DEV)) {
-          window.__gdopGeoJson = geojson;
-        }
+          // 1. Render GDOP Heatmap Layer
+          safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
+          if (heatmapGeoJson && heatmapGeoJson.features?.length) {
+            map.addSource(heatmapSourceId, { type: 'geojson', data: heatmapGeoJson });
+            map.addLayer({
+              id: heatmapLayerId,
+              type: 'heatmap',
+              source: heatmapSourceId,
+              paint: {
+                'heatmap-weight': [
+                  'interpolate',
+                  ['linear'],
+                  ['get', 'gdop'],
+                  1, 1.0,
+                  3, 0.8,
+                  6, 0.5,
+                  15, 0.2,
+                  30, 0.05,
+                ],
+                'heatmap-intensity': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  0, 1,
+                  9, 3,
+                ],
+                'heatmap-color': [
+                  'interpolate',
+                  ['linear'],
+                  ['heatmap-density'],
+                  0, 'rgba(0, 0, 0, 0)',
+                  0.2, 'rgba(56, 189, 248, 0.3)',
+                  0.4, 'rgba(52, 211, 153, 0.5)',
+                  0.6, 'rgba(250, 204, 21, 0.65)',
+                  0.8, 'rgba(251, 146, 60, 0.75)',
+                  1, 'rgba(248, 113, 113, 0.85)',
+                ],
+                'heatmap-radius': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  2, 18,
+                  6, 36,
+                  10, 70,
+                ],
+                'heatmap-opacity': 0.75,
+              },
+            });
+          }
 
-        safeRemoveLayerAndSource(map, layerId, sourceId);
-
-        map.addSource(sourceId, { type: 'geojson', data: geojson });
-        map.addLayer({
-          id: layerId,
-          type: 'heatmap',
-          source: sourceId,
-          paint: {
-            'heatmap-weight': [
-              'interpolate',
-              ['linear'],
-              ['get', 'gdop'],
-              1, 1.0,
-              3, 0.8,
-              6, 0.5,
-              15, 0.2,
-              30, 0.05,
-            ],
-            'heatmap-intensity': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              0, 1,
-              9, 3,
-            ],
-            'heatmap-color': [
-              'interpolate',
-              ['linear'],
-              ['heatmap-density'],
-              0, 'rgba(0, 0, 0, 0)',
-              0.2, 'rgba(56, 189, 248, 0.3)',
-              0.4, 'rgba(52, 211, 153, 0.5)',
-              0.6, 'rgba(250, 204, 21, 0.65)',
-              0.8, 'rgba(251, 146, 60, 0.75)',
-              1, 'rgba(248, 113, 113, 0.85)',
-            ],
-            'heatmap-radius': [
-              'interpolate',
-              ['linear'],
-              ['zoom'],
-              2, 18,
-              6, 36,
-              10, 70,
-            ],
-            'heatmap-opacity': 0.75,
-          },
+          // 2. Render Smooth Iso-GDOP Vector Contours Layer
+          safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+          if (contoursGeoJson && contoursGeoJson.features?.length) {
+            map.addSource(contoursSourceId, { type: 'geojson', data: contoursGeoJson });
+            map.addLayer({
+              id: contoursLayerId,
+              type: 'line',
+              source: contoursSourceId,
+              paint: {
+                'line-color': ['get', 'color'],
+                'line-width': [
+                  'case',
+                  ['==', ['get', 'level'], 10.92], 2.2,
+                  ['==', ['get', 'level'], 1.5], 2.0,
+                  1.6,
+                ],
+                'line-opacity': 0.85,
+              },
+            });
+          }
+        }).catch((err) => {
+          if (!cancelled) {
+            console.warn('Failed to compute or render GDOP layers via worker:', err);
+          }
         });
       } catch (err) {
-        console.warn('Failed to render GDOP heatmap layer:', err);
+        console.warn('Failed to initiate GDOP render:', err);
       }
     };
 
@@ -1099,10 +1115,11 @@ export default function MapView({ onMapClick, isELoran = false }) {
       map.off('idle', render);
       if (typeof window !== 'undefined') {
         delete window.__gdopGeoJson;
+        delete window.__gdopContoursGeoJson;
       }
-      safeRemoveLayerAndSource(map, layerId, sourceId);
-    };
-  }, [
+      safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+      safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
+    };  }, [
     masters,
     slaves,
     designChain,
@@ -1937,7 +1954,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
       {/* Collapsible Station Symbols Legend — positioned cleanly above MapLibre scale control */}
       <div
-        className="absolute left-2.5 z-10 font-mono text-xs transition-all duration-200"
+        className="absolute bottom-12 left-2.5 z-10 font-mono text-xs transition-all duration-200"
         style={{ bottom: legendBottomClearance }}
       >
         {showLegend ? (

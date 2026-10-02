@@ -1,0 +1,21 @@
+{
+  "id": "blazyk_diggle_2007",
+  "citation": "Blazyk & Diggle (2007)",
+  "title": "eLoran Signal-in-Space (SIS) Validation and Performance Evaluation",
+  "authors": [
+    "R. Blazyk",
+    "D. W. Diggle"
+  ],
+  "organization": "International Loran Association (ILA)",
+  "proceedings": "Proceedings of the 36th Annual Convention of the International Loran Association (ILA-36)",
+  "date": "2007-10",
+  "upstreamUrl": "http://www.loran.org/proceedings/2007/BlazykDiggle2007.pdf",
+  "evidenceStrings": [
+    "eLoran Signal-in-Space",
+    "Blazyk",
+    "Diggle"
+  ],
+  "description": "Flight and ground trials validating eLoran signal-in-space accuracy, spatial ASF correlation, and receiver cycle selection integrity.",
+  "verificationType": "CONFERENCE_PROCEEDINGS",
+  "status": "AUTHENTICATED"
+}

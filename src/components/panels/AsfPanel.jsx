@@ -566,7 +566,7 @@ export default function AsfPanel() {
                         Land: {geoResult.landDistKm.toFixed(1)} km ({(geoResult.landFraction * 100).toFixed(1)}%)
                       </span>
                       <span className="text-[var(--text-muted)]">
-                        {geoResult.transitions} crossing{geoResult.transitions === 1 ? '' : 's'}
+                        {geoResult.transitions} boundary crossing{geoResult.transitions === 1 ? '' : 's'}
                       </span>
                       <span className="text-[var(--accent-eloran)] font-medium">
                         Sea: {geoResult.seaDistKm.toFixed(1)} km ({(geoResult.seaFraction * 100).toFixed(1)}%)
@@ -579,7 +579,7 @@ export default function AsfPanel() {
                     <div className="text-[10px] text-[var(--text-muted)] flex justify-between items-center">
                       <span>Path Segments (Tx → Rx):</span>
                       <span className="text-[var(--accent-eloran)] font-bold">
-                        ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
+                        Calculated ASF: {geoResult.asfMeters.toFixed(1)} m ({geoResult.asfMicroseconds.toFixed(3)} µs)
                       </span>
                     </div>
                     {geoResult.segments?.length > 0 && (
@@ -666,7 +666,7 @@ export default function AsfPanel() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-semibold text-[var(--text-primary)]">
-              Temporal Atmospheric Refractivity
+              Temporal ASF — Atmospheric Refractivity
             </span>
             <InfoTooltip
               align="right"
@@ -912,8 +912,8 @@ export default function AsfPanel() {
           <div className="flex items-center gap-1">
             <InfoTooltip
               align="right"
-              title="Tier 2 Field Trial Validation"
-              text="Validation against published empirical summary statistics: 7-site Korean eLoran campaign (Rhee et al., 2021) and Maoming inland geodesic test (Gao et al., 2025). Detailed methodology in docs/VALIDATION.md."
+              title="Tier 2 (Published Empirical Summary Statistics)"
+              text="Tier 2 (Published Empirical Summary Statistics): Validation against published empirical summary statistics: 7-site Korean eLoran campaign (Rhee et al., 2021) and Maoming inland geodesic test (Gao et al., 2025). Detailed methodology in docs/VALIDATION.md."
             />
             <button
               type="button"

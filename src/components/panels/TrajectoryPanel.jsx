@@ -35,7 +35,7 @@ import {
   exportTrajectoryToCsv,
 } from '../../lib/trajectoryParser.js';
 import { createEkf } from '../../lib/ekf.js';
-import { latLngToLocalXY } from '../../lib/geodesy.js';
+import { latLngToLocalXY, initialBearing } from '../../lib/geodesy.js';
 
 const BUILTIN_PRESETS = [
   {
@@ -267,14 +267,30 @@ export default function TrajectoryPanel() {
     return activeStations.map((st) => {
       const res = computeDopplerShiftHz(
         currentSample,
-        { vx: currentSample.vx, vy: currentSample.vy },
+        { vx: currentSample?.vx ?? 0, vy: currentSample?.vy ?? 0 },
         st
       );
+      const bearing =
+        typeof res?.bearingDeg === 'number' && !isNaN(res.bearingDeg)
+          ? res.bearingDeg
+          : (currentSample && st ? initialBearing(currentSample, st) : 0);
+      const distM =
+        typeof res?.distanceM === 'number' && !isNaN(res.distanceM)
+          ? res.distanceM
+          : (res?.distanceMeters ?? 0);
+      const dopHz =
+        typeof res?.dopplerHz === 'number' && !isNaN(res.dopplerHz)
+          ? res.dopplerHz
+          : (res?.dopplerShiftHz ?? 0);
+
       return {
         label: st.label,
         name: st.name || st.label,
         isMaster: st.isMaster,
         ...res,
+        bearingDeg: bearing,
+        distanceM: distM,
+        dopplerHz: dopHz,
       };
     });
   }, [activeStations, currentSample]);
@@ -630,6 +646,7 @@ export default function TrajectoryPanel() {
             value={playheadSec}
             onChange={handleScrubberChange}
             unit="s"
+            label="Trajectory Scrubber"
             ariaLabel="Trajectory scrubber"
           />
         </div>
@@ -655,10 +672,10 @@ export default function TrajectoryPanel() {
             <span>Speed Over Ground</span>
           </div>
           <div className="text-sm font-bold text-[var(--text-primary)]">
-            {currentSample.speedKts.toFixed(1)} <span className="text-[10px] font-normal text-[var(--text-dim)]">kts</span>
+            {(currentSample?.speedKts ?? 0).toFixed(1)} <span className="text-[10px] font-normal text-[var(--text-dim)]">kts</span>
           </div>
           <div className="text-[9.5px] text-[var(--text-muted)]">
-            {(currentSample.speedMs || 0).toFixed(1)} m/s
+            {(currentSample?.speedMs ?? 0).toFixed(1)} m/s
           </div>
         </div>
 
@@ -668,7 +685,7 @@ export default function TrajectoryPanel() {
             <span>Vessel Course</span>
           </div>
           <div className="text-sm font-bold text-[var(--text-primary)]">
-            {currentSample.headingDeg.toFixed(0)}° <span className="text-[10px] font-normal text-[var(--text-dim)]">({getCompassDirection(currentSample.headingDeg)})</span>
+            {(currentSample?.headingDeg ?? 0).toFixed(0)}° <span className="text-[10px] font-normal text-[var(--text-dim)]">({getCompassDirection(currentSample?.headingDeg ?? 0)})</span>
           </div>
           <div className="text-[9.5px] text-[var(--text-muted)]">
             Ground track heading
@@ -681,7 +698,7 @@ export default function TrajectoryPanel() {
             <span>Position Delta</span>
           </div>
           <div className="text-sm font-bold text-[var(--text-primary)]">
-            {ekfState ? (ekfState.posErrorM !== undefined ? `${ekfState.posErrorM.toFixed(1)} m` : '2.1 m') : '--'}
+            {ekfState ? (typeof ekfState.posErrorM === 'number' && !isNaN(ekfState.posErrorM) ? `${ekfState.posErrorM.toFixed(1)} m` : '2.1 m') : '--'}
           </div>
           <div className="text-[9.5px] text-[var(--status-ok)] font-medium">
             Within 10m target
@@ -694,7 +711,7 @@ export default function TrajectoryPanel() {
             <span>EKF Clock Bias</span>
           </div>
           <div className="text-sm font-bold text-[var(--text-primary)]">
-            {ekfState?.clockBiasNs ? `${ekfState.clockBiasNs.toFixed(1)} ns` : '333.6 ns'}
+            {typeof ekfState?.clockBiasNs === 'number' && !isNaN(ekfState.clockBiasNs) ? `${ekfState.clockBiasNs.toFixed(1)} ns` : '333.6 ns'}
           </div>
           <div className="text-[9.5px] text-[var(--text-muted)]">
             100m nominal bias
@@ -725,20 +742,29 @@ export default function TrajectoryPanel() {
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
               {dopplerList.map((d) => {
-                const isPositive = d.dopplerHz >= 0;
+                const dopHz = typeof d.dopplerHz === 'number' && !isNaN(d.dopplerHz)
+                  ? d.dopplerHz
+                  : (typeof d.dopplerShiftHz === 'number' && !isNaN(d.dopplerShiftHz) ? d.dopplerShiftHz : 0);
+                const isPositive = dopHz >= 0;
+                const distM = typeof d.distanceM === 'number' && !isNaN(d.distanceM)
+                  ? d.distanceM
+                  : (typeof d.distanceMeters === 'number' && !isNaN(d.distanceMeters) ? d.distanceMeters : 0);
+                const bearing = typeof d.bearingDeg === 'number' && !isNaN(d.bearingDeg) ? d.bearingDeg : 0;
+                const rangeRate = typeof d.rangeRateMs === 'number' && !isNaN(d.rangeRateMs) ? d.rangeRateMs : 0;
+
                 return (
                   <tr key={d.label} className="hover:bg-[var(--bg-subtle)] transition">
                     <td className="py-1 font-bold text-[var(--text-primary)]">
                       {d.label} {d.isMaster ? '(M)' : ''}
                     </td>
                     <td className="py-1 text-[var(--text-secondary)]">
-                      {(d.distanceM / 1000).toFixed(1)} km
+                      {(distM / 1000).toFixed(1)} km
                     </td>
                     <td className="py-1 text-[var(--text-secondary)]">
-                      {d.bearingDeg.toFixed(0)}°
+                      {bearing.toFixed(0)}°
                     </td>
                     <td className="py-1 text-[var(--text-secondary)]">
-                      {d.rangeRateMs.toFixed(1)} m/s
+                      {rangeRate.toFixed(1)} m/s
                     </td>
                     <td
                       className={`py-1 text-right font-bold ${
@@ -746,7 +772,7 @@ export default function TrajectoryPanel() {
                       }`}
                     >
                       {isPositive ? '+' : ''}
-                      {d.dopplerHz.toFixed(3)} Hz
+                      {dopHz.toFixed(3)} Hz
                     </td>
                   </tr>
                 );

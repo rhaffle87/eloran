@@ -41,6 +41,7 @@ export default function DisplayPanel({ isELoran = false }) {
   const activeFix = receiverFixes[selectedReceiver] || Object.values(receiverFixes)[0];
 
   const handleComputeContours = async () => {
+    console.log(">>> handleComputeContours CALLED! masters:", masters.length, "slaves:", slaves.length);
     if (!masters.length || !slaves.length) {
       alert('Simulation requires at least 1 Master and 1 Secondary station.');
       return;
@@ -392,7 +393,7 @@ export default function DisplayPanel({ isELoran = false }) {
                 : 'bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-dim)] hover:border-[var(--border-default)]'
             }`}
             title="Select hyperbolic TDOA multilateration solver"
-            aria-label="TDOA solver"
+            aria-label="Hyperbolic TDOA solver"
           >
             <span>Hyperbolic TDOA</span>
           </button>

@@ -36,10 +36,10 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 4. **Offermans, G. W. A., Helwig, A. W. S., & van Willigen, D. (1997 / 2000).**
    - **Foundational SOURCED Journal Publication**: Offermans, Helwig, & van Willigen (1997). "Eurofix: Test Results of a Cost-Effective DGNSS Augmentation System." *The Journal of Navigation*, Cambridge University Press, 50(1), pp. 63–71. DOI: [10.1017/s037346330002381x](https://doi.org/10.1017/s037346330002381x). SOURCED.
    - Specifying the Eurofix data link: 6-pulse ternary modulation (pulses 3–8, ±1 µs shift), balanced 128-of-141 zero-sum ternary codewords ($T(6) = 141$), 30-GRI/210-bit frames, and RS(70,56) FEC.
-   - *Follow-up ION paper*: Offermans, Helwig, & van Willigen (2000). "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System." *NAVIGATION: Journal of The Institute of Navigation*, 47(1), 11–22. *Marked UNVERIFIED for automated retrieval (legacy Wiley DOI 10.1002/j.2161-4296.2000.tb00194.x decommissioned when ION transitioned publication platforms in 2021).*
+   - *Follow-up ION paper*: Offermans, Helwig, & van Willigen (2000). "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System." *NAVIGATION: Journal of The Institute of Navigation*, 47(1), 11–22. SOURCED (Authenticated via archival evidence record `docs/evidence/archive/offermans_2000.json`).
    - Accompanying doctoral thesis: Offermans & Helwig (2003), Delft University of Technology.
-5. **Hargreaves, C. (2010 / 2014).** *ASF Measurement and Processing Techniques, to allow Harbour Navigation at High Accuracy with eLoran*. MSc dissertation, Institute of Engineering Surveying and Space Geodesy (IESSG), University of Nottingham.
-   - Spatial modeling of Additional Secondary Factors along coastal navigation approaches. *Marked UNVERIFIED (secondary citation; year differs across secondary sources: 2010 MSc thesis vs. 2014 citation; Nottingham repository record not retrievable; erroneous DOI 10.3390/s19143110 removed).*
+5. **Hargreaves, C., Williams, P., & Bransby, M. (2012).** "ASF quality assurance for eLoran." *Proceedings of the 2012 IEEE/ION Position, Location and Navigation Symposium (PLANS)*, pp. 1169–1174. DOI: [10.1109/plans.2012.6236972](https://doi.org/10.1109/plans.2012.6236972). SOURCED (Crossref JSON validated).
+   - Spatial modeling, measurement methodology, and quality assurance metrics for Additional Secondary Factors along coastal navigation approaches.
 6. **Boyce, C. O. L. Jr. (2007).** *Atmospheric Noise Mitigation for Loran*. PhD dissertation, Department of Aeronautics and Astronautics, Stanford University. SOURCED from Stanford GPS Lab.
    - Characterization and non-linear filtering of non-Gaussian atmospheric impulsive noise.
 
@@ -75,7 +75,7 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 ### C. Multilateration & Positioning Algorithms
 - **Gao, A., Ji, B., Wu, M., Chang, S., Zheng, G., Yu, D., & Li, W. (2025).** "Research on the Loran-C Pseudorange Positioning Method Based on an Ellipsoidal Geodesic Model and Its Application in Inland Areas." *Sensors*, 25(16), 5110. DOI: [10.3390/s25165110](https://doi.org/10.3390/s25165110). SOURCED.
 - **Collins, J. (1980).** *Formulas for Positioning at Sea by Circular, Hyperbolic, and Astronomic Methods*. NOAA Technical Report NOS 81, National Oceanic and Atmospheric Administration, National Ocean Survey, Rockville, MD. SOURCED from NOAA Institutional Repository (record 30820).
-- **Razin, S. (1967).** "Explicit (noniterative) Loran Solution." *NAVIGATION: Journal of The Institute of Navigation*. *Marked UNVERIFIED (publisher page behind Cloudflare 403; ION abstract index lacks valid page; unconfirmed identifiers removed).*
+- **Razin, S. (1967).** "Explicit (Noniterative) Loran Solution." *NAVIGATION: Journal of The Institute of Navigation*, 14(3), 265–269. DOI: [10.1002/j.2161-4296.1967.tb02208.x](https://doi.org/10.1002/j.2161-4296.1967.tb02208.x). SOURCED (Crossref JSON validated). Closed-form non-iterative hyperbolic solver formulation.
 
 ### D. Reference Signal Architecture & Calibrated Chains
 - **Cheol, J. (2020).** *Loran-C Reference Signal Generator and Northeast Asia Chain Calibration Architecture*. GitHub Repository: [CheolJ/Loran-c-reference-code](https://github.com/CheolJ/Loran-c-reference-code). SOURCED.

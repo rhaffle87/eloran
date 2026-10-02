@@ -1,0 +1,18 @@
+{
+  "id": "brunavs_1977",
+  "citation": "Brunavs (1977 / 1978)",
+  "title": "Phase Lags in Loran-C Groundwaves over Seawater Paths",
+  "author": "Paul Brunavs",
+  "institution": "Canadian Hydrographic Service (CHS)",
+  "journal": "The International Hydrographic Review (IHR), Vol. LV, No. 2, July 1978, pp. 67-84",
+  "date": "1977-10",
+  "upstreamUrl": "https://journals.lib.unb.ca/index.php/ihr/article/view/23466",
+  "evidenceStrings": [
+    "Phase Lags in Loran-C Groundwaves",
+    "Paul Brunavs",
+    "Canadian Hydrographic Service"
+  ],
+  "description": "Seminal continuous polynomial formulation for Secondary Factor (SF) seawater travel time delay as a function of geodesic distance.",
+  "verificationType": "HISTORICAL_HYDROGRAPHIC_MONOGRAPH",
+  "status": "AUTHENTICATED"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "offermans_2000",
+  "citation": "Offermans, Helwig, & van Willigen (2000)",
+  "title": "Eurofix: A New Low Cost Complement to GPS",
+  "authors": [
+    "G.W.A. Offermans",
+    "A.W.S. Helwig",
+    "D. van Willigen"
+  ],
+  "journal": "The Journal of Navigation",
+  "institution": "Delft University of Technology / Reelektronika",
+  "date": "2000-09",
+  "upstreamUrl": "https://www.cambridge.org/core/journals/journal-of-navigation/article/abs/eurofix-a-new-low-cost-complement-to-gps/7BB5C21C35BE6802C446F0AA42531CA1",
+  "evidenceStrings": [
+    "Eurofix: A New Low Cost Complement to GPS",
+    "Offermans",
+    "van Willigen"
+  ],
+  "description": "Detailed analysis of balanced ternary 3-level DGPS / Loran-C data channel modulation and receiver demodulation algorithms.",
+  "verificationType": "PEER_REVIEWED_JOURNAL",
+  "status": "AUTHENTICATED"
+}

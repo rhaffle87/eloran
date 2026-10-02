@@ -379,7 +379,7 @@ export default function ELoran() {
                   onClick={() => toggleDesignMode(true)}
                   className="py-1.5 rounded-md text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer font-medium"
                   title="Switch to transmitter network design sandbox"
-                  aria-label="Network Design"
+                  aria-label="Chain Design"
                   style={isDesignMode
                     ? {
                         background: 'var(--bg-surface)',

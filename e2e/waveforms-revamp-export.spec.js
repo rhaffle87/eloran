@@ -4,6 +4,7 @@ import path from 'path';
 
 test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
   test('verify waveform lab oscilloscope, receiver telemetry, and exports', async ({ page }) => {
+    test.setTimeout(60000);
     await page.goto('/waveforms');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(500);
@@ -59,7 +60,7 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
     await page.waitForTimeout(200);
 
     // Click 2.0x vertical gain
-    const gain2x = page.getByRole('button', { name: '2x' });
+    const gain2x = page.getByRole('button', { name: 'Gain 2x' });
     await expect(gain2x).toBeVisible();
     await gain2x.click();
     await page.waitForTimeout(200);

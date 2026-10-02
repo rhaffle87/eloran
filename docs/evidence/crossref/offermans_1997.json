@@ -1,0 +1,260 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          13
+        ]
+      ],
+      "date-time": "2026-03-13T14:41:53Z",
+      "timestamp": 1773412913846,
+      "version": "3.50.1"
+    },
+    "reference-count": 9,
+    "publisher": "Cambridge University Press (CUP)",
+    "issue": "2",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              2009,
+              11,
+              23
+            ]
+          ],
+          "date-time": "2009-11-23T00:00:00Z",
+          "timestamp": 1258934400000
+        },
+        "content-version": "unspecified",
+        "delay-in-days": 4589,
+        "URL": "https://www.cambridge.org/core/terms"
+      }
+    ],
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "J. Navigation"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          1997,
+          5
+        ]
+      ]
+    },
+    "abstract": "<jats:p>Eurofix is an integrated navigation system, which combines Differential GNSS and Loran-C. The Loran-C system is used to provide differential corrections for the GNSS pseudo-range measurements and integrity information by additionally modulating the transmitted signals. This modulation, however, is not allowed to degrade normal Loran-C operations. As data transmission is hindered by the aggressive Loran-C signal environment, special modulation patterns and Forward Error Correcting codes are designed to fulfil the requirements. Compared to other DGNSS services, Eurofix has a number of advantages: It covers a large area, its implementation in an already existing infrastructure is basically low-cost, it offers enhanced datalink availability in urban and mountainous environment, it has wide-area capabilities and, finally, it provides a free backup navigation system in case either Loran-C or GPS fails.</jats:p><jats:p>The paper describes the Eurofix system, focusing on the Loran-C data channel. A modified RTCM type-9 message format is used with special Forward Error Correction. At Delft University a real-life test set-up has been built to evaluate the Eurofix performance for different scenarios. The results on datalink and DGNSS performance are presented. It is shown that metre-level DGNSS performance is achievable with low bit rate data channels, using Loran-C stations at up to 1000 km distance.</jats:p>",
+    "DOI": "10.1017/s037346330002381x",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2009,
+          11,
+          23
+        ]
+      ],
+      "date-time": "2009-11-23T16:17:37Z",
+      "timestamp": 1258993057000
+    },
+    "page": "209-223",
+    "source": "Crossref",
+    "is-referenced-by-count": 7,
+    "title": [
+      "Eurofix: Test Results of a Cost-Effective DGNSS Augmentation System"
+    ],
+    "prefix": "10.1017",
+    "volume": "50",
+    "author": [
+      {
+        "given": "G. W. A.",
+        "family": "Offermans",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "A. W. S.",
+        "family": "Helwig",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "D.",
+        "family": "van Willigen",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "56",
+    "published-online": {
+      "date-parts": [
+        [
+          2009,
+          11,
+          23
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "S037346330002381X_ref004",
+        "volume-title": "Proceedings of the 23rd Annual Technical Symposium of the Wild Goose Association",
+        "author": "Offermans",
+        "year": "1994"
+      },
+      {
+        "key": "S037346330002381X_ref005",
+        "volume-title": "Proceedings of the 1995 National Technical Meeting of the Institute of Navigation",
+        "author": "Andersen",
+        "year": "1995"
+      },
+      {
+        "key": "S037346330002381X_ref006",
+        "volume-title": "Proceedings of the 2gth Annual Technical Symposium of the International Loran Association",
+        "author": "Helwig",
+        "year": "1996"
+      },
+      {
+        "key": "S037346330002381X_ref007",
+        "volume-title": "Proceedings of the 25th Annual Technical Symposium of the International Loran Association",
+        "author": "Offermans",
+        "year": "1996"
+      },
+      {
+        "key": "S037346330002381X_ref008",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TIT.1986.1057212"
+      },
+      {
+        "key": "S037346330002381X_ref009",
+        "volume-title": "Proceedings of the 25th Annual Technical Symposium of the International Loran Association",
+        "author": "van Willigen",
+        "year": "1996"
+      },
+      {
+        "key": "S037346330002381X_ref001",
+        "unstructured": "1 ‘European Radionavigation Plan (ERNP)’, Final Draft (July 9, 1996). Booz-Allen and Hamilton."
+      },
+      {
+        "key": "S037346330002381X_ref003",
+        "volume-title": "Proceedings of the 5th International Conference on Differential Satellite Navigation Systems",
+        "author": "Last",
+        "year": "1996"
+      },
+      {
+        "key": "S037346330002381X_ref002",
+        "first-page": "375",
+        "volume": "42",
+        "author": "van Willigen",
+        "year": "1988",
+        "journal-title": "Journal"
+      }
+    ],
+    "container-title": [
+      "Journal of Navigation"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/S037346330002381X",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2019,
+          5,
+          11
+        ]
+      ],
+      "date-time": "2019-05-11T20:58:49Z",
+      "timestamp": 1557608329000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://www.cambridge.org/core/product/identifier/S037346330002381X/type/journal_article"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          1997,
+          5
+        ]
+      ]
+    },
+    "references-count": 9,
+    "journal-issue": {
+      "issue": "2",
+      "published-print": {
+        "date-parts": [
+          [
+            1997,
+            5
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "S037346330002381X"
+    ],
+    "URL": "https://doi.org/10.1017/s037346330002381x",
+    "relation": {},
+    "ISSN": [
+      "0373-4633",
+      "1469-7785"
+    ],
+    "issn-type": [
+      {
+        "value": "0373-4633",
+        "type": "print"
+      },
+      {
+        "value": "1469-7785",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1997,
+          5
+        ]
+      ]
+    }
+  }
+}

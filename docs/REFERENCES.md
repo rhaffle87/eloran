@@ -33,9 +33,11 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
    - Mathematical treatment of hyperbolic positioning, circular vs. hyperbolic lines of position, GDOP covariance transformations, and skywave contamination.
 3. **Pelgrum, W. J. (2006).** *New Potential of Low-Frequency Radionavigation in the 21st Century*. PhD dissertation, Delft University of Technology. SOURCED from TU Delft Repository (uuid:90450409-f146-4c45-839c-a4b484f723ff).
    - Analysis of the modern error budget (transmitter, mixed-path ASF propagation, H-field antennas, receiver DSP).
-4. **Offermans, G. W. A., Helwig, A. W. S., & van Willigen, D. (2000).** "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System." *NAVIGATION: Journal of The Institute of Navigation*, 47(1), 11–22. DOI: [10.1002/j.2161-4296.2000.tb00194.x](https://doi.org/10.1002/j.2161-4296.2000.tb00194.x). SOURCED.
-   - Peer-reviewed foundational journal paper specifying the Eurofix data link: 6-pulse ternary modulation (pulses 3–8, ±1 µs shift), balanced 128-of-141 zero-sum ternary codewords ($T(6) = 141$), 30-GRI/210-bit frames, and RS(70,56) FEC.
-   - Accompanying doctoral thesis: Offermans & Helwig (2003), Delft University of Technology, ISBN 90-901-7418-4.
+4. **Offermans, G. W. A., Helwig, A. W. S., & van Willigen, D. (1997 / 2000).**
+   - **Foundational SOURCED Journal Publication**: Offermans, Helwig, & van Willigen (1997). "Eurofix: Test Results of a Cost-Effective DGNSS Augmentation System." *The Journal of Navigation*, Cambridge University Press, 50(1), pp. 63–71. DOI: [10.1017/s037346330002381x](https://doi.org/10.1017/s037346330002381x). SOURCED.
+   - Specifying the Eurofix data link: 6-pulse ternary modulation (pulses 3–8, ±1 µs shift), balanced 128-of-141 zero-sum ternary codewords ($T(6) = 141$), 30-GRI/210-bit frames, and RS(70,56) FEC.
+   - *Follow-up ION paper*: Offermans, Helwig, & van Willigen (2000). "Eurofix: A New Low-Cost High-Accuracy Positioning and Communication System." *NAVIGATION: Journal of The Institute of Navigation*, 47(1), 11–22. *Marked UNVERIFIED for automated retrieval (legacy Wiley DOI 10.1002/j.2161-4296.2000.tb00194.x decommissioned when ION transitioned publication platforms in 2021).*
+   - Accompanying doctoral thesis: Offermans & Helwig (2003), Delft University of Technology.
 5. **Hargreaves, C. (2010 / 2014).** *ASF Measurement and Processing Techniques, to allow Harbour Navigation at High Accuracy with eLoran*. MSc dissertation, Institute of Engineering Surveying and Space Geodesy (IESSG), University of Nottingham.
    - Spatial modeling of Additional Secondary Factors along coastal navigation approaches. *Marked UNVERIFIED (secondary citation; year differs across secondary sources: 2010 MSc thesis vs. 2014 citation; Nottingham repository record not retrievable; erroneous DOI 10.3390/s19143110 removed).*
 6. **Boyce, C. O. L. Jr. (2007).** *Atmospheric Noise Mitigation for Loran*. PhD dissertation, Department of Aeronautics and Astronautics, Stanford University. SOURCED from Stanford GPS Lab.
@@ -46,7 +48,7 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
 ## 3. Topical Research & Papers
 
 ### A. ASF Propagation & Mixed Paths
-- **Millington, G. (1949).** "Ground-wave propagation over an inhomogeneous smooth earth." *Proc. IEE - Part III*, 96(39), 53–64. *Marked UNVERIFIED (publisher digital library behind Cloudflare 403 bot challenge).*
+- **Millington, G. (1949).** "Ground-wave propagation over an inhomogeneous smooth earth." *Proc. IEE - Part III: Radio and Communication Engineering*, 96(39), 53–64. DOI: [10.1049/pi-3.1949.0013](https://doi.org/10.1049/pi-3.1949.0013). SOURCED (Crossref JSON validated). Foundational reciprocal mixed-path method.
 - **Monteath, G. D. (1973).** *Applications of the Electromagnetic Reciprocity Principle*. Pergamon Press.
 - **Williams, P., & Last, D. (2000).** "Mapping the ASFs of the Northwest European Loran-C System." *The Journal of Navigation*, Cambridge University Press, 53(2), 225–235. DOI: [10.1017/s0373463300008778](https://doi.org/10.1017/s0373463300008778). SOURCED.
 - **Zhou, L., Xi, X., Zhang, J., & Pu, Y. (2013).** "A new method for Loran-C ASF calculation over irregular terrain." *IEEE Transactions on Aerospace and Electronic Systems*, 49(3), 1738–1744. DOI: [10.1109/TAES.2013.6558016](https://doi.org/10.1109/TAES.2013.6558016). SOURCED.
@@ -59,6 +61,8 @@ This document compiles primary standards, technical reports, PhD and MSc dissert
   - **Simulation threshold**: The $10\ \mu\text{s}$ figure ($|\Delta t| > 10\ \mu\text{s}$, a whole carrier cycle slip) is the paper's simulation counting criterion.
   - **Empirical Austron approximation**: ECD standard deviation of $\approx 42/\sqrt{N \cdot \text{SNR}}\ \mu\text{s}$, or $\approx 28/\sqrt{N \cdot \text{SNR}}\ \mu\text{s}$ with newer receivers, where $N \cdot \text{SNR}$ is total averaged SNR.
 - **Lo, S., Morris, P. B., & Enge, P. (2005).** "Early Skywave Detection Network: Preliminary Design and Analysis." *Proc. 34th Annual Convention of the International Loran Association (ILA-34)*, Santa Barbara, CA. SOURCED from Stanford GPS Lab.
+
+- **Ma, H., Yuan, Y., Li, Z., Liu, J., Pu, Y., Du, Y., & Xi, X. (2023).** "High-precision simulation technology for enhanced Loran signal simulators based on Lagrange farrow structure filter." *IET Radar, Sonar & Navigation*, 17(6), 917–926. DOI: [10.1049/rsn2.12343](https://doi.org/10.1049/rsn2.12343). SOURCED (Crossref JSON validated). High-precision sub-sample pulse delay simulation using Lagrange Farrow interpolation filters for digital RF pulse front-ends and time-delay generation.
 
 ### C. Receiver Noise, Terrain Diffraction, & Multi-Sensor Fusion
 - **Rhee, J. H., Kim, J., Son, P. W., & Seo, J. (2021).** "Enhanced Loran (eLoran) Positioning Accuracy Assessment Under Transmitter and Receiver Noise." *IEEE Access*, 9, 116248–116259. DOI: [10.1109/ACCESS.2021.3105739](https://doi.org/10.1109/ACCESS.2021.3105739). SOURCED.

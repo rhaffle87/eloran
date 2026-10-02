@@ -86,7 +86,7 @@ simuloran/
   - RTCM MPS: $\eta = 1.000338$ ($c = 299,792,458\text{ m/s}$)
   - USCG Loran-C User Handbook: $\eta = 1.000284$
   - China National Standard: $\eta = 1.000315$
-- **Secondary Factor (SF)**: Empirical polynomial modeling all-seawater groundwave delay (marked UNVERIFIED due to a known ~0.236 µs / ~71 m step discontinuity at 100 statute miles; disabled by default with a visible UI indicator `Secondary Factor: off (UNVERIFIED model)` wherever results depend on PF+SF+ASF).
+- **Secondary Factor (SF)**: Continuous closed-form seawater groundwave delay model (Brunavs 1977 / 1978, $(\text{PF+SF})_{\text{meters}} = -111.0 + 98.2D + (13.0D + 113.0)e^{-D/2} + 2.277/D$), eliminating the historical ~0.236 µs (71 m) boundary step discontinuity (< 0.0001 µs jump across 100 statute miles); historical discontinuous polynomial retained under optional `'legacy'` comparison flag.
 - **Additional Secondary Factor (ASF)**: Real-time spatial polynomial and raster evaluation of overland phase delays.
 - **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 1, §3 Millington reciprocal groundwave solver.
 

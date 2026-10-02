@@ -20,7 +20,13 @@ const httpsAgent = new https.Agent({ family: 4, keepAlive: false });
 const httpAgent = new http.Agent({ family: 4, keepAlive: false });
 
 function normalizeWhitespace(str) {
-  return str.toLowerCase().replace(/\s+/g, ' ').trim();
+  return str
+    .toLowerCase()
+    .replace(/&quot;/g, '')
+    .replace(/["'`]/g, '')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**

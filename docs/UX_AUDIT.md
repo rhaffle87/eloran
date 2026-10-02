@@ -219,7 +219,7 @@ In [`src/components/map/MapView.jsx:1052-1059`](file:///E:/Projects/simuloran/sr
 - **Phase 2 (Complete)**: Radar Canvas Map Mode functional rehaul (committed at `9d9aba3`). Canvas repositioned to `z-index: 0` underlay; WebGL canvas made transparent; station markers and LOP contours composited on top; declutter controls added; 4/4 Playwright tests passing in `e2e/radar-canvas.spec.js`.
 - **Phase 3 (Complete)**: Sidebar text-to-tooltip conversion (committed at `5321d39`). Converted 12 provenance items verbatim into accessible `InfoTooltip` components; `/theory` link fixed to `/learn`; UTF-8 mojibake repaired; 2/2 tests passing in `e2e/tooltips-verification.spec.js`.
 - **Phase 4 (Complete)**: Full functional QA suite in `e2e/full-functional-audit.spec.js` (committed at `ad7343c` and `afd00e7`). 12 tests covering mode buttons, map click placement, Clear All, Commit Design, CSV round-trip export/import, dynamic chart rendering, off-thread LOP worker, AsfPanel mode persistence, presets, and trial validation (12/12 passing).
-- **Phase 5 (Complete)**: Polish, redundancy pruning, responsive clearance, and final quality gate. Pruned invalid `py-0.2` classes, elevated sub-9px text to 10px, enlarged touch targets to $\ge 36\times 36\text{px}$, verified 768px tablet and 390px mobile viewports, recorded 36-matrix post-rehaul screenshot suite (`phase5_verified_*`), and passed all quality gates.
+- **Phase 5 (Complete)**: Polish, redundancy pruning, responsive clearance, and final quality gate. Pruned invalid `py-0.2` classes, elevated sub-9px text to 10px, enlarged touch targets to ≥ 36×36px, verified 768px tablet and 390px mobile viewports, recorded 36-matrix post-rehaul screenshot suite (`phase5_verified_*`), and passed all quality gates.
 
 ---
 
@@ -235,7 +235,7 @@ In [`src/components/map/MapView.jsx:1052-1059`](file:///E:/Projects/simuloran/sr
 | **Radar Canvas E2E Suite** | `npx playwright test e2e/radar-canvas.spec.js` | **PASS (4 / 4)** | Underlay stacking, marker overlays, declutter radials, tile-failure fallback, and online restoration verified. |
 | **Tooltips & Encoding E2E Suite** | `npx playwright test e2e/tooltips-verification.spec.js` | **PASS (2 / 2)** | All 12 provenance items verified accessible via hover/focus; CycleSelectionPanel clean UTF-8 verified. |
 | **Grid Worker E2E Suite** | `npx playwright test e2e/grid-worker.spec.js` | **PASS (1 / 1)** | Web worker instantiation and off-thread marching squares computation verified with CSP compliance. |
-| **Responsive Clearance & 36-Matrix** | `npx playwright test e2e/capture-phase5-verification.spec.js` | **PASS (3 / 3)** | 36 post-rehaul screenshots captured; 768px tablet height $\le 60\text{px}$ verified; 390px zero horizontal overflow and $\ge 36\times 36\text{px}$ touch targets verified. |
+| **Responsive Clearance & 36-Matrix** | `npx playwright test e2e/capture-phase5-verification.spec.js` | **PASS (3 / 3)** | 36 post-rehaul screenshots captured; 768px tablet height ≤ 60px verified; 390px zero horizontal overflow and ≥ 36×36px touch targets verified. |
 
 ### Visual Artifact Ledger
 All verification screenshots are committed in `docs/verification/screenshots/`:

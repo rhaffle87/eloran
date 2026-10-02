@@ -33,9 +33,9 @@ This document provides context on the operational status, history, and geographi
 - **Status**: Active operational chain model.
 - **Chain**: North China Sea Chain (GRI 7430). (Note: GRI 6780 is the distinct South China Sea chain with Hexian master).
 - **Transmitters** (Coordinates from NGA Publication 117, Chapter 6):
-  - **Rongcheng (Master)**: `37°04' N`, `122°19' E` $\rightarrow$ Lat `37.0667° N`, Lng `122.3167° E`
-  - **Xuancheng (Secondary X)**: `31°04' N`, `118°53' E` $\rightarrow$ Lat `31.0667° N`, Lng `118.8833° E`
-  - **Helong (Secondary Y)**: `42°43' N`, `129°06' E` $\rightarrow$ Lat `42.7167° N`, Lng `129.1000° E`
+  - **Rongcheng (Master)**: `37°04' N`, `122°19' E` $→$ Lat `37.0667° N`, Lng `122.3167° E`
+  - **Xuancheng (Secondary X)**: `31°04' N`, `118°53' E` $→$ Lat `31.0667° N`, Lng `118.8833° E`
+  - **Helong (Secondary Y)**: `42°43' N`, `129°06' E` $→$ Lat `42.7167° N`, Lng `129.1000° E`
 - **Significance**: Demonstrates eLoran multi-station positioning with differential corrections.
 
 ### 3. `jakarta_baseline` (Synthetic Maritime Testbed)
@@ -47,6 +47,6 @@ This document provides context on the operational status, history, and geographi
 
 ## 3. Coordinate Systems & Geodetic Standards
 
-- All geographic positions reference the **WGS 84** ellipsoid (semi-major axis $a = 6,378,137\text{ m}$, flattening $f = 1 / 298.257223563$).
+- All geographic positions reference the **WGS 84** ellipsoid (semi-major axis $a = 6{,}378{,}137\text{ m}$, flattening $f = 1 / 298.257223563$).
 - Great-circle transmitter-receiver ranges are computed in SIMULORAN using the spherical Haversine formula with mean Earth radius $R = 6,371,000\text{ m}$. Rigorous ellipsoidal geodesic distances (such as Vincenty 1975 or Karney 2013) can be evaluated where millimeter-level geodesic fidelity is needed.
 - Planar map projections utilize Web Mercator (**EPSG:3857**) for raster basemap display.

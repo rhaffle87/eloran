@@ -78,7 +78,7 @@ simuloran/
 ## 4. Physics & Navigation Engine
 
 ### 1. Dual Positioning Solvers
-- **Modern 2D+Time Pseudorange Multilateration**: Directly solves the state vector $\mathbf{x} = [x, y, c \cdot b_{rx}]^T$, simultaneously estimating horizontal coordinates $(x, y)$ and receiver clock bias $b_{rx}$ in nanoseconds. Supports cross-chain and all-in-view reception given a common UTC time base (or estimating one receiver clock bias per independent chain), removing the classical requirement for a single shared master station.
+- **Modern 2D+Time Pseudorange Multilateration**: Directly solves the state vector $\mathbf{x} = [x, y, c \cdot b_{\text{rx}}]^T$, simultaneously estimating horizontal coordinates $(x, y)$ and receiver clock bias $b_{\text{rx}}$ in nanoseconds. Supports cross-chain and all-in-view reception given a common UTC time base (or estimating one receiver clock bias per independent chain), removing the classical requirement for a single shared master station.
 - **Classical Hyperbolic TDOA**: Iterative Gauss-Newton solver on range differences $(d_S - d_M)$ relative to a reference master station.
 
 ### 2. Atmospheric & Propagation Modeling
@@ -91,16 +91,16 @@ simuloran/
 - **Coastline Path Segmentation & Geo-ASF**: Turf.js great-circle segmentation against Natural Earth Vector coastline polygons feeding the ITU-R P.368-10 Annex 1, §3 Millington reciprocal groundwave solver.
 
 ### 3. Cycle Slip Modeling (Boyce 2006)
-Simulates wrong-cycle selection where degraded SNR or skywave interference shifts the tracking point away from the 3rd zero crossing, introducing integer $\pm 10\ \mu s$ ($~3\text{ km}$) step errors.
+Simulates wrong-cycle selection where degraded SNR or skywave interference shifts the tracking point away from the 3rd zero crossing, introducing integer ±10 µs (~3 km) step errors.
 
 
 ### 4. Live Additional Secondary Factor (ASF) Heatmap Layer
 - **Dual Physical Quantity Overlay**: Switchable between propagation delay ($\mu\text{s}$, $0\text{–}3\ \mu\text{s}$ dynamic range mapped to Jet colormap) and groundwave field attenuation ($\text{dB}$, $0\text{–}60\text{ dB}$ loss mapped to Viridis colormap).
 - **Asynchronous Worker Rendering**: Utilizes `gridWorker.js` with transferable `Float32Array` memory buffers for smooth, debounced (300 ms) parameter updates without UI stutter.
-- **Iso-Contour Overlays**: Canvas-rendered equi-delay ($0.5\ \mu\text{s}$) and equi-attenuation ($10\text{ dB}$) contour rings with configurable layer opacity ($0\text{–}100\%$) and grid resolution ($20\times 20$ to $80\times 80$).
+- **Iso-Contour Overlays**: Canvas-rendered equi-delay (0.5 µs) and equi-attenuation (10 dB) contour rings with configurable layer opacity (0–100%) and grid resolution (20×20 to 80×80).
 
 ### 5. Receiver Tracking Loop Simulation (PLL & DLL)
-- **Standard Zero Crossing (SZC) Tracking**: Closed-loop simulation tracking the 3rd positive-going zero crossing ($30\ \mu\text{s}$) using the $15\ \mu\text{s}$ ratio test ($e(15)/e(30) \approx 0.397$).
+- **Standard Zero Crossing (SZC) Tracking**: Closed-loop simulation tracking the 3rd positive-going zero crossing (30 µs) using the 15 µs ratio test ($e(15)/e(30) \approx 0.397$).
 - **State Machine Architecture**: Real-time transition between `ACQUIRING` (phase-lock search), `LOCKED` (sub-microsecond tracking jitter via Rhee et al. 2021 noise model), and `CYCLE_SLIP` states.
 - **Envelope-to-Cycle Difference (ECD) Sparkline**: 50-GRI rolling time-history chart displaying microsecond tracking error, phase jitter, and cycle slip events.
 
@@ -112,16 +112,16 @@ Simulates wrong-cycle selection where degraded SNR or skywave interference shift
 ### 7. Multi-Sensor GNSS / eLoran BLUE Fusion & Error Ellipses
 - **Best Linear Unbiased Estimator (BLUE)**: Fuses independent eLoran and GNSS positioning solutions via inverse-covariance weighting:
 
-  $
+  $$
   \mathbf{P}_{\text{fused}} = \left( \mathbf{P}_{\text{eLoran}}^{-1} + \mathbf{P}_{\text{GNSS}}^{-1} \right)^{-1}, \quad \hat{\mathbf{x}}_{\text{fused}} = \mathbf{P}_{\text{fused}} \left( \mathbf{P}_{\text{eLoran}}^{-1} \hat{\mathbf{x}}_{\text{eLoran}} + \mathbf{P}_{\text{GNSS}}^{-1} \hat{\mathbf{x}}_{\text{GNSS}} \right)
-  $
-- **2.45-$\sigma$ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
-- **Aviation Horizontal Protection Level (HPL)**: Continuous HPL calculation with real-time RNAV RNP 0.3 ($556\text{ m}$) and APV approach ($40\text{ m}$) alert limit threshold compliance gauges.
+  $$
+- **2.45σ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
+- **Aviation Horizontal Protection Level (HPL)**: Continuous HPL calculation with real-time RNAV RNP 0.3 (556 m) and APV approach (40 m) alert limit threshold compliance gauges.
 
 ### 8. Terrain Masking & Knife-Edge Obstacle Diffraction (ITU-R P.526)
 - **Great-Circle Elevation Profiles**: Interpolates terrain elevation samples between transmitter towers and receiver antennas with Open-Elevation REST client and 128-entry in-memory LRU cache.
 - **Fresnel-Kirchhoff Diffraction Engine**: Evaluates clearance parameter $v$ and calculates knife-edge path loss $J(v)$ using the Nurul-Saunders piecewise approximation, estimating excess diffracted propagation delay $\tau_{\text{excess}}$.
-- **Vector Map Visualization**: Highlights clear paths in solid emerald green and obstructed links ($>15\text{ dB}$ loss) in dashed high-visibility red.
+- **Vector Map Visualization**: Highlights clear paths in solid emerald green and obstructed links (>15 dB loss) in dashed high-visibility red.
 
 ---
 

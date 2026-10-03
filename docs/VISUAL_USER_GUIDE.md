@@ -138,16 +138,28 @@ Custom transmitters can be engineered or edited directly on the map or via the *
 
 ## 6. Geometric Dilution of Precision (GDOP) Contours
 
-Activating the **Layers Tab** enables real-time spatial coverage and precision mapping across the maritime theater.
+Activating the **Layers Tab** or clicking the floating **GDOP HUD Ribbon** enables real-time spatial coverage and precision mapping across the maritime theater.
 
 [![GDOP Heatmap Coverage Contours](assets/screenshots/07_gdop_heatmap_contours.png)](assets/screenshots/07_gdop_heatmap_contours.png)
 
-### Heatmap Interpretation (East China Sea Basin)
-- **Green / Cyan (GDOP < 2.0)**: Optimal station geometry. Lines of position intersect near orthogonal angles (~90°), providing optimal fix accuracy across the core navigation approaches.
-- **Yellow / Orange (2.0 <= GDOP <= 5.0)**: Acceptable navigation geometry. Typical for mid-range marine coverage along the coastal boundaries.
-- **Red / Magenta (GDOP > 10.0)**: Severe geometric degradation. Occurs near baseline extensions and outer chain perimeters.
-- **Grid Density & Decimation Controls**: Real-time slider adjustment for Grid Mesh Density (180 cells) and Ramer-Douglas-Peucker (RDP) contour decimation (8 m) with selectable units (Meters Range Δ or Seconds TDOA).
-- **Coverage Masking**: Areas where received signal strength falls below receiver sensitivity (-10 dBµV/m) or where SNR < -20 dB are automatically blanked.
+### Geographically Static Coverage & Geometry Anchoring
+- **Fixed Station Geometry Domain**: The GDOP calculation bounding box is strictly anchored to the physical positions of the transmitters plus a 40% baseline margin. It never expands or recalculates when you zoom out or pan, preventing distortion or continent-wide phantom haze.
+- **Navigable Area Clamping**: Grid points are clamped to $\text{GDOP} \le 15.0$, cleanly blanking un-navigable regions outside operational coverage.
+- **Anti-Clipping Cased Contours**: Vector lines feature a dark `#030712` under-casing and zero blur (`line-blur: 0`), delivering maximum contrast against both light and dark basemaps.
+
+### Independent Layer Controls & Individual Contour Inspection
+- **Independent Component Toggles**:
+  - **`🔥 Heatmap Surface [ON/OFF]`**: Toggle the continuous Jet gradient surface independently of the isolines.
+  - **`📈 Iso-Contours [ON/OFF]`**: Toggle the vector boundary lines.
+  - **Surface Opacity Slider**: Adjust heatmap opacity continuously from 10% to 80% (default: 45%).
+- **Dedicated Inspection Buttons (Click to Isolate)**:
+  - `[All (4)]`: Displays all 4 operational contours simultaneously.
+  - `[🟢 1.5 HEA]`: Optimal Fix ($\text{GDOP} \le 1.5$, IMO/USCG Harbor Entrance and Approach standard).
+  - `[🔵 3.0 Coastal]`: Good Fix ($\text{GDOP} \le 3.0$, Coastal Navigation standard).
+  - `[🟡 7.7 Ocean]`: Marginal Fix ($\text{GDOP} \le 7.7$, Ocean En-Route standard).
+  - `[🔴 10.92 USCG Limit]`: USCG Specification Boundary ($\text{GDOP} \le 10.92$, dashed).
+- **Dual Access Points**: Access controls via the **Console Drawer Layers Tab** (`data-testid="gdop-inspector-card"`) or directly via the **Floating Map HUD Ribbon** (`data-testid="gdop-inspector-pill"`).
+- **Zero-Latency WebGL Filtering**: Switching levels or toggling visibility applies directly to MapLibre WebGL layer properties with 0 ms latency, without re-running any background worker computation.
 
 > [!NOTE]
 > The GDOP rasterizer runs asynchronously in an off-thread Web Worker, guaranteeing smooth 60 FPS map panning and zooming without blocking the main browser thread.
@@ -362,9 +374,10 @@ Exhibits empirical benchmarks validating Simuloran against real-world experiment
 5. Inspect the patrol vessel icon on the map to view real-time horizontal coordinates (28.5000°N, 122.5000°E), estimated error (5.8 m), and clock bias.
 
 ### Recipe 2: How to Evaluate GDOP Coverage
-1. Open the **Layers Subsystem** tab.
+1. Open the **Layers Subsystem** tab (or click the floating **GDOP HUD Ribbon** on the map).
 2. Toggle **"Live GDOP Coverage Overlay"** to ON.
-3. Observe the colored contour zones. If GDOP exceeds 5.0 in your area of interest, open **Station Editor** and add a secondary transmitter orthogonal to the existing baseline.
+3. Use the **Contour Inspection Buttons** (`[1.5]`, `[3.0]`, `[7.7]`, `[10.92]`) to isolate specific navigation standards (e.g. HEA or Coastal limits) without background visual clutter.
+4. Adjust the **Heatmap Surface Opacity** slider to balance basemap chart readability against coverage density.
 
 ### Recipe 3: How to Diagnose a 10 µs Cycle Slip
 1. Open `/waveforms` and select the **Skywave** tab.

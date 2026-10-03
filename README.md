@@ -38,7 +38,7 @@ SimuLoran provides a high-density, professional dark-mode maritime radio-navigat
 
 [![Real-Time GDOP Heatmap Contours](docs/assets/screenshots/07_gdop_heatmap_contours.png)](docs/VISUAL_USER_GUIDE.md#6-geometric-dilution-of-precision-gdop-contours)
 
-*Real-time multi-station GDOP and HDOP coverage contour rasterization across the East China Sea basin computed via an off-thread Web Worker (180 cells grid density, 8 m RDP contour decimation). Renders Jet colormap contours with configurable operational threshold isolines (GDOP ≤ 1.5, 3.0, 5.0) and live convergence telemetry. [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#6-geometric-dilution-of-precision-gdop-contours)*
+*Real-time multi-station GDOP and HDOP coverage contour rasterization across the East China Sea basin computed via an off-thread Web Worker (180 cells grid density, 8 m RDP contour decimation). Features geographically static coverage domains strictly anchored to transmitter baseline geometry, eliminating viewport scaling distortion during zoom/pan. Incorporates high-contrast cased vector contours, independent layer toggles (`🔥 Heatmap Surface` / `📈 Iso-Contours`), continuous opacity control, and dedicated inspection buttons for individual operational standards: Optimal HEA (GDOP ≤ 1.5), Coastal Navigation (GDOP ≤ 3.0), Ocean En-Route (GDOP ≤ 7.7), and USCG Specification Limit (GDOP ≤ 10.92, dashed). [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#6-geometric-dilution-of-precision-gdop-contours)*
 
 ---
 
@@ -178,23 +178,38 @@ simuloran/
 ### 3. Cycle Slip Modeling (Boyce 2006)
 Simulates wrong-cycle selection where degraded SNR or skywave interference shifts the tracking point away from the 3rd zero crossing, introducing integer ±10 µs (~3 km) step errors.
 
+### 4. Geographically Static GDOP Coverage & Iso-Contour Inspector
+- **Transmitter Geometry Anchoring**: The GDOP calculation domain is strictly derived from the physical positions of the active master and secondary transmitters plus a calibrated baseline buffer ($[\min(\text{stations}) - 40\%, \max(\text{stations}) + 40\%]$). Completely decoupled from the camera viewport, preventing the calculation bounding box from expanding across continents or re-triggering worker jobs upon map zoom or pan.
+- **Off-Thread Matrix Evaluation & Navigable Clamping**: Evaluates direction cosines and the hyperbolic geometry $\mathbf{H}$-matrix across ~18,000 grid samples in `physicsWorker.js`. Grid points exceeding $\text{GDOP} > 15.0$ are strictly masked, eliminating phantom continent-wide haze outside the valid hyperbolic fix area.
+- **Anti-Clipping Cased Contours**: Vector isolines are drawn with a dedicated dark under-casing (`#030712`) and zero blur (`line-blur: 0`), providing razor-sharp optical contrast over both light/dark basemaps and colorful heatmap gradients without blurring or clipping into the background.
+- **Independent Component Separation**:
+  - **`🔥 Heatmap Surface`**: Independent toggle for continuous Jet-gradient precision dilution raster.
+  - **`📈 Iso-Contours`**: Independent toggle for threshold vector lines.
+  - **Surface Opacity Slider**: Continuous adjustment from 10% to 80% opacity.
+- **Dedicated Operational Standard Buttons**:
+  - `[All (4)]`: Displays all 4 operational contours simultaneously.
+  - `[🟢 1.5 HEA]`: Isolates Optimal Fix geometry ($\text{GDOP} \le 1.5$, Harbor Entrance and Approach standard).
+  - `[🔵 3.0 Coastal]`: Isolates Good Fix geometry ($\text{GDOP} \le 3.0$, Coastal Navigation standard).
+  - `[🟡 7.7 Ocean]`: Isolates Marginal Fix geometry ($\text{GDOP} \le 7.7$, Ocean En-Route standard).
+  - `[🔴 10.92 USCG Limit]`: Isolates the USCG Specification Boundary ($\text{GDOP} \le 10.92$, dashed).
+- **Dual Access Points & Zero-Latency WebGL Filtering**: Quick-access on-map floating HUD pill (`data-testid="gdop-inspector-pill"`) and full Console Drawer Layers Panel (`data-testid="gdop-inspector-card"`). Interactive filtering and visibility toggles execute in 0 ms via MapLibre WebGL paint/filter properties with zero worker re-evaluations.
 
-### 4. Live Additional Secondary Factor (ASF) Heatmap Layer
+### 5. Live Additional Secondary Factor (ASF) Heatmap Layer
 - **Dual Physical Quantity Overlay**: Switchable between propagation delay ($\mu\text{s}$, $0\text{–}3\ \mu\text{s}$ dynamic range mapped to Jet colormap) and groundwave field attenuation ($\text{dB}$, $0\text{–}60\text{ dB}$ loss mapped to Viridis colormap).
 - **Asynchronous Worker Rendering**: Utilizes `gridWorker.js` with transferable `Float32Array` memory buffers for smooth, debounced (300 ms) parameter updates without UI stutter.
 - **Iso-Contour Overlays**: Canvas-rendered equi-delay (0.5 µs) and equi-attenuation (10 dB) contour rings with configurable layer opacity (0–100%) and grid resolution (20×20 to 80×80).
 
-### 5. Receiver Tracking Loop Simulation (PLL & DLL)
+### 6. Receiver Tracking Loop Simulation (PLL & DLL)
 - **Standard Zero Crossing (SZC) Tracking**: Closed-loop simulation tracking the 3rd positive-going zero crossing (30 µs) using the 15 µs ratio test ($e(15)/e(30) \approx 0.397$).
 - **State Machine Architecture**: Real-time transition between `ACQUIRING` (phase-lock search), `LOCKED` (sub-microsecond tracking jitter via Rhee et al. 2021 noise model), and `CYCLE_SLIP` states.
 - **Envelope-to-Cycle Difference (ECD) Sparkline**: 50-GRI rolling time-history chart displaying microsecond tracking error, phase jitter, and cycle slip events.
 
-### 6. Station Failure & Constellation Integrity
+### 7. Station Failure & Constellation Integrity
 - **Per-Transmitter Operating Modes**: Real-time toggling of stations between `NOMINAL`, `DEGRADED` (inflated observation noise simulating aging transmitters), and `FAILED` (complete transmitter loss).
 - **Dynamic GDOP Matrix Exclusion**: Failed stations are dynamically dropped from the geometry $\mathbf{H}$-matrix with warning indicators when fewer than 2 secondaries remain (hyperbolic fix degenerate).
 - **Hazard Coverage Overlay**: Automatically renders a 250 km hatched red loss-of-coverage exclusion circle centered on failed transmitters.
 
-### 7. Multi-Sensor GNSS / eLoran BLUE Fusion & Error Ellipses
+### 8. Multi-Sensor GNSS / eLoran BLUE Fusion & Error Ellipses
 **Best Linear Unbiased Estimator (BLUE)**: Fuses independent eLoran and GNSS positioning solutions via inverse-covariance weighting:
 
 $$
@@ -204,7 +219,7 @@ $$
 - **$2.45\sigma$ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
 - **Aviation Horizontal Protection Level (HPL)**: Continuous HPL calculation with real-time RNAV RNP 0.3 (556 m) and APV approach (40 m) alert limit threshold compliance gauges.
 
-### 8. Terrain Masking & Knife-Edge Obstacle Diffraction (ITU-R P.526)
+### 9. Terrain Masking & Knife-Edge Obstacle Diffraction (ITU-R P.526)
 - **Great-Circle Elevation Profiles**: Evaluates deterministic offline regional terrain geomorphology profiles between transmitter towers and receiver antennas with zero remote API latency or network timeouts.
 - **Fresnel-Kirchhoff Diffraction Engine**: Evaluates clearance parameter $v$ and calculates knife-edge path loss $J(v)$ using the Nurul-Saunders piecewise approximation, estimating excess diffracted propagation delay $\tau_{\text{excess}}$.
 - **Vector Map Visualization**: Highlights clear paths in solid emerald green and obstructed links (>15 dB loss) in dashed high-visibility red.
@@ -212,16 +227,16 @@ $$
 ---
 
 
-### 9. Software-Defined Radio (SDR) Baseband & Web Worker DSP
+### 10. Software-Defined Radio (SDR) Baseband & Web Worker DSP
 - **100 kHz Baseband Synthesizer**: Generates synthetic, phase-coded I/Q time-domain baseband samples directly in a dedicated background Web Worker (`sdrWorker.js`).
 - **Interactive Oscilloscope & Spectral Waterfall**: 60 FPS hardware-accelerated canvas waterfall display with dual-trace Digital Storage Oscilloscope (DSO) and matched filter envelope detection.
 - **Synthetic Audio Demodulation**: Listen to simulated receiver audio outputs across variable SNR conditions with zero DOM-thread blocking.
 
-### 10. Offline Elevation & Topographic Modeling
+### 11. Offline Elevation & Topographic Modeling
 - **Deterministic Offline Terrain**: Generates realistic coastal terrain profiles using multi-octave Perlin-Simplex synthesis, providing 100% offline capability without external digital elevation model (DEM) tile dependencies.
 - **Fresnel Clearance & Path Profiling**: Live visualization of the 1st Fresnel zone clearance ellipse between any transmitter and receiver pair.
 
-### 11. Desktop Electron & Production Containerization
+### 12. Desktop Electron & Production Containerization
 - **Cross-Platform Desktop App**: Packaged with Electron 33 providing native window frame controls, offline operation, and field-ready telemetry displays.
 - **Hardened Container Runtime**: Multi-stage Dockerfile and Docker Compose orchestration serving an immutable, high-security Nginx web environment.
 

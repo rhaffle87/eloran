@@ -121,20 +121,28 @@ test.describe('SimuLoran - Visual User Guide & High-Resolution Layout Capture', 
     // Switch to Layers tab
     const layersTab = page.locator('button[aria-label="Layers"]');
     await layersTab.click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(800);
 
     // Ensure Live GDOP Coverage Overlay is enabled
-    const gdopToggle = page.locator('input[type="checkbox"]').filter({ hasText: /GDOP/i }).or(page.locator('label:has-text("Live GDOP Coverage Overlay")'));
-    if (await gdopToggle.count() > 0) {
-      await gdopToggle.first().click().catch(() => {});
+    const gdopLabel = page.locator('label:has-text("Live GDOP Coverage Overlay")');
+    const gdopCheckbox = gdopLabel.locator('input[type="checkbox"]');
+    const isChecked = await gdopCheckbox.isChecked();
+    if (!isChecked) {
+      await gdopLabel.click();
+      await page.waitForTimeout(1500);
     }
 
-    // Trigger contour generation across China East Sea
-    const genBtn = page.locator('button:has-text("Generate LOP Contours")');
-    if (await genBtn.count() > 0) {
-      await genBtn.click();
-      await page.waitForTimeout(3500);
-    }
+    // Scroll the drawer panel to top so the inspector card and buttons are fully visible
+    await page.evaluate(() => {
+      const scrollable = document.querySelector('.overflow-y-auto');
+      if (scrollable) scrollable.scrollTop = 0;
+    });
+
+    // Wait for GDOP worker computation and MapLibre layers
+    await page.waitForFunction(() => {
+      return Boolean(window.__gdopGeoJson && window.__gdopContoursGeoJson);
+    }, { timeout: 12000 }).catch(() => {});
+    await page.waitForTimeout(2000);
 
     await ensureMapReady(page);
     await page.screenshot({ path: 'docs/assets/screenshots/07_gdop_heatmap_contours.png' });

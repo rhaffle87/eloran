@@ -22,7 +22,9 @@
     "electron:dev": "electron . --dev",
     "electron:start": "electron .",
     "electron:pack": "npm run build && electron-builder --dir",
-    "electron:build": "npm run build && electron-builder"
+    "electron:build": "npm run build && electron-builder",
+    "docker:build": "docker build -t simuloran .",
+    "docker:run": "docker run -d -p 8080:80 simuloran"
   },
   "dependencies": {
     "@turf/turf": "^7.2.0",

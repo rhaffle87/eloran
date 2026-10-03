@@ -155,6 +155,13 @@ npm run dev
 
 # Build production bundle
 npm run build
+
+# Run via Docker Compose (production Nginx container on http://localhost:8080)
+docker compose up -d
+
+# Or build and run standalone Docker container
+docker build -t simuloran .
+docker run -d -p 8080:80 simuloran
 ```
 
 ---

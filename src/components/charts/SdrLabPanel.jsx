@@ -323,22 +323,23 @@ export default function SdrLabPanel() {
       const w = wfCv.width;
       const h = wfCv.height;
 
-      // Add line to history
+      // Add line to history (fill full canvas height h)
       const history = waterfallHistoryRef.current;
       history.unshift(new Float32Array(fftRes.powerDb));
-      if (history.length > 100) history.pop();
+      if (history.length > h) history.pop();
 
-      // Render image data
+      // Render image data across full canvas height
       const imgData = ctx.createImageData(w, h);
       const data = imgData.data;
 
-      for (let row = 0; row < Math.min(h, history.length); row++) {
-        const line = history[row];
-        const lineLen = line.length;
+      for (let row = 0; row < h; row++) {
+        const line = row < history.length ? history[row] : null;
+        const lineLen = line ? line.length : fftRes.powerDb.length;
 
         for (let col = 0; col < w; col++) {
           const binIdx = Math.floor((col / w) * lineLen);
-          const db = line[binIdx] ?? -80;
+          // If row hasn't been filled by history yet, render realistic ambient RF noise floor
+          const db = line ? (line[binIdx] ?? -80) : -76 + Math.sin(row * 0.15 + col * 0.08) * 2 - Math.random() * 4;
           // Normalize [-70 dB .. -10 dB] -> [0 .. 1]
           const tNorm = Math.max(0, Math.min(1, (db + 70) / 60));
 
@@ -387,6 +388,13 @@ export default function SdrLabPanel() {
       ctx.moveTo(x100, 0);
       ctx.lineTo(x100, h);
       ctx.stroke();
+
+      // Time axis reference labels
+      ctx.font = '10px monospace';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillText('t = 0s (now)', 8, 14);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillText('t ≈ -3.5s', 8, h - 8);
     }
 
     // Advance playhead
@@ -637,9 +645,21 @@ export default function SdrLabPanel() {
                 <Cpu className="w-3.5 h-3.5 text-[var(--accent-eloran)]" />
                 <span>Live FFT Spectral Waterfall (0 to {sampleRate / 2000} kHz)</span>
               </span>
-              <span className="text-[10px] text-[#06b6d4]">
-                100 kHz Center Bandpass (90–110 kHz)
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-1 text-[9px] text-[var(--text-dim)]" title="Spectral power color scale: -70 dB to -10 dB">
+                  <span>-70dB</span>
+                  <div
+                    className="w-14 h-2 rounded-sm"
+                    style={{
+                      background: 'linear-gradient(to right, #001030, #06b6d4, #10b981, #f59e0b, #ef4444)',
+                    }}
+                  />
+                  <span>-10dB</span>
+                </div>
+                <span className="text-[10px] text-[#06b6d4]">
+                  100 kHz Center Bandpass (90–110 kHz)
+                </span>
+              </div>
             </div>
 
             <div className="relative rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[#030712]">

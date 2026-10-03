@@ -22,27 +22,74 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ---
 
-## Visual Showcase & Layout Gallery
+## Visual Showcase & Layout Overview
 
-SimuLoran features a high-density, professional dark-mode maritime engineering interface. Below is an overview of the primary operational views. For complete operating procedures, parameter definitions, and workflows, consult the **[Visual User Guide](docs/VISUAL_USER_GUIDE.md)**.
+SimuLoran provides a high-density, professional dark-mode maritime radio-navigation workbench. Below is a visual tour of the primary operational views shown at full width. For complete step-by-step operating procedures, parameter definitions, and workflows, consult the **[Visual User Guide](docs/VISUAL_USER_GUIDE.md)**.
 
-| eLoran Multilateration & Radial Geometry | Real-Time GDOP & Coverage Heatmap |
-| :---: | :---: |
-| [![eLoran Multilateration](docs/assets/screenshots/05_eloran_all_in_view_map.png)](docs/VISUAL_USER_GUIDE.md#4-eloran-pseudorange-multilateration-all-in-view) | [![GDOP Heatmap](docs/assets/screenshots/07_gdop_heatmap_contours.png)](docs/VISUAL_USER_GUIDE.md#6-real-time-geometric-dilution-of-precision-gdop-contours) |
-| *All-in-view pseudorange fixes, station radials, and error ellipses.* | *Multi-station GDOP coverage contour rasterization with Jet colormap.* |
+### 1. eLoran All-in-View Pseudorange Multilateration & Radial Geometry
 
-| 100 kHz RF Pulse & Zero-Crossing Lab | GNSS-eLoran Multi-Sensor Fusion |
-| :---: | :---: |
-| [![RF Pulse Oscilloscope](docs/assets/screenshots/14_rf_waveforms_pulse_viewer.png)](docs/VISUAL_USER_GUIDE.md#13-rf-waveforms-workbench--pulse-oscilloscope) | [![Sensor Fusion](docs/assets/screenshots/10_sensor_fusion_resilience.png)](docs/VISUAL_USER_GUIDE.md#9-gnss-eloran-sensor-fusion--resilience-lab) |
-| *100 kHz carrier, raised-cosine envelope, SZC tracking, and FFT spectrum.* | *Inverse-covariance BLUE estimator with GNSS jamming resilience.* |
+[![eLoran All-in-View Multilateration Map](docs/assets/screenshots/05_eloran_all_in_view_map.png)](docs/VISUAL_USER_GUIDE.md#4-eloran-pseudorange-multilateration-all-in-view)
 
-| Additional Secondary Factor (ASF) Millington Lab | Loran Data Channel (LDC) 32-PPM Demodulator |
-| :---: | :---: |
-| [![Millington ASF Panel](docs/assets/screenshots/08_asf_millington_panel.png)](docs/VISUAL_USER_GUIDE.md#7-additional-secondary-factor-asf--millington-propagation) | [![LDC Demodulator](docs/assets/screenshots/18_rf_waveforms_ldc_demodulator.png)](docs/VISUAL_USER_GUIDE.md#17-loran-data-channel-ldc-demodulator) |
-| *Multi-segment mixed-path ground conductivity modeling (ITU-R P.368).* | *32-PPM pulse position shift modulation and Reed-Solomon RS(31,15) decoder.* |
+*Real-time all-in-view pseudorange multilateration on MapLibre vector charts. Features synchronized station radials, dynamic receiver clock bias ($b_{rx}$) estimation via Weighted Least Squares (WLS), and covariance error ellipses. [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#4-eloran-pseudorange-multilateration-all-in-view)*
+
+---
+
+### 2. Real-Time Geometric Dilution of Precision (GDOP) & Coverage Contours
+
+[![Real-Time GDOP Heatmap Contours](docs/assets/screenshots/07_gdop_heatmap_contours.png)](docs/VISUAL_USER_GUIDE.md#6-real-time-geometric-dilution-of-precision-gdop-contours)
+
+*Real-time multi-station GDOP and HDOP coverage contour rasterization using an off-thread Web Worker. Renders Jet/Viridis colormaps with configurable operational threshold isolines (GDOP ≤ 1.5, 3.0, 5.0). [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#6-real-time-geometric-dilution-of-precision-gdop-contours)*
+
+---
+
+### 3. 100 kHz RF Waveform Workbench & Standard Zero-Crossing (SZC) Oscilloscope
+
+[![100 kHz RF Pulse Oscilloscope](docs/assets/screenshots/14_rf_waveforms_pulse_viewer.png)](docs/VISUAL_USER_GUIDE.md#13-rf-waveforms-workbench--pulse-oscilloscope)
+
+*High-precision digital oscilloscope synthesizing the USCG standardized 100 kHz pulse: $i(t) = A (t-\tau)^2 e^{-2(t-\tau)/65} \sin(0.2\pi t)$. Shows envelope derivative tracking, the 3rd zero-crossing (SZC at 30 µs), and spectral FFT containment. [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#13-rf-waveforms-workbench--pulse-oscilloscope)*
+
+---
+
+### 4. GNSS-eLoran Multi-Sensor Fusion & Resilient Anti-Jamming Lab
+
+[![GNSS-eLoran Multi-Sensor Fusion](docs/assets/screenshots/10_sensor_fusion_resilience.png)](docs/VISUAL_USER_GUIDE.md#9-gnss-eloran-sensor-fusion--resilience-lab)
+
+*Inverse-covariance Best Linear Unbiased Estimator (BLUE) sensor fusion. Dynamically weights satellite pseudoranges against high-power terrestrial eLoran signals, maintaining resilient PNT fix continuity during severe GNSS jamming and spoofing attacks. [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#9-gnss-eloran-sensor-fusion--resilience-lab)*
+
+---
+
+### 5. Additional Secondary Factor (ASF) & Millington Mixed-Path Propagation
+
+[![Millington ASF Propagation Panel](docs/assets/screenshots/08_asf_millington_panel.png)](docs/VISUAL_USER_GUIDE.md#7-additional-secondary-factor-asf--millington-propagation)
+
+*Multi-segment boundary groundwave phase delay modeling following ITU-R P.368 and Millington's method. Computes forward and reverse boundary field strengths across varying conductivities (seawater $\sigma=5.0\text{ S/m}$, agricultural land, rocky terrain). [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#7-additional-secondary-factor-asf--millington-propagation)*
+
+---
+
+### 6. Loran-C Hyperbolic Time-Difference of Arrival (TDOA) Navigation
+
+[![Loran-C Hyperbolic TDOA Map](docs/assets/screenshots/03_loran_c_hyperbolic_map.png)](docs/VISUAL_USER_GUIDE.md#3-loran-c-hyperbolic-time-difference-navigation)
+
+*Classical hyperbolic radio-navigation showing master and secondary stations, hyperbolic Lines of Position (LOPs), baseline extension geometry, and time difference measurements ($\text{TD}_X, \text{TD}_Y$). [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#3-loran-c-hyperbolic-time-difference-navigation)*
+
+---
+
+### 7. Loran Data Channel (LDC) 32-PPM Demodulator & Telemetry
+
+[![LDC 32-PPM Demodulator](docs/assets/screenshots/18_rf_waveforms_ldc_demodulator.png)](docs/VISUAL_USER_GUIDE.md#17-loran-data-channel-ldc-demodulator)
+
+*32-State Pulse Position Modulation (32-PPM) demodulator and Eurofix 9th-pulse decoder with Reed-Solomon RS(31,15) forward error correction for differential corrections and UTC synchronization. [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#17-loran-data-channel-ldc-demodulator)*
+
+---
+
+### 8. Interactive Physics Theory & Empirical Trial Benchmarks
+
+[![Interactive Theory & KaTeX Math](docs/assets/screenshots/19_learn_interactive_theory.png)](docs/VISUAL_USER_GUIDE.md#18-learn-page--interactive-physics-theory)
+
+*Dedicated educational laboratory featuring KaTeX-rendered equations, ellipsoidal geodesic derivations (Andoyer-Lambert), ionospheric skywave reflections (Doherty), and empirical trial benchmark validation (Korean Nationwide eLoran Testbed). [Read detailed guide →](docs/VISUAL_USER_GUIDE.md#18-learn-page--interactive-physics-theory)*
 
 > [!TIP]
-> Explore the full gallery of 20 high-resolution annotated layouts in **[docs/VISUAL_USER_GUIDE.md](docs/VISUAL_USER_GUIDE.md)**, or inspect automated multi-breakpoint verification runs in **[docs/verification/screenshots/README.md](docs/verification/screenshots/README.md)**.
+> Explore all 20 full-resolution layouts with complete interactive control descriptions in the **[Visual User Guide](docs/VISUAL_USER_GUIDE.md)**, or inspect the automated multi-viewport verification archive in **[docs/verification/screenshots/README.md](docs/verification/screenshots/README.md)**.
 
 ## 2. Documentation & Research Standards
 

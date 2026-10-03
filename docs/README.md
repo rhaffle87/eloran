@@ -8,6 +8,8 @@ Welcome to the SIMULORAN scientific and engineering documentation catalog. This 
 
 | Document | Description | Target Audience | Primary Standards |
 |---|---|---|---|
+| [**VISUAL_USER_GUIDE.md**](VISUAL_USER_GUIDE.md) | Dedicated illustrated visual guide covering every layout, control panel, navigation mode, RF waveform lab, telemetry console, and step-by-step user workflows with high-res screenshots. | Users, Operators, Engineers | UI/UX, Operational Protocols |
+| [**LORAN_MATHEMATICAL_PHYSICS_MANUAL.md**](LORAN_MATHEMATICAL_PHYSICS_MANUAL.md) | Rigorous mathematical physics manual formalizing hyperbolic TDOA, Millington mixed-path ASF, ionospheric skywave reflections, Allan variance oscillator drift, and WLS/BLUE solvers. | Navigation Scientists, Mathematicians | USCG M16562.4A, ITU-R P.368, RTCM 12700.1 |
 | [**WHITEPAPER.md**](WHITEPAPER.md) | Master technical whitepaper (v1.6.0) detailing the complete mathematical formulation of 100 kHz pulse synthesis, groundwave propagation, TDOA multilateration, EKF tracking, and RAIM integrity. | Physicists, Navigation Engineers, Academics | USCG M16562.4A, ITU-R P.368, RTCM MPS |
 | [**VALIDATION.md**](VALIDATION.md) | Empirical field trial benchmarks from historical and modern trials (Korean Nationwide eLoran Testbed 2021, Maoming Inland Geodesic Test 2025), error budgets, and validation harness. | QA Engineers, Researchers | Rhee et al. (2021), Gao et al. (2025) |
 | [**PROVENANCE.md**](PROVENANCE.md) | Machine-verified citation registry providing retrievable URLs, DOIs, and authenticated archival evidence for all referenced publications with strict zero-hallucination tracking. | Librarians, Peer Reviewers, Auditors | Crossref API, ITU-R Archive |
@@ -22,5 +24,6 @@ Welcome to the SIMULORAN scientific and engineering documentation catalog. This 
 
 ## Subdirectories
 
-- **[evidence/](evidence/)**: Contains machine-readable JSON records of authenticated primary sources used by the automated provenance checking harness (`check-provenance.mjs`).
-- **[verification/](verification/)**: Visual regression archives, export datasets, and automated verification screenshots proving simulation correctness across major releases.
+- **[assets/screenshots/](assets/screenshots/)**: Official high-resolution screenshot catalog illustrating all 20 layouts, modal dialogues, and engineering workbenches.
+- **[evidence/](evidence/)**: Machine-readable JSON records of authenticated primary sources used by the automated provenance checking harness (`check-provenance.mjs`).
+- **[verification/screenshots/](verification/screenshots/)**: Visual regression archives, export datasets, and automated multi-viewport verification screenshots proving simulation correctness across releases.

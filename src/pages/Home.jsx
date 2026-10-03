@@ -255,7 +255,7 @@ export default function Home() {
       </section>
 
       {/* ── Preset Scenarios ──────────────────────────── */}
-      <section className="border-t border-[var(--surface-border)] py-16" style={{ background: 'var(--surface-layer)' }}>
+      <section id="presets" className="border-t border-[var(--surface-border)] py-16" style={{ background: 'var(--surface-layer)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>

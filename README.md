@@ -19,8 +19,35 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ---
 
+
+---
+
+## Visual Showcase & Layout Gallery
+
+SimuLoran features a high-density, professional dark-mode maritime engineering interface. Below is an overview of the primary operational views. For complete operating procedures, parameter definitions, and workflows, consult the **[Visual User Guide](docs/VISUAL_USER_GUIDE.md)**.
+
+| eLoran Multilateration & Radial Geometry | Real-Time GDOP & Coverage Heatmap |
+| :---: | :---: |
+| [![eLoran Multilateration](docs/assets/screenshots/05_eloran_all_in_view_map.png)](docs/VISUAL_USER_GUIDE.md#4-eloran-pseudorange-multilateration-all-in-view) | [![GDOP Heatmap](docs/assets/screenshots/07_gdop_heatmap_contours.png)](docs/VISUAL_USER_GUIDE.md#6-real-time-geometric-dilution-of-precision-gdop-contours) |
+| *All-in-view pseudorange fixes, station radials, and error ellipses.* | *Multi-station GDOP coverage contour rasterization with Jet colormap.* |
+
+| 100 kHz RF Pulse & Zero-Crossing Lab | GNSS-eLoran Multi-Sensor Fusion |
+| :---: | :---: |
+| [![RF Pulse Oscilloscope](docs/assets/screenshots/14_rf_waveforms_pulse_viewer.png)](docs/VISUAL_USER_GUIDE.md#13-rf-waveforms-workbench--pulse-oscilloscope) | [![Sensor Fusion](docs/assets/screenshots/10_sensor_fusion_resilience.png)](docs/VISUAL_USER_GUIDE.md#9-gnss-eloran-sensor-fusion--resilience-lab) |
+| *100 kHz carrier, raised-cosine envelope, SZC tracking, and FFT spectrum.* | *Inverse-covariance BLUE estimator with GNSS jamming resilience.* |
+
+| Additional Secondary Factor (ASF) Millington Lab | Loran Data Channel (LDC) 32-PPM Demodulator |
+| :---: | :---: |
+| [![Millington ASF Panel](docs/assets/screenshots/08_asf_millington_panel.png)](docs/VISUAL_USER_GUIDE.md#7-additional-secondary-factor-asf--millington-propagation) | [![LDC Demodulator](docs/assets/screenshots/18_rf_waveforms_ldc_demodulator.png)](docs/VISUAL_USER_GUIDE.md#17-loran-data-channel-ldc-demodulator) |
+| *Multi-segment mixed-path ground conductivity modeling (ITU-R P.368).* | *32-PPM pulse position shift modulation and Reed-Solomon RS(31,15) decoder.* |
+
+> [!TIP]
+> Explore the full gallery of 20 high-resolution annotated layouts in **[docs/VISUAL_USER_GUIDE.md](docs/VISUAL_USER_GUIDE.md)**, or inspect automated multi-breakpoint verification runs in **[docs/verification/screenshots/README.md](docs/verification/screenshots/README.md)**.
+
 ## 2. Documentation & Research Standards
 
+- [**docs/VISUAL_USER_GUIDE.md**](docs/VISUAL_USER_GUIDE.md) — Comprehensive visual documentation & step-by-step user guide with annotated high-resolution screenshots covering all layouts and controls.
+- [**docs/LORAN_MATHEMATICAL_PHYSICS_MANUAL.md**](docs/LORAN_MATHEMATICAL_PHYSICS_MANUAL.md) — Rigorous theoretical physics manual, equations, theorems, and mathematical foundations.
 - [**ARCHITECTURE.md**](ARCHITECTURE.md) — Complete system architecture, reactive state pipeline, off-thread Web Worker architecture, and platform target diagrams.
 - [**CONTRIBUTING.md**](CONTRIBUTING.md) — Contributor onboarding, conventional commit format, zero-defect quality gates, and testing procedures.
 - [**docs/README.md**](docs/README.md) — Master documentation index cataloging all technical specifications, empirical benchmarks, and security policies.
@@ -39,42 +66,49 @@ Global Navigation Satellite Systems (GNSS: GPS, Galileo, BeiDou, GLONASS) transm
 
 ```
 simuloran/
-├── docs/
-│   ├── REFERENCES.md            # Standards, formulas, and literature compendium
-│   ├── PROVENANCE.md            # Provenance audit, citation links & unverified ledger
-│   ├── DATA_NOTES.md            # Global station operational history & coordinates
-│   ├── TILES.md                 # Tile providers, usage limits & offline mode
-│   └── EXTRACTION_NOTES.md      # Mathematical specifications & legacy audit
-├── src/
-│   ├── lib/                     # Pure, testable mathematical library (zero UI coupling)
-│   │   ├── geodesy.js           # Haversine, forward/inverse geodesics, PF refraction, Brunavs SF
-│   │   ├── tdoa.js              # Pseudorange solver (b_rx), hyperbolic TDOA, cycle slips
-│   │   ├── gdop.js              # Direction cosines, GDOP/HDOP geometry matrix, heatmaps
-│   │   ├── asf.js               # Safe recursive-descent AST formula parser & evaluator
-│   │   ├── clocks.js            # Cesium, Rubidium, GPSDO, Quartz drift & bias models
-│   │   ├── dds.js               # Eurofix 9th-pulse PPM telemetry generator
-│   │   ├── elevationProfile.js  # Great-circle elevation interpolation & Open-Elevation client
-│   │   ├── fusion.js            # Inverse-covariance weighted GNSS-eLoran BLUE multi-sensor fusion
-│   │   ├── heatmapColormap.js   # Jet & Viridis 256-entry LUTs & canvas rasterizer
-│   │   ├── pulse.js             # 100 kHz carrier, raised-cosine envelope, GRI timing
-│   │   ├── terrainMasking.js    # ITU-R P.526 knife-edge obstacle diffraction & excess delay
-│   │   ├── trackingLoop.js      # PLL/DLL carrier tracking, SZC lock & Boyce cycle slip model
-│   │   ├── contours.js          # Marching squares 2D contouring + RDP simplification
-│   │   ├── stations.js          # Station schema, validation, boundary guards, CSV/GeoJSON
-│   │   └── tiles.js             # Centralized tile provider config with offline radar fallback
-│   ├── workers/                 # Off-thread Web Workers for high-density compute
-│   │   ├── gridWorker.js        # Parallel 2D TDOA grid & contour extraction
-│   │   ├── asfWorker.js         # Spatial formula rasterizer
-│   │   └── workerClient.js      # Cancellable Promise wrapper with transferable buffers
-│   ├── state/
-│   │   ├── simulationStore.js   # Single reactive Zustand state store
-│   │   └── presets.js           # Calibrated scenarios (North China Sea, North Sea Historical, etc.)
-│   ├── components/
-│   │   ├── map/                 # MapView (MapLibre GL vector & raster), AsfHeatmapLayer, Contours, Markers
-│   │   ├── panels/              # StationEditor, ClockPanel, AsfPanel, FusionPanel, TrackingPanel, DisplayPanel
-│   │   ├── charts/              # PulseViewer (oscilloscope with SVG export), TrackingChart
-│   │   └── ui/                  # Modal, Slider, Toggle, ErrorBoundary, SystemBanners
-│   └── pages/                   # Home, LoranC, ELoran, Waveforms, Learn, About
+|-- docs/
+|   |-- assets/
+|   |   `-- screenshots/         # 20 high-resolution user guide screenshot assets
+|   |-- verification/
+|   |   `-- screenshots/         # Automated visual regression & responsive audit archive
+|   |-- VISUAL_USER_GUIDE.md     # Visual user documentation and layout instructions
+|   |-- LORAN_MATHEMATICAL_PHYSICS_MANUAL.md # Physics theorems and formulas manual
+|   |-- WHITEPAPER.md            # Technical whitepaper & mathematical specification
+|   |-- VALIDATION.md            # Empirical field trial benchmarks (Korea & Maoming)
+|   |-- REFERENCES.md            # Standards, formulas, and literature compendium
+|   |-- PROVENANCE.md            # Provenance audit, citation links & unverified ledger
+|   |-- DATA_NOTES.md            # Global station operational history & coordinates
+|   `-- TILES.md                 # Tile providers, usage limits & offline mode
+|-- src/
+|   |-- lib/                     # Pure, testable mathematical library (zero UI coupling)
+|   |   |-- geodesy.js           # Haversine, forward/inverse geodesics, PF refraction, Brunavs SF
+|   |   |-- tdoa.js              # Pseudorange solver (b_rx), hyperbolic TDOA, cycle slips
+|   |   |-- gdop.js              # Direction cosines, GDOP/HDOP geometry matrix, heatmaps
+|   |   |-- asf.js               # Safe recursive-descent AST formula parser & evaluator
+|   |   |-- clocks.js            # Cesium, Rubidium, GPSDO, Quartz drift & bias models
+|   |   |-- dds.js               # Eurofix 9th-pulse PPM telemetry generator
+|   |   |-- elevationProfile.js  # Great-circle elevation interpolation & Open-Elevation client
+|   |   |-- fusion.js            # Inverse-covariance weighted GNSS-eLoran BLUE multi-sensor fusion
+|   |   |-- heatmapColormap.js   # Jet & Viridis 256-entry LUTs & canvas rasterizer
+|   |   |-- pulse.js             # 100 kHz carrier, raised-cosine envelope, GRI timing
+|   |   |-- terrainMasking.js    # ITU-R P.526 knife-edge obstacle diffraction & excess delay
+|   |   |-- trackingLoop.js      # PLL/DLL carrier tracking, SZC lock & Boyce cycle slip model
+|   |   |-- contours.js          # Marching squares 2D contouring + RDP simplification
+|   |   |-- stations.js          # Station schema, validation, boundary guards, CSV/GeoJSON
+|   |   `-- tiles.js             # Centralized tile provider config with offline radar fallback
+|   |-- workers/                 # Off-thread Web Workers for high-density compute
+|   |   |-- gridWorker.js        # Parallel 2D TDOA grid & contour extraction
+|   |   |-- asfWorker.js         # Spatial formula rasterizer
+|   |   `-- workerClient.js      # Cancellable Promise wrapper with transferable buffers
+|   |-- state/
+|   |   |-- simulationStore.js   # Single reactive Zustand state store
+|   |   `-- presets.js           # Calibrated scenarios (North China Sea, Korean Testbed, etc.)
+|   |-- components/
+|   |   |-- map/                 # MapView (MapLibre GL vector & raster), HeatmapLayer, Markers
+|   |   |-- panels/              # StationEditor, ClockPanel, AsfPanel, FusionPanel, TrackingPanel
+|   |   `-- charts/              # PulseViewer (oscilloscope with SVG export), TrackingChart
+|   `-- pages/                   # Home, LoranC, ELoran, Waveforms, Learn, About
+`-- e2e/                         # Playwright automated test & visual capture suite
 ```
 
 ---

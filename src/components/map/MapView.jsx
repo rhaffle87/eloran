@@ -22,6 +22,14 @@ function isMapStyleReady(map) {
 }
 
 
+function getGdopContourFilter(selectedLevel) {
+  if (!selectedLevel || selectedLevel === 'all') {
+    return ['all'];
+  }
+  const num = parseFloat(selectedLevel);
+  return ['==', ['get', 'level'], num];
+}
+
 export default function MapView({ onMapClick, isELoran = false }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -150,6 +158,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
     stationStatus = {},
     settings,
     isConsoleOpen,
+    setGdopSelectedLevel,
+    setGdopHeatmapVisible,
+    setGdopContoursVisible,
   } = useSimulationStore();
 
   const stationsRef = useRef({ masters, slaves });
@@ -164,6 +175,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
   lopsVisibleRef.current = lopsVisible;
   const gdopVisibleRef = useRef(gdopLayerVisible);
   gdopVisibleRef.current = gdopLayerVisible;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const overlayRenderersRef = useRef({
     baselines: null,
@@ -969,7 +982,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     };
   }, [contours, lopsVisible, isELoran, safeRemoveLayerAndSource]);
 
-  // Render Live GDOP Heatmap Layer — viewport-adaptive, seamless fill
+  // Render Live GDOP Coverage & Iso-Contours Layer — static station geometry, zero viewport drift
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -978,6 +991,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     const heatmapSourceId = 'loran-gdop-heatmap-source';
     const heatmapLayerId = 'loran-gdop-heatmap-layer';
     const contoursSourceId = 'loran-gdop-contours-source';
+    const contoursCasingLayerId = 'loran-gdop-contours-casing';
     const contoursLayerId = 'loran-gdop-contours-layer';
 
     const activeMaster = isDesignMode ? designChain.master : masters[0];
@@ -985,7 +999,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
 
     if (!gdopLayerVisible || !activeMaster || !activeSecondaries || !activeSecondaries.length) {
       overlayRenderersRef.current.gdop = null;
-      safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+      safeRemoveLayerAndSource(map, contoursLayerId, null);
+      safeRemoveLayerAndSource(map, contoursCasingLayerId, contoursSourceId);
       safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
       return;
     }
@@ -997,31 +1012,31 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
 
       try {
-        // Viewport-union bbox: union of map viewport and station extents + 20% padding
+        // Static geographic coverage domain: fixed strictly to physical station geometry,
+        // independent of map camera viewport or user zoom/pan.
         const _lats = [activeMaster.lat, ...activeSecondaries.map((s) => s.lat)];
         const _lngs = [activeMaster.lng, ...activeSecondaries.map((s) => s.lng)];
         const stMinLat = Math.min(..._lats), stMaxLat = Math.max(..._lats);
         const stMinLng = Math.min(..._lngs), stMaxLng = Math.max(..._lngs);
-        let vpMinLat = stMinLat, vpMaxLat = stMaxLat, vpMinLng = stMinLng, vpMaxLng = stMaxLng;
-        try {
-          const vb = map.getBounds();
-          vpMinLat = vb.getSouth(); vpMaxLat = vb.getNorth();
-          vpMinLng = vb.getWest();  vpMaxLng = vb.getEast();
-        } catch { /* use station extents as fallback */ }
-        const uMinLat = Math.min(stMinLat, vpMinLat), uMaxLat = Math.max(stMaxLat, vpMaxLat);
-        const uMinLng = Math.min(stMinLng, vpMinLng), uMaxLng = Math.max(stMaxLng, vpMaxLng);
-        const latSpan = Math.max(uMaxLat - uMinLat, 1.0);
-        const lngSpan = Math.max(uMaxLng - uMinLng, 1.0);
+        const latSpan = Math.max(stMaxLat - stMinLat, 1.0);
+        const lngSpan = Math.max(stMaxLng - stMinLng, 1.0);
+
+        // Fixed margin beyond outermost transmitters (+40% of baseline span or min 3.5 deg)
+        // Strictly anchors the GDOP coverage region to physical station geometry,
+        // preventing map zoom/pan from re-computing or blowing up the heatmap across continents.
+        const latMargin = Math.max(latSpan * 0.40, 3.5);
+        const lngMargin = Math.max(lngSpan * 0.50, 4.5);
         const bbox = {
-          minLat: Math.max(-85,    uMinLat - latSpan * 0.20),
-          maxLat: Math.min(85,     uMaxLat + latSpan * 0.20),
-          minLng: Math.max(-179.9, uMinLng - lngSpan * 0.20),
-          maxLng: Math.min(179.9,  uMaxLng + lngSpan * 0.20),
+          minLat: Math.max(-85,    stMinLat - latMargin),
+          maxLat: Math.min(85,     stMaxLat + latMargin),
+          minLng: Math.max(-179.9, stMinLng - lngMargin),
+          maxLng: Math.min(179.9,  stMaxLng + lngMargin),
         };
-        // Adaptive resolution: target ~18 000 samples keyed to aspect ratio
-        const _aspect = lngSpan / Math.max(latSpan, 0.01);
-        const nx = Math.max(80, Math.min(200, Math.round(Math.sqrt(18000 / _aspect) * _aspect)));
-        const ny = Math.max(60, Math.min(160, Math.round(Math.sqrt(18000 / _aspect))));
+
+        // High-fidelity uniform mesh keyed to geometric aspect ratio
+        const _aspect = (lngSpan + 2 * lngMargin) / Math.max(latSpan + 2 * latMargin, 0.01);
+        const nx = Math.max(90, Math.min(180, Math.round(Math.sqrt(18000 * _aspect))));
+        const ny = Math.max(70, Math.min(150, Math.round(Math.sqrt(18000 / _aspect))));
 
         // Offload GDOP grid & Iso-GDOP contour generation to dedicated physics worker
         computeGdopAsync({
@@ -1042,7 +1057,13 @@ export default function MapView({ onMapClick, isELoran = false }) {
             window.__gdopContoursGeoJson = contoursGeoJson;
           }
 
-          // 1. Render GDOP Heatmap Layer
+          const s = settingsRef.current;
+          const heatmapVisible = gdopLayerVisible && (s?.gdopHeatmapVisible ?? true);
+          const contoursVisible = gdopLayerVisible && (s?.gdopContoursVisible ?? true);
+          const contourFilter = getGdopContourFilter(s?.gdopSelectedLevel);
+          const heatmapOpacity = typeof s?.gdopHeatmapOpacity === 'number' ? s.gdopHeatmapOpacity : 0.45;
+
+          // 1. Render GDOP Heatmap Layer with calibrated geographic radius
           safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
           if (heatmapGeoJson && heatmapGeoJson.features?.length) {
             map.addSource(heatmapSourceId, { type: 'geojson', data: heatmapGeoJson });
@@ -1054,40 +1075,68 @@ export default function MapView({ onMapClick, isELoran = false }) {
                 // Weight: good-GDOP zones hot; poor-GDOP dims to zero naturally
                 'heatmap-weight': [
                   'interpolate', ['linear'], ['get', 'gdop'],
-                  1, 1.00, 2, 0.90, 4, 0.70, 8, 0.40, 16, 0.15, 30, 0.03,
+                  1, 1.00, 2, 0.90, 4, 0.70, 8, 0.40, 16, 0.15,
                 ],
-                // Intensity grows with zoom — prevents isolated-dot look at high zoom
+                // Intensity gently scales with zoom without exploding screen pixels
                 'heatmap-intensity': [
                   'interpolate', ['linear'], ['zoom'],
-                  1, 0.6, 4, 1.0, 7, 2.2, 10, 4.0,
+                  1, 0.5, 4, 0.8, 7, 1.4, 10, 2.2,
                 ],
                 'heatmap-color': [
                   'interpolate', ['linear'], ['heatmap-density'],
                   0,    'rgba(0, 0, 0, 0)',
-                  0.10, 'rgba(56, 189, 248, 0.18)',
-                  0.30, 'rgba(52, 211, 153, 0.45)',
-                  0.55, 'rgba(250, 204, 21, 0.62)',
-                  0.75, 'rgba(251, 146, 60, 0.74)',
-                  0.90, 'rgba(248, 113, 113, 0.84)',
-                  1.00, 'rgba(239, 68, 68, 0.92)',
+                  0.10, 'rgba(56, 189, 248, 0.16)',
+                  0.30, 'rgba(52, 211, 153, 0.38)',
+                  0.55, 'rgba(250, 204, 21, 0.52)',
+                  0.75, 'rgba(251, 146, 60, 0.65)',
+                  0.90, 'rgba(248, 113, 113, 0.75)',
+                  1.00, 'rgba(239, 68, 68, 0.85)',
                 ],
-                // Large overlapping radii → seamless coverage, no hard bbox wall
+                // Calibrated radius: scales smoothly from macro view to tactical zoom
                 'heatmap-radius': [
                   'interpolate', ['linear'], ['zoom'],
-                  1, 30, 3, 42, 5, 55, 7, 72, 9, 96, 11, 130,
+                  2, 10, 5, 20, 8, 32, 11, 46,
                 ],
-                'heatmap-opacity': [
-                  'interpolate', ['linear'], ['zoom'],
-                  2, 0.82, 8, 0.70,
-                ],
+                'heatmap-opacity': heatmapOpacity,
+              },
+              layout: {
+                visibility: heatmapVisible ? 'visible' : 'none',
               },
             });
           }
 
-          // 2. Render Smooth Iso-GDOP Vector Contours Layer
-          safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+          // 2. Render Smooth Iso-GDOP Vector Contours with Casing for High Contrast
+          safeRemoveLayerAndSource(map, contoursLayerId, null);
+          safeRemoveLayerAndSource(map, contoursCasingLayerId, contoursSourceId);
+
           if (contoursGeoJson && contoursGeoJson.features?.length) {
             map.addSource(contoursSourceId, { type: 'geojson', data: contoursGeoJson });
+
+            // Casing layer for crisp outline separation against basemap and heatmap colors
+            map.addLayer({
+              id: contoursCasingLayerId,
+              type: 'line',
+              source: contoursSourceId,
+              paint: {
+                'line-color': '#030712',
+                'line-width': [
+                  'case',
+                  ['==', ['get', 'level'], 10.92], 4.2,
+                  ['==', ['get', 'level'], 1.5], 4.0,
+                  3.4,
+                ],
+                'line-opacity': 0.85,
+                'line-blur': 0,
+              },
+              filter: contourFilter,
+              layout: {
+                'line-cap': 'round',
+                'line-join': 'round',
+                visibility: contoursVisible ? 'visible' : 'none',
+              },
+            });
+
+            // Fore-edge colored contour line
             map.addLayer({
               id: contoursLayerId,
               type: 'line',
@@ -1100,8 +1149,19 @@ export default function MapView({ onMapClick, isELoran = false }) {
                   ['==', ['get', 'level'], 1.5], 2.0,
                   1.6,
                 ],
-                'line-opacity': 0.88,
-                'line-blur': 0.4,
+                'line-dasharray': [
+                  'case',
+                  ['==', ['get', 'level'], 10.92], ['literal', [3, 2]],
+                  ['literal', [1]],
+                ],
+                'line-opacity': 0.95,
+                'line-blur': 0,
+              },
+              filter: contourFilter,
+              layout: {
+                'line-cap': 'round',
+                'line-join': 'round',
+                visibility: contoursVisible ? 'visible' : 'none',
               },
             });
           }
@@ -1115,16 +1175,6 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
     };
 
-    // Debounced viewport recompute: re-render 400ms after pan/zoom completes
-    let _gdopDebounce = null;
-    const onViewportChange = () => {
-      if (cancelled) return;
-      clearTimeout(_gdopDebounce);
-      _gdopDebounce = setTimeout(() => { if (!cancelled) render(); }, 400);
-    };
-    map.on('moveend', onViewportChange);
-    map.on('zoomend', onViewportChange);
-
     const renderers = overlayRenderersRef.current;
     renderers.gdop = render;
     render();
@@ -1132,16 +1182,14 @@ export default function MapView({ onMapClick, isELoran = false }) {
     return () => {
       cancelled = true;
       renderers.gdop = null;
-      clearTimeout(_gdopDebounce);
-      map.off('moveend', onViewportChange);
-      map.off('zoomend', onViewportChange);
       map.off('styledata', render);
       map.off('idle', render);
       if (typeof window !== 'undefined') {
         delete window.__gdopGeoJson;
         delete window.__gdopContoursGeoJson;
       }
-      safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
+      safeRemoveLayerAndSource(map, contoursLayerId, null);
+      safeRemoveLayerAndSource(map, contoursCasingLayerId, contoursSourceId);
       safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
     };
   }, [
@@ -1151,6 +1199,44 @@ export default function MapView({ onMapClick, isELoran = false }) {
     isDesignMode,
     gdopLayerVisible,
     safeRemoveLayerAndSource,
+  ]);
+
+  // Live interactive updates for GDOP filter & visibility without recomputing mesh
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapStyleReady(map)) return;
+
+    const heatmapLayerId = 'loran-gdop-heatmap-layer';
+    const contoursCasingLayerId = 'loran-gdop-contours-casing';
+    const contoursLayerId = 'loran-gdop-contours-layer';
+
+    const heatmapVisible = gdopLayerVisible && (settings?.gdopHeatmapVisible ?? true);
+    const contoursVisible = gdopLayerVisible && (settings?.gdopContoursVisible ?? true);
+    const filter = getGdopContourFilter(settings?.gdopSelectedLevel);
+    const opacity = typeof settings?.gdopHeatmapOpacity === 'number' ? settings.gdopHeatmapOpacity : 0.45;
+
+    try {
+      if (map.getLayer(heatmapLayerId)) {
+        map.setLayoutProperty(heatmapLayerId, 'visibility', heatmapVisible ? 'visible' : 'none');
+        map.setPaintProperty(heatmapLayerId, 'heatmap-opacity', opacity);
+      }
+      if (map.getLayer(contoursCasingLayerId)) {
+        map.setLayoutProperty(contoursCasingLayerId, 'visibility', contoursVisible ? 'visible' : 'none');
+        map.setFilter(contoursCasingLayerId, filter);
+      }
+      if (map.getLayer(contoursLayerId)) {
+        map.setLayoutProperty(contoursLayerId, 'visibility', contoursVisible ? 'visible' : 'none');
+        map.setFilter(contoursLayerId, filter);
+      }
+    } catch (err) {
+      console.warn('Error updating GDOP dynamic visibility/filter:', err);
+    }
+  }, [
+    gdopLayerVisible,
+    settings?.gdopHeatmapVisible,
+    settings?.gdopContoursVisible,
+    settings?.gdopSelectedLevel,
+    settings?.gdopHeatmapOpacity,
   ]);
 
   // High-performance radar canvas fallback drawing
@@ -1974,6 +2060,90 @@ export default function MapView({ onMapClick, isELoran = false }) {
             <span>Grid</span>
             <span className="font-bold">{radarShowGraticule ? 'ON' : 'OFF'}</span>
           </button>
+        </div>
+      )}
+
+      {/* GDOP Coverage & Iso-Contours Quick-Inspector HUD */}
+      {gdopLayerVisible && (
+        <div
+          data-testid="gdop-inspector-pill"
+          className={`absolute left-4 z-10 backdrop-blur-md rounded-lg px-2.5 py-1.5 text-[11px] font-mono flex flex-wrap items-center gap-2 shadow-lg animate-fade-in ${
+            activeTileProvider === 'offline-radar' ? 'top-38 sm:top-36' : 'top-26 sm:top-24'
+          }`}
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.95 }}
+        >
+          <div className="flex items-center gap-1.5 pr-1 border-r border-[var(--border-subtle)]">
+            <span className="w-2 h-2 rounded-full" style={{ background: '#38bdf8' }} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">GDOP:</span>
+          </div>
+
+          {/* Heatmap surface toggle */}
+          <button
+            type="button"
+            data-testid="gdop-toggle-heatmap"
+            onClick={() => setGdopHeatmapVisible(!(settings?.gdopHeatmapVisible ?? true))}
+            className="px-2 py-0.5 rounded text-[10px] cursor-pointer flex items-center gap-1 transition-colors"
+            style={{
+              background: (settings?.gdopHeatmapVisible ?? true) ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+              color: (settings?.gdopHeatmapVisible ?? true) ? '#38bdf8' : 'var(--text-dim)',
+              border: `1px solid ${(settings?.gdopHeatmapVisible ?? true) ? '#38bdf8' : 'var(--border-subtle)'}`,
+            }}
+            title="Toggle GDOP continuous gradient surface"
+          >
+            <span>Heatmap</span>
+            <span className="font-bold">{(settings?.gdopHeatmapVisible ?? true) ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Iso-Contours toggle */}
+          <button
+            type="button"
+            data-testid="gdop-toggle-contours"
+            onClick={() => setGdopContoursVisible(!(settings?.gdopContoursVisible ?? true))}
+            className="px-2 py-0.5 rounded text-[10px] cursor-pointer flex items-center gap-1 transition-colors"
+            style={{
+              background: (settings?.gdopContoursVisible ?? true) ? 'rgba(52, 211, 153, 0.15)' : 'transparent',
+              color: (settings?.gdopContoursVisible ?? true) ? '#10b981' : 'var(--text-dim)',
+              border: `1px solid ${(settings?.gdopContoursVisible ?? true) ? '#10b981' : 'var(--border-subtle)'}`,
+            }}
+            title="Toggle Iso-GDOP threshold lines"
+          >
+            <span>Contours</span>
+            <span className="font-bold">{(settings?.gdopContoursVisible ?? true) ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Individual Contour Level Filter Buttons */}
+          {(settings?.gdopContoursVisible ?? true) && (
+            <div className="flex items-center gap-1 pl-1 border-l border-[var(--border-subtle)]">
+              <span className="text-[9px] uppercase text-[var(--text-dim)] mr-0.5">Filter:</span>
+              {[
+                { id: 'all', label: 'All', color: 'var(--text-primary)' },
+                { id: '1.5', label: '1.5', color: '#10b981', title: 'Optimal (GDOP ≤ 1.5, Harbor/HEA)' },
+                { id: '3.0', label: '3.0', color: '#38bdf8', title: 'Good (GDOP ≤ 3.0, Coastal)' },
+                { id: '7.7', label: '7.7', color: '#f59e0b', title: 'Marginal (GDOP ≤ 7.7, Ocean)' },
+                { id: '10.92', label: '10.92', color: '#ef4444', title: 'USCG Limit (GDOP ≤ 10.92)' },
+              ].map((lvl) => {
+                const isActive = (settings?.gdopSelectedLevel ?? 'all') === lvl.id;
+                return (
+                  <button
+                    key={lvl.id}
+                    type="button"
+                    data-testid={`gdop-hud-level-${lvl.id}`}
+                    onClick={() => setGdopSelectedLevel(lvl.id)}
+                    title={lvl.title || 'Show all contour lines'}
+                    className="px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all"
+                    style={{
+                      background: isActive ? 'var(--bg-subtle)' : 'transparent',
+                      color: lvl.color,
+                      border: `1px solid ${isActive ? lvl.color : 'transparent'}`,
+                      boxShadow: isActive ? `0 0 6px ${lvl.color}40` : 'none',
+                    }}
+                  >
+                    {lvl.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -175,6 +175,10 @@ export const useSimulationStore = create((set, get) => {
     asfHeatmapOpacity: 0.65,
     asfHeatmapResolution: 40,
     asfHeatmapIsoContours: true,
+    gdopHeatmapVisible: true,
+    gdopContoursVisible: true,
+    gdopSelectedLevel: 'all', // 'all' | '1.5' | '3.0' | '7.7' | '10.92' | 'none'
+    gdopHeatmapOpacity: 0.45,
     enableDDS: true,
     enableIntegrity: true,
     integrityThresholdMeters: 50,
@@ -241,6 +245,14 @@ export const useSimulationStore = create((set, get) => {
   toggleSimRunning: () => set((state) => ({ isSimRunning: !state.isSimRunning })),
 
   toggleGdopLayer: () => set((state) => ({ gdopLayerVisible: !state.gdopLayerVisible })),
+  setGdopSelectedLevel: (level) =>
+    set((state) => ({ settings: { ...state.settings, gdopSelectedLevel: level } })),
+  setGdopHeatmapVisible: (visible) =>
+    set((state) => ({ settings: { ...state.settings, gdopHeatmapVisible: visible } })),
+  setGdopContoursVisible: (visible) =>
+    set((state) => ({ settings: { ...state.settings, gdopContoursVisible: visible } })),
+  setGdopHeatmapOpacity: (opacity) =>
+    set((state) => ({ settings: { ...state.settings, gdopHeatmapOpacity: opacity } })),
   toggleBaselines: () => set((state) => ({ baselinesVisible: !state.baselinesVisible })),
   toggleLops: () => set((state) => ({ lopsVisible: !state.lopsVisible })),
 

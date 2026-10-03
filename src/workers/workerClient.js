@@ -134,7 +134,7 @@ export function computeGdopAsync(payload) {
         for (let i = 0; i < nx; i++) {
           const lng = bbox.minLng + i * dLng;
           const gdop = grid.data[j * nx + i];
-          if (gdop < 50 && Number.isFinite(gdop)) {
+          if (gdop <= 15.0 && Number.isFinite(gdop)) {
             features.push({
               type: 'Feature',
               geometry: { type: 'Point', coordinates: [lng, lat] },

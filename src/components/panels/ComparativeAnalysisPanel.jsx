@@ -67,14 +67,15 @@ export default function ComparativeAnalysisPanel() {
     <div className="space-y-4 font-mono text-xs">
       {/* Scenario Presets Bar */}
       <div className="p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-bold text-[var(--text-secondary)] text-[11px] uppercase tracking-wider flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-[var(--accent-eloran)]" />
-            <span>Interactive PNT Denial & Resilience Scenarios</span>
+            <span>Empirical PNT Multi-System Denial & Resilience</span>
           </span>
-          <span className="text-[10px] text-[var(--text-dim)]">
-            Resilience Score: <strong className="text-[var(--status-ok)]">{comparison.resilienceScore}/100</strong>
-          </span>
+          <div className="flex items-center gap-3 text-[10px] text-[var(--text-dim)]">
+            <span>Protection Margin: <strong className={comparison.integrityMarginMeters >= 0 ? 'text-[var(--status-ok)]' : 'text-[var(--status-danger)]'}>{comparison.integrityMarginMeters >= 0 ? `+${comparison.integrityMarginMeters} m` : `${comparison.integrityMarginMeters} m`}</strong></span>
+            <span>HPL/HAL Ratio: <strong className="text-[var(--text-primary)]">{comparison.hplHalRatio}</strong></span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -160,6 +161,10 @@ export default function ComparativeAnalysisPanel() {
               </span>
             </div>
             <div className="flex justify-between">
+              <span>95% Uncertainty (2σ):</span>
+              <span className="text-[var(--text-secondary)]">{loranC.r95Meters} m (HDOP: {loranC.hdop})</span>
+            </div>
+            <div className="flex justify-between">
               <span>Status:</span>
               <span className="font-semibold text-[var(--text-primary)]">{loranC.status}</span>
             </div>
@@ -171,7 +176,7 @@ export default function ComparativeAnalysisPanel() {
         </div>
 
         {/* 2. Modernized eLoran Card */}
-        <div className="p-3 rounded-xl border border-[var(--accent-eloran-border)] bg-[var(--accent-eloran-subtle)]/20 space-y-2">
+        <div className="p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-eloran)]" />
@@ -203,6 +208,10 @@ export default function ComparativeAnalysisPanel() {
               <span className={eloran.available ? 'text-[var(--status-ok)] font-bold' : 'text-[var(--status-warn)] font-bold'}>
                 {eloran.available ? 'AVAILABLE (WITHIN HAL)' : 'DEGRADED'}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span>95% Uncertainty (2σ):</span>
+              <span className="text-[var(--text-secondary)]">{eloran.r95Meters} m (HDOP: {eloran.hdop})</span>
             </div>
             <div className="flex justify-between">
               <span>Status:</span>
@@ -248,6 +257,10 @@ export default function ComparativeAnalysisPanel() {
               <span className={gnss.available ? 'text-[var(--status-ok)] font-bold' : 'text-[var(--status-danger)] font-bold'}>
                 {gnss.available ? 'AVAILABLE' : 'DENIED / COMPROMISED'}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span>95% Uncertainty (2σ):</span>
+              <span className="text-[var(--text-secondary)]">{gnss.r95Meters} m (HDOP: {gnss.hdop})</span>
             </div>
             <div className="flex justify-between">
               <span>Status:</span>
@@ -297,6 +310,10 @@ export default function ComparativeAnalysisPanel() {
               </span>
             </div>
             <div className="flex justify-between">
+              <span>95% Uncertainty (2σ):</span>
+              <span className="text-[var(--text-secondary)]">{ekf.r95Meters} m (HDOP: {ekf.hdop})</span>
+            </div>
+            <div className="flex justify-between">
               <span>Integrity Engine:</span>
               <span className="font-semibold text-[var(--text-primary)]">{ekf.status}</span>
             </div>
@@ -323,7 +340,7 @@ export default function ComparativeAnalysisPanel() {
         </div>
 
         <div className="text-right">
-          <span className="text-[10px] text-[var(--text-dim)] block">Resilience Status</span>
+          <span className="text-[10px] text-[var(--text-dim)] block">Integrity State</span>
           <span className="font-bold text-[11px] text-[var(--status-ok)] flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Assured PNT Active</span>

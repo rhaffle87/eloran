@@ -1,0 +1,18 @@
+{
+  "id": "boyce_lo_2006",
+  "citation": "Boyce, Lo, Powell, & Enge (2006)",
+  "title": "Analysis of Noise and Cycle Selection in a Loran Receiver",
+  "author": "C. O. Lee Boyce, Jr., Sherman C. Lo, J. David Powell, Per K. Enge",
+  "institution": "Stanford University Department of Aeronautics and Astronautics",
+  "conference": "Proceedings of the 35th Annual Convention of the International Loran Association (ILA-35)",
+  "date": "2006-10",
+  "upstreamUrl": "https://web.stanford.edu/group/scpnt/gpslab/pubs/papers/Boyce_ILA_2006.pdf",
+  "evidenceStrings": [
+    "Analysis of Noise and Cycle Selection in a Loran",
+    "Sherman C. Lo",
+    "Per K. Enge"
+  ],
+  "description": "Cycle-selection model, envelope-to-cycle difference (ECD) variance, and ratio test threshold for Loran-C pulse tracking.",
+  "verificationType": "CONFERENCE_PROCEEDINGS_ARCHIVE",
+  "status": "AUTHENTICATED"
+}

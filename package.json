@@ -18,7 +18,11 @@
     "refresh:tiles": "node scripts/refresh-tiles.cjs",
     "prepare": "node scripts/setup-hooks.cjs",
     "preview": "vite preview",
-    "test:physics": "node scripts/verify-physics-benchmarks.cjs"
+    "test:physics": "node scripts/verify-physics-benchmarks.cjs",
+    "electron:dev": "electron . --dev",
+    "electron:start": "electron .",
+    "electron:pack": "npm run build && electron-builder --dir",
+    "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
     "@turf/turf": "^7.2.0",
@@ -50,6 +54,27 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.7",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.8",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "org.simuloran.app",
+    "productName": "SIMULORAN",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
   }
 }

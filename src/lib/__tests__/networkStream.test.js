@@ -123,6 +123,12 @@ describe('Local Network WebSocket & Signal K Streaming Bridge', () => {
       expect(onStatus).toHaveBeenCalledWith(CONNECTION_STATUS.DISCONNECTED, expect.any(Object));
     });
 
+    it('defaults to autoReconnect=false to prevent background localhost spam', () => {
+      const streamer = createNetworkStreamer();
+      const stats = streamer.getStats();
+      expect(stats.config.autoReconnect).toBe(false);
+    });
+
     it('updates configuration dynamically', () => {
       const streamer = createNetworkStreamer();
       streamer.updateConfig({

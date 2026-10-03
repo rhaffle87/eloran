@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
     console.warn('Failed to read package.json version:', e);
   }
   return {
+    base: './',
     define: {
       __E2E_HOOKS__: JSON.stringify(isE2E),
       __APP_VERSION__: JSON.stringify(appVersion),

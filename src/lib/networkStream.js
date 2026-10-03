@@ -30,8 +30,9 @@ export const DEFAULT_STREAM_CONFIG = {
   endpointUrl: 'ws://localhost:10110',
   protocol: STREAM_PROTOCOLS.NMEA0183,
   vesselUrn: 'vessels.urn:mrn:signalk:uuid:simuloran-vessel-01',
+  autoReconnect: false, // Strictly user-initiated by default; avoids localhost connection spam
   reconnectIntervalMs: 3000,
-  maxReconnectAttempts: 5,
+  maxReconnectAttempts: 3,
   broadcastChannelName: 'simuloran_marine_telemetry',
 };
 
@@ -207,7 +208,7 @@ export function createNetworkStreamer(userConfig = {}, onStatusChange = null) {
   }
 
   function scheduleReconnect() {
-    if (isExplicitlyClosed || reconnectAttempts >= config.maxReconnectAttempts) return;
+    if (!config.autoReconnect || isExplicitlyClosed || reconnectAttempts >= config.maxReconnectAttempts) return;
     reconnectAttempts += 1;
     if (reconnectTimer) clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(() => {

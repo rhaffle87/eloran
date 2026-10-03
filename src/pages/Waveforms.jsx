@@ -7,6 +7,7 @@ import LdcDemodulatorPanel from '../components/panels/LdcDemodulatorPanel.jsx';
 import CheolJChainViewer from '../components/charts/CheolJChainViewer.jsx';
 import CustomWaveformSynthesizer from '../components/charts/CustomWaveformSynthesizer.jsx';
 import SkywavePanel from '../components/panels/SkywavePanel.jsx';
+import SdrLabPanel from '../components/charts/SdrLabPanel.jsx';
 import MathView from '../components/ui/MathView.jsx';
 
 export default function Waveforms() {
@@ -52,6 +53,7 @@ export default function Waveforms() {
             {[
               ['all', 'All Views'],
               ['oscilloscope', 'Oscilloscope'],
+              ['sdr', 'SDR Ingestion & Waterfall'],
               ['synthesizer', 'RF Synthesizer'],
               ['pci-chains', 'Pulse Group Timings'],
               ['tracking', 'Tracking Loop'],
@@ -80,6 +82,7 @@ export default function Waveforms() {
 
       {/* Main Content Panels */}
       {(activeTab === 'all' || activeTab === 'oscilloscope') && <PulseViewer />}
+      {(activeTab === 'all' || activeTab === 'sdr') && <SdrLabPanel />}
       {(activeTab === 'all' || activeTab === 'skywave') && <SkywavePanel />}
       {(activeTab === 'all' || activeTab === 'synthesizer') && <CustomWaveformSynthesizer />}
       {(activeTab === 'all' || activeTab === 'pci-chains') && <CheolJChainViewer />}

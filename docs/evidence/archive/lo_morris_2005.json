@@ -1,0 +1,18 @@
+{
+  "id": "lo_morris_2005",
+  "citation": "Lo, Morris, & Enge (2005)",
+  "title": "Early Skywave Detection Network: Preliminary Design and Analysis",
+  "author": "Sherman C. Lo, Peter Morris, Per Enge",
+  "institution": "Stanford University GPS Laboratory",
+  "conference": "Proceedings of the 34th Annual Convention of the International Loran Association (ILA-34)",
+  "date": "2005-10",
+  "upstreamUrl": "https://web.stanford.edu/group/scpnt/gpslab/pubs/papers/Lo_ILA_2005.pdf",
+  "evidenceStrings": [
+    "Early Skywave Detection Network: Preliminary Design and Analysis",
+    "Peter Morris",
+    "Per Enge"
+  ],
+  "description": "Early skywave interference delay models and detection algorithms for Loran pulse integrity.",
+  "verificationType": "CONFERENCE_PROCEEDINGS_ARCHIVE",
+  "status": "AUTHENTICATED"
+}

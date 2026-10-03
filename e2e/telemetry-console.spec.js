@@ -11,17 +11,17 @@ test.describe('Tactical Telemetry Console & Live Feed E2E Suite', () => {
     await expect(consoleEl).toBeVisible();
 
     // Ribbon bar text verification
-    await expect(consoleEl).toContainText('TACTICAL CONSOLE');
+    await expect(consoleEl).toContainText('PNT CONSOLE');
     await expect(consoleEl).toContainText(/NET: \d+\/\d+/);
     await expect(consoleEl).toContainText('RX:');
     await expect(consoleEl).toContainText('GDOP:');
 
     // Click ribbon to expand console
-    await consoleEl.locator('text=EXPAND CONSOLE').click();
+    await consoleEl.locator('text=EXPAND').click();
 
     // Verification of expanded sections
     await expect(consoleEl).toContainText('TELEMETRY & FIX');
-    await expect(consoleEl).toContainText('UNCERTAINTY VARIANCE (σ²)');
+    await expect(consoleEl).toContainText(/UNCERTAINTY VARIANCE/);
     await expect(consoleEl).toContainText('OPERATIONAL ACTIVITY FEED');
 
     // Sparkline SVG verification
@@ -33,6 +33,6 @@ test.describe('Tactical Telemetry Console & Live Feed E2E Suite', () => {
 
     // Click to collapse
     await consoleEl.locator('text=COLLAPSE').click();
-    await expect(consoleEl).toContainText('EXPAND CONSOLE');
+    await expect(consoleEl).toContainText('EXPAND');
   });
 });

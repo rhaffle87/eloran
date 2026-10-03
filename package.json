@@ -24,7 +24,8 @@
     "electron:pack": "npm run build && electron-builder --dir",
     "electron:build": "npm run build && electron-builder",
     "docker:build": "docker build -t simuloran .",
-    "docker:run": "docker run -d -p 8080:80 simuloran"
+    "docker:run": "docker run -d -p 8080:80 simuloran",
+    "verify:all": "npm run check:secrets && npm run test:utf8 && npm run test:a11y && npm run check:provenance && npm run lint -- --max-warnings 0 && npm run test && npm run build"
   },
   "dependencies": {
     "@turf/turf": "^7.2.0",

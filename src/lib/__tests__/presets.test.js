@@ -3,14 +3,20 @@ import { PRESET_SCENARIOS } from '../../state/presets.js';
 import { haversineDistance } from '../geodesy.js';
 
 describe('Operational Scenario Presets Verification', () => {
-  it('contains all required real-world operational scenarios', () => {
+  it('contains all required real-world operational scenarios from peer-reviewed literature', () => {
     const keys = Object.keys(PRESET_SCENARIOS);
-    expect(keys).toContain('jakarta_baseline');
     expect(keys).toContain('rotterdam_harbor_approach');
     expect(keys).toContain('dover_strait_tss');
     expect(keys).toContain('korea_yellow_sea_trial');
     expect(keys).toContain('china_east_sea_8390');
     expect(keys).toContain('east_asia_9930');
+    expect(keys).toContain('bohai_yellow_sea_active');
+    expect(keys).toContain('north_sea_historical');
+    // Ensure irrelevant / uncalibrated synthetic presets are pruned
+    expect(keys).not.toContain('jakarta_baseline');
+    expect(keys).not.toContain('high_gdop');
+    expect(keys).not.toContain('gnss_denied');
+    expect(keys.length).toBe(7);
   });
 
   it('verifies CheolJ calibrated presets (8390 and 9930) emission delay values', () => {

@@ -264,7 +264,7 @@ export default function Home() {
                 Scenario Presets
               </h2>
               <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
-                Calibrated operational chains and synthetic testbeds — ready to simulate.
+                Calibrated operational chains and peer-reviewed benchmark scenarios — ready to simulate.
               </p>
             </div>
             <span className="text-xs font-mono" style={{ color: 'var(--text-dim)' }}>

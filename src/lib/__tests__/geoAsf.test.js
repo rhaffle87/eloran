@@ -50,6 +50,7 @@ describe('GIS Coastline Ray-Tracing & Geo-ASF Engine', () => {
       const manifest = (await import('../../data/geo/index.js')).COASTLINE_MANIFEST;
 
       for (const [regKey, meta] of Object.entries(manifest)) {
+        if (!meta.presetId) continue;
         const scenario = PRESET_SCENARIOS[meta.presetId];
         expect(scenario).toBeDefined();
         const pts = [

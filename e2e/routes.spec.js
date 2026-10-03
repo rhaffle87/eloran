@@ -252,7 +252,7 @@ test.describe('SIMULORAN E2E Suite', () => {
     // Switch to collinear / high GDOP scenario
     const presetSelect = page.locator('select').first();
     await expect(presetSelect).toBeVisible();
-    await presetSelect.selectOption('high_gdop');
+    await presetSelect.selectOption('north_sea_historical');
 
     // Wait for simulation to evaluate with the collinear geometry
     await page.waitForTimeout(1000);

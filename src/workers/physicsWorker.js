@@ -353,10 +353,9 @@ self.onmessage = function (e) {
         const dLng = (bbox.maxLng - bbox.minLng) / (nx - 1);
         const dLat = (bbox.maxLat - bbox.minLat) / (ny - 1);
 
-        const step = Math.max(1, Math.round(nx / 50));
-        for (let j = 0; j < ny; j += step) {
+        for (let j = 0; j < ny; j++) {
           const lat = bbox.minLat + j * dLat;
-          for (let i = 0; i < nx; i += step) {
+          for (let i = 0; i < nx; i++) {
             const lng = bbox.minLng + i * dLng;
             const gdop = grid.data[j * nx + i];
             if (gdop < 50 && Number.isFinite(gdop)) {

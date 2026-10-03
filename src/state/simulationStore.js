@@ -100,14 +100,15 @@ export const DESIGN_PRESETS = {
 
 export const useSimulationStore = create((set, get) => {
   // Extract initial masters for validation (banner in App.jsx warns if length > 1)
-  const initialMasters = PRESET_SCENARIOS.jakarta_baseline.masters;
+  const defaultPreset = PRESET_SCENARIOS.rotterdam_harbor_approach || Object.values(PRESET_SCENARIOS)[0];
+  const initialMasters = defaultPreset.masters;
 
   return {
   // Active Scenario & Stations
-  activePresetId: 'jakarta_baseline',
+  activePresetId: 'rotterdam_harbor_approach',
   masters: initialMasters,
-  slaves: PRESET_SCENARIOS.jakarta_baseline.slaves,
-  receivers: PRESET_SCENARIOS.jakarta_baseline.receivers,
+  slaves: defaultPreset.slaves,
+  receivers: defaultPreset.receivers,
 
   // Chain Design Mode State
   isDesignMode: false,
@@ -118,8 +119,8 @@ export const useSimulationStore = create((set, get) => {
 
   // Map & Interaction Mode
   mapMode: 'pan', // 'pan' | 'add-master' | 'add-slave' | 'add-receiver'
-  mapCenter: PRESET_SCENARIOS.jakarta_baseline.center,
-  mapZoom: PRESET_SCENARIOS.jakarta_baseline.zoom,
+  mapCenter: defaultPreset.center,
+  mapZoom: defaultPreset.zoom,
 
   // Simulation Clock
   simTimeSec: 0,

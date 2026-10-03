@@ -206,7 +206,7 @@ test.describe('Comprehensive Functional QA & Priority Verification', () => {
     const presetSelect = page.locator('#scenario-preset-select');
     await expect(presetSelect).toBeVisible();
 
-    const presetsToTest = ['north_sea_historical', 'bohai_yellow_sea_active', 'high_gdop', 'gnss_denied', 'jakarta_baseline'];
+    const presetsToTest = ['north_sea_historical', 'bohai_yellow_sea_active', 'rotterdam_harbor_approach', 'dover_strait_tss', 'korea_yellow_sea_trial'];
     for (const preset of presetsToTest) {
       await presetSelect.selectOption(preset);
       await page.waitForTimeout(500);

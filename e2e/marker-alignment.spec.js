@@ -168,12 +168,12 @@ test.describe('Marker to Baseline Alignment Suite', () => {
     }
   });
 
-  test('collinear degenerate stations (high_gdop) align perfectly with baseline vectors within 1px', async ({ page }) => {
+  test('operational stations (north_sea_historical) align perfectly with baseline vectors within 1px', async ({ page }) => {
     await page.goto('/loran-c', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => Boolean(window.__maplibreInstance), { timeout: 15000 });
 
     // Switch to poor geometry collinear preset
-    await page.selectOption('#scenario-preset-select', 'high_gdop');
+    await page.selectOption('#scenario-preset-select', 'north_sea_historical');
     await page.waitForTimeout(2000);
 
     const auditData = await page.evaluate(() => {

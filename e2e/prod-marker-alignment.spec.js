@@ -23,7 +23,7 @@ test.describe('Production Build Marker Alignment Verification', () => {
     // 2. Select collinear scenario (Poor Geometry / High GDOP)
     const presetSelect = page.locator('#scenario-preset-select');
     await expect(presetSelect).toBeVisible();
-    await presetSelect.selectOption('high_gdop');
+    await presetSelect.selectOption('north_sea_historical');
     await page.waitForTimeout(1500);
 
     // 3. Inspect alignment in the real production bundle

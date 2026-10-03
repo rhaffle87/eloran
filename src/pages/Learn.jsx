@@ -20,7 +20,7 @@ const concepts = [
     math: '\\text{TDOA} = t_{\\text{arr},S} - t_{\\text{arr},M} = \\frac{d_S - d_M}{c} + t_{\\text{coding}}',
     explanation:
       'For any fixed time difference, the locus of points having a constant distance difference from two fixed stations forms a hyperbola (Line of Position / LOP). The intersection of two or more LOPs uniquely fixes the receiver in two dimensions.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/loran-c',
     buttonLabel: 'Launch Baseline TDOA Demo',
   },
@@ -34,9 +34,9 @@ const concepts = [
     math: '\\text{GDOP} = \\sqrt{ \\mathrm{Tr}\\left( (H^T H)^{-1} \\right) }',
     explanation:
       'When transmitter stations are nearly collinear or subtend narrow angles relative to the receiver, hyperbolic lines of position intersect at grazing angles. A 10 ns timing jitter translates into hundreds of metres of horizontal position error. Wide angular baseline separation yields optimal geometry (GDOP < 2).',
-    presetId: 'high_gdop',
+    presetId: 'north_sea_historical',
     targetRoute: '/loran-c',
-    buttonLabel: 'Inspect High-GDOP Scenario',
+    buttonLabel: 'Inspect Geometry & GDOP',
   },
   {
     id: 'gauss-newton',
@@ -48,7 +48,7 @@ const concepts = [
     math: '\\Delta \\mathbf{x} = \\left( J^T J \\right)^{-1} J^T \\Delta \\mathbf{\\rho}, \\quad \\det(J^T J) > 10^{-12}',
     explanation:
       'Non-linear hyperbolic measurement equations are linearized via a 2D Jacobian matrix J relating positional corrections [Δx, Δy] to range-difference residuals Δρ. Formulating the normal equations in metric distance space rather than seconds space prevents matrix determinants from collapsing to order 10⁻³⁴, guaranteeing rapid 4-iteration convergence and numerical stability.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/loran-c',
     buttonLabel: 'Test Hyperbolic Solver',
   },
@@ -62,7 +62,7 @@ const concepts = [
     math: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF} + \\text{SF} + \\text{ASF}(\\varphi, \\lambda)',
     explanation:
       'Loran 100 kHz signals travel via groundwaves following Earth curvature. Over seawater (conductivity ~4 S/m), signals travel near the speed of light. Over dry land or granite (~0.001 S/m), signals slow down, creating spatial errors up to hundreds of metres. eLoran maps and cancels these errors using published ASF grids and real-time differential corrections.',
-    presetId: 'north_sea',
+    presetId: 'north_sea_historical',
     targetRoute: '/eloran',
     buttonLabel: 'Explore North Sea ASF Grid',
   },
@@ -76,7 +76,7 @@ const concepts = [
     math: 't_{\\text{prop}} = \\frac{d}{c} + \\text{PF}(\\eta) + \\text{SF}(\\sigma) + \\text{ASF}(d, \\sigma)',
     explanation:
       'Total signal propagation time decomposes into three physical terms: Primary Factor (PF: atmospheric refractivity delay along the geodesic), Secondary Factor (SF: phase lag over an ideal all-seawater spherical earth with σ = 4.0 S/m), and Additional Secondary Factor (ASF: excess phase retardation accumulated over resistive land and terrain profiles calculated via Millington boundary integration).',
-    presetId: 'north_sea',
+    presetId: 'north_sea_historical',
     targetRoute: '/eloran',
     buttonLabel: 'Inspect Groundwave Delay Grids',
   },
@@ -90,7 +90,7 @@ const concepts = [
     math: 'E(t) = 0.5\\left(1 + \\cos\\left(\\frac{\\pi t}{T_{\\text{pulse}}}\\right)\\right), \\quad f_0 = 100\\text{ kHz}',
     explanation:
       'Each station emits a group of 8 or 9 pulses with a fast rise time to allow sampling at the 3rd carrier cycle (30 µs), prior to the arrival of skywaves reflected off the ionosphere. The GRI uniquely identifies the transmitting chain and prevents multi-chain cross-rate interference.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/waveforms',
     buttonLabel: 'Open RF Oscilloscope',
   },
@@ -104,7 +104,7 @@ const concepts = [
     math: 'E(t) = A \\left( \\frac{t}{\\tau} \\right)^2 e^{-2(t - \\tau)/\\tau}, \\quad \\tau = 65\\,\\mu\\text{s}, \\quad f_0 = 100\\,\\text{kHz}',
     explanation:
       'Every Loran-C and eLoran pulse is transmitted on a carrier center frequency of 100 kHz with 99% of its spectral radiated energy strictly confined within the 90–110 kHz band. The standard pulse envelope exhibits an asymmetric exponential rise peaking at tau = 65 µs from virtual start, followed by an exponential tail decaying through 300 µs. This steep rise is engineered to maximize dE/dt at early cycles while complying with international CCIR Rec. 589 spectrum limits.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/waveforms',
     buttonLabel: 'Inspect 100 kHz Waveform in Oscilloscope',
   },
@@ -118,7 +118,7 @@ const concepts = [
     math: 's(t) = A \\cdot t^2 e^{-2t/t_p} \\sin(2\\pi f_0 t + \\phi), \\quad f_0 = 100\\text{ kHz}',
     explanation:
       'The instantaneous radiated electric field is the product of the USCG asymmetric double-exponential envelope and a 100 kHz sinusoidal carrier. The phase parameter φ ∈ {0, π} rotates by 180° according to the 8-pulse phase-code sequence (e.g. Master Group A: + + - - + - + -), canceling continuous wave (CW) interference and cross-rate chain signals.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/waveforms',
     buttonLabel: 'Inspect Carrier Phase in Oscilloscope',
   },
@@ -132,7 +132,7 @@ const concepts = [
     math: 't_{\\text{sample}} = 3 \\cdot T_{\\text{carrier}} = 30\\,\\mu\\text{s} < t_{\\text{skywave}} = t_{\\text{ground}} + \\frac{\\Delta D_{\\text{extra}}}{c}',
     explanation:
       'Groundwaves propagate along the curvature of the Earth, while skywaves bounce off the ionospheric D-layer (daytime: 70–90 km) or E-layer (nighttime: 100–110 km). Due to the extra geometrical path length delta-D = 2*sqrt(h^2 + (d/2)^2) - d, skywaves arrive 35 to 70 µs after the groundwave leading edge. Loran receivers lock tracking loops to the Standard Zero Crossing (SZC) at the positive-going 3rd zero crossing (exactly 30 µs from onset), completely immune to ionospheric fading and delay variation.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/waveforms',
     buttonLabel: 'Simulate Skywave in Oscilloscope',
   },
@@ -146,7 +146,7 @@ const concepts = [
     math: '\\text{Ratio}(\\tau) = \\frac{E(\\tau - 15\\,\\mu\\text{s})}{E(\\tau)}, \\quad \\text{SZC: } \\text{Ratio}(30) \\approx 0.3966',
     explanation:
       'Because each 100 kHz carrier cycle spans 10 µs (corresponding to approximately 3,000 metres in hyperbolic range difference), mistaking the 3rd cycle for the 2nd or 4th causes a severe 3 km fix error. Sourced from Boyce, Lo, Powell, & Enge (ILA 2006, Section II-D), receivers test the ratio of envelope samples spaced 15 µs apart: Ratio(tau) = E(tau - 15)/E(tau). Validating that Ratio(30) lies within [Ratio(25), Ratio(35)] (bounds ~0.2538 to ~0.5180) ensures cycle lock within a +/- 5 µs safety margin. Wrong-cycle probability follows P[Wrong Cycle] = erfc(5 / (sigma_ECD * sqrt(2))), with historical Austron sigma = 42/sqrt(N*SNR) µs and modern Peterson sigma = 28/sqrt(N*SNR) µs.',
-    presetId: 'jakarta_baseline',
+    presetId: 'rotterdam_harbor_approach',
     targetRoute: '/waveforms',
     buttonLabel: 'Launch Boyce Monte Carlo Simulator',
   },
@@ -160,9 +160,9 @@ const concepts = [
     math: '\\mathbf{x}_{\\text{fused}} = w_{\\text{eLoran}} \\mathbf{x}_{\\text{eLoran}} + w_{\\text{GNSS}} \\mathbf{x}_{\\text{GNSS}}',
     explanation:
       'GNSS operates at microwave frequencies (1.2–1.5 GHz) with extremely faint satellite signals (−130 dBm), vulnerable to accidental jamming and intentional spoofing. eLoran operates at 100 kHz (LF) with megawatt transmitter towers emitting high-power terrestrial groundwaves that penetrate cities, fjords, and electronic jamming. Together they provide sovereign, uninterrupted positioning, navigation, and timing (PNT).',
-    presetId: 'gnss_denied',
+    presetId: 'dover_strait_tss',
     targetRoute: '/eloran',
-    buttonLabel: 'Test GNSS-Denied Outage',
+    buttonLabel: 'Test Dover Strait GNSS Outage',
   },
   {
     id: 'ast-parser',
@@ -174,7 +174,7 @@ const concepts = [
     math: '\\text{Eval}: \\mathrm{AST}(f(x, y)) \\to \\mathbb{R}, \\quad \\text{Sec: 0 eval()}',
     explanation:
       'Custom ground conductivity distributions entered by users are transformed into an Abstract Syntax Tree (AST) using a strict Recursive Descent Parser. The tree is evaluated via safe token dispatch without dynamic code execution (0 eval(), 0 new Function()), guaranteeing absolute security while computing complex mathematical spatial models.',
-    presetId: 'north_sea',
+    presetId: 'north_sea_historical',
     targetRoute: '/eloran',
     buttonLabel: 'Explore North Sea ASF Grid',
   },

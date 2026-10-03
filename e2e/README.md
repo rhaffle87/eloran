@@ -36,10 +36,7 @@ npm run e2e:capture
 - `full-functional-audit.spec.js`: End-to-end assessment of GNSS jamming injection, spoofing detection, and eLoran backup failover.
 - `sdr-playback.spec.js`: Tests 100 kHz synthetic baseband audio generation, matched filtering, and oscilloscope visualization.
 
-### 4. Scenario Packaging & Missions
-- `mission-pack.spec.js`: Validates import, export, JSON validation, and state rehydration of `.simuloran.json` mission packs.
-
-### 5. Accessibility & UX Quality
+### 4. Accessibility & UX Quality
 - `sidebar-flicker.spec.js`: Validates zero sidebar rendering flicker and layout stability under heavy state updates.
 - `tooltips-verification.spec.js`: Ensures non-clipping viewport bounds for interactive mathematical tooltips.
 - `style-layers-persistence.spec.js`: Confirms map style persistence across dark/light radar themes.

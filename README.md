@@ -60,7 +60,6 @@ simuloran/
 │   │   ├── terrainMasking.js    # ITU-R P.526 knife-edge obstacle diffraction & excess delay
 │   │   ├── trackingLoop.js      # PLL/DLL carrier tracking, SZC lock & Boyce cycle slip model
 │   │   ├── contours.js          # Marching squares 2D contouring + RDP simplification
-│   │   ├── scenarioPack.js      # Portable .simuloran.json schema validation & scenario packager
 │   │   ├── stations.js          # Station schema, validation, boundary guards, CSV/GeoJSON
 │   │   └── tiles.js             # Centralized tile provider config with offline radar fallback
 │   ├── workers/                 # Off-thread Web Workers for high-density compute
@@ -132,22 +131,16 @@ $$
 ---
 
 
-### 9. Portable Scenario Packaging & Mission Packs (.simuloran.json)
-- **Open Schema Specification**: Compliant with `https://simuloran.org/schema/mission-pack-v1.json`.
-- **Reproducible Testbeds**: Bundles transmitter chains (masters, secondaries, GRI, coding delays, coordinates), receivers, and environmental propagation physics into an importable/exportable JSON format.
-- **Built-in Benchmark Missions**: Includes sovereign eLoran flight trials (Korea 2021) and high-density maritime corridors (Dover TSS).
-- **1-Click Export & Drag-and-Drop Ingestion**: Built-in modal in the navigation bar supporting live JSON previews, clipboard copying, and file drag-and-drop validation.
-
-### 10. Software-Defined Radio (SDR) Baseband & Web Worker DSP
+### 9. Software-Defined Radio (SDR) Baseband & Web Worker DSP
 - **100 kHz Baseband Synthesizer**: Generates synthetic, phase-coded I/Q time-domain baseband samples directly in a dedicated background Web Worker (`sdrWorker.js`).
 - **Interactive Oscilloscope & Spectral Waterfall**: 60 FPS hardware-accelerated canvas waterfall display with dual-trace Digital Storage Oscilloscope (DSO) and matched filter envelope detection.
 - **Synthetic Audio Demodulation**: Listen to simulated receiver audio outputs across variable SNR conditions with zero DOM-thread blocking.
 
-### 11. Offline Elevation & Topographic Modeling
+### 10. Offline Elevation & Topographic Modeling
 - **Deterministic Offline Terrain**: Generates realistic coastal terrain profiles using multi-octave Perlin-Simplex synthesis, providing 100% offline capability without external digital elevation model (DEM) tile dependencies.
 - **Fresnel Clearance & Path Profiling**: Live visualization of the 1st Fresnel zone clearance ellipse between any transmitter and receiver pair.
 
-### 12. Desktop Electron & Production Containerization
+### 11. Desktop Electron & Production Containerization
 - **Cross-Platform Desktop App**: Packaged with Electron 33 providing native window frame controls, offline operation, and field-ready telemetry displays.
 - **Hardened Container Runtime**: Multi-stage Dockerfile and Docker Compose orchestration serving an immutable, high-security Nginx web environment.
 

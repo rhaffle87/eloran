@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Radio, Compass, Activity, BookOpen, Info, Menu, X, Sun, Moon, Monitor, Package } from 'lucide-react';
+import { Radio, Compass, Activity, BookOpen, Info, Menu, X, Sun, Moon, Monitor } from 'lucide-react';
 import { useSimulationStore } from '../state/simulationStore.js';
 import { useThemeStore } from '../state/themeStore.js';
 import { PRESET_SCENARIOS } from '../state/presets.js';
-import MissionPackModal from './modals/MissionPackModal.jsx';
 
 const navLinks = [
   { to: '/loran-c',   label: 'Loran-C',       icon: Radio,     accent: 'loran-c' },
@@ -69,7 +68,6 @@ export default function Navbar() {
   const { theme, setTheme, effectiveTheme } = useThemeStore();
   const activePreset = PRESET_SCENARIOS[activePresetId];
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMissionPackOpen, setIsMissionPackOpen] = useState(false);
 
   return (
     <nav
@@ -108,18 +106,6 @@ export default function Navbar() {
               simTimeSec={simTimeSec}
               activePreset={activePreset}
             />
-
-            {/* Mission Packs Modal Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsMissionPackOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:border-[var(--accent-eloran)] text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer"
-              title="Mission Packs (.simuloran.json)"
-              aria-label="Mission Packs"
-            >
-              <Package size={13} className="text-[var(--accent-eloran)]" />
-              <span className="hidden sm:inline">Mission Packs</span>
-            </button>
 
             {/* 3-Way Theme Switcher (Light / Dark / Auto) */}
             <div
@@ -211,17 +197,6 @@ export default function Navbar() {
           id="mobile-menu"
           className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 space-y-1"
         >
-          <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                setIsMissionPackOpen(true);
-              }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-mono transition text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
-            >
-              <Package size={14} className="text-[var(--accent-eloran)]" />
-              Mission Packs (.simuloran.json)
-            </button>
             {navLinks.map(({ to, label, icon: MobileIcon }) => (
             <NavLink
               key={to}
@@ -241,10 +216,6 @@ export default function Navbar() {
           ))}
         </div>
       )}
-      <MissionPackModal
-        open={isMissionPackOpen}
-        onClose={() => setIsMissionPackOpen(false)}
-      />
     </nav>
   );
 }

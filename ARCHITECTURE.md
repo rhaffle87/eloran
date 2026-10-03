@@ -63,7 +63,7 @@ simuloran/
 │   ├── components/          # React presentation layer
 │   │   ├── charts/          # Oscilloscopes, spectrum analyzers, Stanford diagrams
 │   │   ├── map/             # MapLibre GL map engine & ASF heatmap canvas layers
-│   │   ├── modals/          # Scenario pack import/export modal, NMEA terminal
+│   │   ├── modals/          # NMEA serial streaming terminal
 │   │   ├── panels/          # Telemetry, station editor, trajectory, and EW controls
 │   │   ├── seo/             # Structured data, OpenGraph, and meta injection
 │   │   └── ui/              # Accessible design primitives (Sliders, Toggles, Tooltips)
@@ -110,5 +110,5 @@ To maintain a responsive 60 FPS user interface during complex matrix operations:
 ## 5. Security & Deployment Posture
 - **Strict Content Security Policy (CSP)**: Disallows unauthorized external scripts; explicitly permits trusted OpenFreeMap vector tile domains and local Web Worker blobs.
 - **Zero-Dependency Tile Fallback**: Features an air-gapped HTML5 Canvas Radar basemap mode that operates without external network dependencies.
-- **Air-Gapped Scenarios**: Mission Packs (`.simuloran.json`) bundle scenarios into structured JSON objects for reproducible, self-contained testing.
+- **Offline Scenario Presets**: Air-gapped scenario presets and GeoJSON station exports allow reproducible, self-contained testing.
 - **Production Containerization**: Multi-stage Docker container deployed on `nginx:1.27-alpine` with unprivileged execution, security headers, and automated health checks.

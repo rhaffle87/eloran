@@ -1,22 +1,14 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck, Radio, Target,
+  Terminal, ChevronUp, ChevronDown, Activity, Crosshair, ShieldCheck, Radio,
 } from 'lucide-react';
 import { useSimulationStore } from '../../state/simulationStore.js';
 import UncertaintySparkline from '../charts/UncertaintySparkline.jsx';
 import ActivityLogFeed from './ActivityLogFeed.jsx';
 import NmeaTerminalModal from './NmeaTerminalModal.jsx';
-import MissionDrawer from './MissionDrawer.jsx';
 
 export default function TelemetryConsole({ isELoran = false }) {
   const [isNmeaModalOpen, setIsNmeaModalOpen] = useState(false);
-  const [isMissionsOpen, setIsMissionsOpen] = useState(false);
-
-  useEffect(() => {
-    const handleOpenMissions = () => setIsMissionsOpen(true);
-    window.addEventListener('simuloran:open-missions', handleOpenMissions);
-    return () => window.removeEventListener('simuloran:open-missions', handleOpenMissions);
-  }, []);
 
   const {
     isConsoleOpen,
@@ -28,7 +20,6 @@ export default function TelemetryConsole({ isELoran = false }) {
     masters = [],
     slaves = [],
     uncertaintyHistory = [],
-    activityLogs = [],
   } = useSimulationStore();
 
   const activeFix = receiverFixes[selectedReceiver] || Object.values(receiverFixes)[0];
@@ -50,12 +41,10 @@ export default function TelemetryConsole({ isELoran = false }) {
   const gdopLabel = gdop === null
     ? 'N/A'
     : gdop < 3
-    ? 'OPTIMAL'
+    ? 'OPT'
     : gdop < 10.92
-    ? 'ACCEPTABLE'
-    : 'CRITICAL';
-
-  const latestLog = activityLogs[activityLogs.length - 1];
+    ? 'ACC'
+    : 'CRIT';
 
   return (
     <div
@@ -67,82 +56,91 @@ export default function TelemetryConsole({ isELoran = false }) {
         boxShadow: '0 -4px 16px rgba(0,0,0,0.25)',
       }}
     >
-      {/* Ribbon Bar (Always visible) */}
+      {/* Sleek Minimalist Ribbon Bar (Always visible) */}
       <div
-        className="flex items-center justify-between px-3 py-1.5 cursor-pointer select-none text-xs gap-2"
+        className="flex items-center justify-between px-3 py-1.5 cursor-pointer select-none text-xs gap-3"
         style={{
           borderBottom: isConsoleOpen ? '1px solid var(--border-subtle)' : 'none',
           background: isConsoleOpen ? 'var(--bg-subtle)' : 'transparent',
         }}
         onClick={toggleConsoleOpen}
       >
+        {/* Left Side: Essential Live Telemetry at a glance */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="w-5 h-5 rounded flex items-center justify-center shrink-0"
+          {/* Status Indicator */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span
+                className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                style={{ background: activeStations === totalStations ? 'var(--status-ok)' : 'var(--status-warn)' }}
+              />
+              <span
+                className="relative inline-flex rounded-full h-2 w-2"
+                style={{ background: activeStations === totalStations ? 'var(--status-ok)' : 'var(--status-warn)' }}
+              />
+            </span>
+            <span
+              className="font-bold tracking-wider text-[11px] text-[var(--text-primary)]"
+              style={{ color: isELoran ? 'var(--accent-eloran)' : 'var(--accent-loran-c)' }}
+            >
+              PNT CONSOLE
+            </span>
+          </div>
+
+          {/* Network constellation status */}
+          <span
+            className="text-[9.5px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0"
             style={{
-              background: isELoran ? 'var(--accent-eloran-subtle)' : 'var(--accent-loran-c-subtle)',
-              color: isELoran ? 'var(--accent-eloran)' : 'var(--accent-loran-c)',
-              border: `1px solid ${isELoran ? 'var(--accent-eloran-border)' : 'var(--accent-loran-c-border)'}`,
+              background: activeStations === totalStations ? 'var(--status-ok-subtle)' : 'var(--status-warn-subtle)',
+              color: activeStations === totalStations ? 'var(--status-ok)' : 'var(--status-warn)',
+              border: `1px solid ${activeStations === totalStations ? 'var(--status-ok-border)' : 'var(--status-warn-border)'}`,
             }}
           >
-            <Terminal size={12} aria-hidden="true" />
-          </div>
+            NET: {activeStations}/{totalStations}
+          </span>
 
-          <div className="flex items-center gap-2 text-[11px] min-w-0">
-            <span className="font-bold tracking-wider hidden sm:inline" style={{ color: 'var(--text-primary)' }}>
-              TACTICAL CONSOLE
-            </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0"
-              style={{
-                background: activeStations === totalStations ? 'var(--status-ok-subtle)' : 'var(--status-warn-subtle)',
-                color: activeStations === totalStations ? 'var(--status-ok)' : 'var(--status-warn)',
-                border: `1px solid ${activeStations === totalStations ? 'var(--status-ok-border)' : 'var(--status-warn-border)'}`,
-              }}
-            >
-              NET: {activeStations}/{totalStations}
-            </span>
+          <span className="text-[var(--border-subtle)] hidden sm:inline" aria-hidden="true">•</span>
 
-            {activeFix && (
-              <span className="text-[10px] hidden md:inline truncate" style={{ color: 'var(--text-secondary)' }}>
-                RX: <strong style={{ color: 'var(--text-primary)' }}>{selectedReceiver || 'R1'}</strong> | Δρ: {activeFix.errorMeters ? `${activeFix.errorMeters.toFixed(1)}m` : '0.0m'} | GDOP:{' '}
-                <strong style={{ color: gdopColor }}>{gdop !== null ? gdop.toFixed(2) : '--'}</strong> ({gdopLabel})
+          {/* Core PNT Telemetry Readout */}
+          {activeFix && (
+            <div className="hidden sm:flex items-center gap-2.5 text-[10.5px] min-w-0">
+              <span className="text-[var(--text-secondary)] shrink-0">
+                RX: <strong className="text-[var(--text-primary)]">{selectedReceiver || 'R1'}</strong>
               </span>
-            )}
 
-            {!isConsoleOpen && latestLog && (
-              <span className="text-[10px] text-[var(--text-dim)] hidden xl:inline truncate max-w-sm">
-                • [{latestLog.category}] {latestLog.message}
+              <span className="text-[var(--border-subtle)]" aria-hidden="true">•</span>
+
+              <span className="text-[var(--text-secondary)] shrink-0">
+                Δρ: <strong className="text-[var(--text-primary)]">{activeFix.errorMeters !== undefined ? `${activeFix.errorMeters.toFixed(1)}m` : '--'}</strong>
               </span>
-            )}
-          </div>
+
+              <span className="text-[var(--border-subtle)]" aria-hidden="true">•</span>
+
+              <span className="text-[var(--text-secondary)] shrink-0">
+                GDOP: <strong style={{ color: gdopColor }}>{gdop !== null ? gdop.toFixed(2) : '--'}</strong>{' '}
+                <span className="text-[9px] opacity-75">[{gdopLabel}]</span>
+              </span>
+
+              <span className="text-[var(--border-subtle)] hidden md:inline" aria-hidden="true">•</span>
+
+              <span className="text-[var(--text-secondary)] hidden md:inline shrink-0">
+                LOCK: <strong style={{ color: activeFix.converged ? 'var(--status-ok)' : 'var(--status-warn)' }}>
+                  {activeFix.converged ? '3D FIX' : 'ACQUIRING'}
+                </strong>
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMissionsOpen((prev) => !prev);
-            }}
-            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-0.5 rounded transition cursor-pointer hover:opacity-90"
-            style={{
-              background: isMissionsOpen ? 'var(--accent-eloran)' : 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              color: isMissionsOpen ? '#000' : 'var(--text-primary)',
-            }}
-            title="Open Guided Mission Challenges & Scenario Labs"
-          >
-            <Target size={11} aria-hidden="true" />
-            <span>Missions</span>
-          </button>
-
+        {/* Right Side: Quick Action & Expand / Collapse */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               setIsNmeaModalOpen(true);
             }}
-            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-0.5 rounded transition cursor-pointer hover:opacity-90"
+            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-1 rounded transition cursor-pointer hover:opacity-90"
             style={{
               background: 'var(--accent-eloran-subtle)',
               border: '1px solid var(--accent-eloran-border)',
@@ -155,15 +153,16 @@ export default function TelemetryConsole({ isELoran = false }) {
           </button>
 
           <div
-            className="text-[10px] font-bold flex items-center gap-1.5 px-2 py-0.5 rounded"
+            className="text-[10px] font-bold font-mono flex items-center gap-1.5 px-2.5 py-1 rounded transition cursor-pointer hover:bg-[var(--bg-muted)]"
             style={{
               background: 'var(--bg-subtle)',
               border: '1px solid var(--border-subtle)',
               color: 'var(--text-secondary)',
             }}
+            title={isConsoleOpen ? 'Collapse console panel' : 'Expand full telemetry console'}
           >
-            <span>{isConsoleOpen ? 'COLLAPSE' : 'EXPAND CONSOLE'}</span>
-            {isConsoleOpen ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+            <span>{isConsoleOpen ? 'COLLAPSE' : 'EXPAND'}</span>
+            {isConsoleOpen ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
           </div>
         </div>
       </div>
@@ -298,11 +297,6 @@ export default function TelemetryConsole({ isELoran = false }) {
       )}
 
       {/* NMEA 0183 Telemetry Streamer Modal */}
-      <MissionDrawer
-        isOpen={isMissionsOpen}
-        onClose={() => setIsMissionsOpen(false)}
-      />
-
       <NmeaTerminalModal
         isOpen={isNmeaModalOpen}
         onClose={() => setIsNmeaModalOpen(false)}

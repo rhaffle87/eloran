@@ -118,11 +118,11 @@ $$
 \mathbf{P}_{\text{fused}} = \left( \mathbf{P}_{\text{eLoran}}^{-1} + \mathbf{P}_{\text{GNSS}}^{-1} \right)^{-1}, \quad \hat{\mathbf{x}}_{\text{fused}} = \mathbf{P}_{\text{fused}} \left( \mathbf{P}_{\text{eLoran}}^{-1} \hat{\mathbf{x}}_{\text{eLoran}} + \mathbf{P}_{\text{GNSS}}^{-1} \hat{\mathbf{x}}_{\text{GNSS}} \right)
 $$
 
-- **2.45σ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
+- **$2.45\sigma$ (95% Confidence) Covariance Ellipses**: Renders bivariate Gaussian error ellipses on the map for eLoran (cyan), GNSS (emerald/amber/red based on spoof/jam status), and Fused (purple) solutions.
 - **Aviation Horizontal Protection Level (HPL)**: Continuous HPL calculation with real-time RNAV RNP 0.3 (556 m) and APV approach (40 m) alert limit threshold compliance gauges.
 
 ### 8. Terrain Masking & Knife-Edge Obstacle Diffraction (ITU-R P.526)
-- **Great-Circle Elevation Profiles**: Interpolates terrain elevation samples between transmitter towers and receiver antennas with Open-Elevation REST client and 128-entry in-memory LRU cache.
+- **Great-Circle Elevation Profiles**: Evaluates deterministic offline regional terrain geomorphology profiles between transmitter towers and receiver antennas with zero remote API latency or network timeouts.
 - **Fresnel-Kirchhoff Diffraction Engine**: Evaluates clearance parameter $v$ and calculates knife-edge path loss $J(v)$ using the Nurul-Saunders piecewise approximation, estimating excess diffracted propagation delay $\tau_{\text{excess}}$.
 - **Vector Map Visualization**: Highlights clear paths in solid emerald green and obstructed links (>15 dB loss) in dashed high-visibility red.
 

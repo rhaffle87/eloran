@@ -22,35 +22,35 @@ This paper presents **SIMULORAN**, an open-source, web-native, deterministic sim
 ## 1. System Architecture & RF Signal Structure
 
 ### 1.1 Canonical Loran Pulse Equation
-In compliance with USCG Specification P16562.5 and CCIR Recommendation 589, the instantaneous radiated Loran-C pulse current envelope i(t) as a function of time t >= 0 (in microseconds) is modeled by:
+In compliance with USCG Specification P16562.5 and CCIR Recommendation 589, the instantaneous radiated Loran-C pulse current envelope $i(t)$ as a function of time $t \ge 0$ (in microseconds) is modeled by:
 
 $$i(t) = A \cdot \left(\frac{t}{\tau}\right)^2 \cdot \exp\left[-2 \cdot \left(\frac{t}{\tau} - 1\right)\right] \cdot \sin(2\pi f_c t + \phi)$$
 
 where:
-- A is the normalized peak amplitude (A = 1.0).
-- \tau = 65.0 \mu s is the envelope peak timestamp.
-- f_c = 100.0 kHz is the nominal RF carrier center frequency (\omega_c = 2\pi \cdot 10^5 rad/s).
-- \phi \in {0, \pi} is the binary phase code parameter (0 deg or 180 deg).
+- $A$ is the normalized peak amplitude ($A = 1.0$).
+- $\tau = 65.0\text{ }\mu\text{s}$ is the envelope peak timestamp.
+- $f_c = 100.0\text{ kHz}$ is the nominal RF carrier center frequency ($\omega_c = 2\pi \cdot 10^5\text{ rad/s}$).
+- $\phi \in \{0, \pi\}$ is the binary phase code parameter ($0^\circ$ or $180^\circ$).
 
 ### 1.2 Standard Zero Crossing (SZC) & Envelope-to-Cycle Difference (ECD)
 Receiver time-of-arrival (TOA) tracking is anchored to the **Standard Zero Crossing (SZC)**, defined as the positive-going zero crossing of the 3rd RF cycle at exactly:
 
 $$t_{\text{SZC}} = 30.0\text{ }\mu\text{s}$$
 
-At t_SZC, the instantaneous pulse envelope ratio relative to peak is:
+At $t_{\text{SZC}}$, the instantaneous pulse envelope ratio relative to peak is:
 
 $$R_{\text{SZC}} = \left(\frac{30.0}{65.0}\right)^2 \cdot \exp\left[-2 \cdot \left(\frac{30.0}{65.0} - 1\right)\right] \approx 0.625345$$
 
-Any physical distortion or dispersion between the envelope group delay t_g and the phase delay t_p creates an **Envelope-to-Cycle Difference (ECD)**:
+Any physical distortion or dispersion between the envelope group delay $t_g$ and the phase delay $t_p$ creates an **Envelope-to-Cycle Difference (ECD)**:
 
 $$\text{ECD} = t_g - t_p$$
 
-If |ECD| > 2.5 \mu s, conventional envelope-derived zero-crossing detectors risk cycle selection ambiguity, potentially slipping by an integer RF period (\pm 10.0 \mu s, inducing ~3.0 km pseudorange error).
+If $|\text{ECD}| > 2.5\text{ }\mu\text{s}$, conventional envelope-derived zero-crossing detectors risk cycle selection ambiguity, potentially slipping by an integer RF period ($\pm 10.0\text{ }\mu\text{s}$, inducing $\sim 3.0\text{ km}$ pseudorange error).
 
 ### 1.3 Transmission Group Sequences and Phase Coding
 Stations transmit pulses in structured groups repeated at the Group Repetition Interval (GRI):
-- **Master Station (M)**: Transmits 9 pulses per GRI. Pulses 1–8 are spaced by 1000 \mu s; pulse 9 is spaced by 2000 \mu s after pulse 8 and acts as the master identification flag.
-- **Secondary Stations (S)**: Transmit 8 pulses per GRI, spaced by 1000 \mu s.
+- **Master Station (M)**: Transmits 9 pulses per GRI. Pulses 1–8 are spaced by $1000\text{ }\mu\text{s}$; pulse 9 is spaced by $2000\text{ }\mu\text{s}$ after pulse 8 and acts as the master identification flag.
+- **Secondary Stations (S)**: Transmit 8 pulses per GRI, spaced by $1000\text{ }\mu\text{s}$.
 
 To eliminate skywave contamination from preceding pulse groups and suppress synchronous continuous wave (CW) interference, pulse phases alternate between Group A and Group B according to CCIR 589 phase code sequences:
 
@@ -67,21 +67,21 @@ $$\text{Group B (Secondary)}: [+, -, +, -, +, +, -, -]$$
 ## 2. Geodesy & Groundwave Propagation Physics
 
 ### 2.1 Ellipsoidal Geodesics (Andoyer-Lambert Expansion)
-The propagation distance d over the WGS-84 reference ellipsoid (a = 6378137.0 m, f = 1/298.257223563) is calculated using the second-order Andoyer-Lambert expansion, providing millimetric accuracy for navigation baselines up to 3,000 km without the iterative convergence overhead of Vincenty algorithms.
+The propagation distance $d$ over the WGS-84 reference ellipsoid ($a = 6378137.0\text{ m}$, $f = 1 / 298.257223563$) is calculated using the second-order Andoyer-Lambert expansion, providing millimetric accuracy for navigation baselines up to $3000\text{ km}$ without the iterative convergence overhead of Vincenty algorithms.
 
 ### 2.2 Primary Factor (PF)
-The Primary Factor accounts for wave propagation through an atmosphere with effective surface radio refractive index n:
+The Primary Factor accounts for wave propagation through an atmosphere with effective surface radio refractive index $n$:
 
 $$t_{\text{PF}} = \frac{n \cdot d}{c_0}$$
 
-where c_0 = 299792458.0 m/s (BIPM defined in vacuum), and n = 1.000338 (RTCM SC-104 / eLoran Minimum Performance Standards) or n = 1.000315 (National standards).
+where $c_0 = 299792458.0\text{ m/s}$ (BIPM defined in vacuum), and $n = 1.000338$ (RTCM SC-104 / eLoran Minimum Performance Standards) or $n = 1.000315$ (National standards).
 
 ### 2.3 Secondary Factor (SF) — Brunavs Continuous Seawater Model
-The Secondary Factor accounts for additional phase delay experienced by a vertically polarized LF groundwave propagating over high-conductivity seawater (\sigma = 5.0 S/m, \epsilon_r = 80). SIMULORAN implements the continuous rational polynomial model established by Brunavs (1977):
+The Secondary Factor accounts for additional phase delay experienced by a vertically polarized LF groundwave propagating over high-conductivity seawater ($\sigma = 5.0\text{ S/m}$, $\epsilon_r = 80$). SIMULORAN implements the continuous rational polynomial model established by Brunavs (1977):
 
 $$SF(d) = \frac{\alpha_0 + \alpha_1 d + \alpha_2 d^2 + \alpha_3 d^3}{1 + \beta_1 d + \beta_2 d^2 + \beta_3 d^3}$$
 
-This eliminates piecewise step artifacts at short ranges (< 100 km) and maintains seamless differentiability for position Jacobian inversion.
+This eliminates piecewise step artifacts at short ranges ($< 100\text{ km}$) and maintains seamless differentiability for position Jacobian inversion.
 
 ### 2.4 Additional Secondary Factor (ASF) — Millington Mixed-Path Method
 When propagation crosses non-homogeneous terrain featuring multiple land and sea boundaries with varying ground conductivities and relative permittivities, phase recovery occurs across transitions. SIMULORAN evaluates mixed-path groundwave delay using the Millington-Pressey formula (Millington, 1949):
@@ -100,7 +100,7 @@ Receiver position and velocity are estimated using a continuous-discrete Extende
 $$\mathbf{x} = \begin{bmatrix} x & y & z & v_x & v_y & v_z \end{bmatrix}^T$$
 
 ### 3.2 Receiver Autonomous Integrity Monitoring (RAIM)
-Fault detection and isolation (FDI) for cycle slip anomalies (\pm 10 \mu s) and transmitter clock runaways are executed via normalized measurement residual testing:
+Fault detection and isolation (FDI) for cycle slip anomalies ($\pm 10\text{ }\mu\text{s}$) and transmitter clock runaways are executed via normalized measurement residual testing:
 
 $$\mathbf{r} = \mathbf{z} - \mathbf{h}(\hat{\mathbf{x}}^-)$$
 
@@ -108,7 +108,7 @@ $$\mathbf{S} = \mathbf{H} \mathbf{P}^- \mathbf{H}^T + \mathbf{R}$$
 
 $$\gamma = \mathbf{r}^T \mathbf{S}^{-1} \mathbf{r} \sim \chi^2(m)$$
 
-If test statistic \gamma > \chi^2_{\alpha}(m), a measurement fault is declared with significance level \alpha = 0.001. The faulty station is isolated by maximizing the normalized individual residual test statistic w_i = |r_i| / \sqrt{S_{ii}} and excluded from the navigation solution.
+If test statistic $\gamma > \chi^2_{\alpha}(m)$, a measurement fault is declared with significance level $\alpha = 0.001$. The faulty station is isolated by maximizing the normalized individual residual test statistic $w_i = |r_i| / \sqrt{S_{ii}}$ and excluded from the navigation solution.
 
 ---
 
@@ -121,9 +121,9 @@ To ensure reproducibility across flight trials, maritime audits, and laboratory 
 ## 5. Verification & Academic Provenance
 
 All 33 primary citations in SIMULORAN have been verified against published literature (Crossref DOI registration, USCG archives, and IEEE Xplore). The platform is validated against:
-- 36 Vitest automated unit suites (423/423 tests passing).
+- 37 Vitest automated unit suites (435/435 tests passing).
 - 19 physics and mathematical benchmarks (0 failures).
-- 64 Playwright end-to-end browser tests across light/dark themes, Web Workers, and MapLibre layers.
+- Complete Playwright end-to-end browser test suites across light/dark themes, Web Workers, SDR spectrograms, and MapLibre layers.
 
 ---
 

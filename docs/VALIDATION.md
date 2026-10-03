@@ -130,7 +130,7 @@ In inland long-baseline Loran-C navigation (500–1000 km), conventional spheric
    - **89.7% error reduction** achieved by replacing spherical arcs with rigorous WGS84 ellipsoidal geodesics and solving for receiver clock bias as an explicit fourth state variable.
 
 ### 3.3 Geodesic Baseline Error Analysis in SIMULORAN
-SIMULORAN evaluates distance using Vincenty's (1975) inverse ellipsoidal geodesic formula against spherical Haversine (R = 6,371 km):
+SIMULORAN evaluates distance using Vincenty's (1975) inverse ellipsoidal geodesic formula against spherical Haversine ($R = 6371\text{ km}$):
 
 | Transmitter | Range (km) | Ellipsoidal Distance ($s$, m) | Spherical Haversine ($d$, m) | Geometric Distortion ($\Delta s$, m) | Equivalent Timing Bias ($\Delta t = \Delta s / c$) |
 |---|---|---|---|---|---|
@@ -139,7 +139,7 @@ SIMULORAN evaluates distance using Vincenty's (1975) inverse ellipsoidal geodesi
 | **Rongcheng** | ≈ 1,845 km | 1,845,892.1 m | 1,845,310.2 m | **+581.9 m** | **+1.941 µs** |
 
 #### Why Spherical Solvers Degrade Inland
-In hyperbolic navigation, a timing error of $\Delta t \approx 1\ \mu\text{s}$ shifts hyperbolic lines of position (LOPs) by ≈ 300 m. Over long baselines, the spherical Earth approximation introduces up to 0.7–1.9 µs of purely geometric timing bias, explaining why conventional spherical hyperbolic solvers produce >400 m fix errors in inland field trials.
+In hyperbolic navigation, a timing error of $\Delta t \approx 1\ \mu\text{s}$ shifts hyperbolic lines of position (LOPs) by $\approx 300\text{ m}$. Over long baselines, the spherical Earth approximation introduces up to $0.7\text{--}1.9\text{ }\mu\text{s}$ of purely geometric timing bias, explaining why conventional spherical hyperbolic solvers produce $>400\text{ m}$ fix errors in inland field trials.
 
 ---
 
@@ -153,11 +153,11 @@ npm test
 
 ### Key Automated Assertions:
 1. `evaluateKoreaTrialBenchmark()` must evaluate all 7 published sites.
-2. Model MAE across Korea sites must be ≤ 2.5 m (currently 1.89 m).
-3. Model RMSE across Korea sites must be ≤ 3.0 m (currently 2.19 m).
-4. HDOP at all 7 sites must remain well-conditioned (1.0 < HDOP < 2.5).
-5. Vincenty ellipsoidal geodesic solver must achieve <1 mm closure error on canonical antipodal / WGS84 geodesics.
-6. Geodesic distortion over 500–1,500 km inland baselines must reproduce the 150–500 m geometric timing error confirmed by Gao et al. (2025).
+2. Model MAE across Korea sites must be $\le 2.5\text{ m}$ (currently 1.89 m).
+3. Model RMSE across Korea sites must be $\le 3.0\text{ m}$ (currently 2.19 m).
+4. HDOP at all 7 sites must remain well-conditioned ($1.0 < \text{HDOP} < 2.5$).
+5. Vincenty ellipsoidal geodesic solver must achieve $< 1\text{ mm}$ closure error on canonical antipodal / WGS84 geodesics.
+6. Geodesic distortion over $500\text{--}1500\text{ km}$ inland baselines must reproduce the $150\text{--}500\text{ m}$ geometric timing error confirmed by Gao et al. (2025).
 
 ---
 

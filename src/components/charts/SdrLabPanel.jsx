@@ -37,6 +37,7 @@ export default function SdrLabPanel() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [fileName, setFileName] = useState('synthetic_eloran_1msps.iq');
   const [fileStats, setFileStats] = useState({ sampleCount: 3000, durationMs: 3.0 });
+  const [waterfallOrientation, setWaterfallOrientation] = useState('horizontal'); // 'horizontal' (Time ->) | 'vertical' (Time v)
 
   // Telemetry state
   const [telemetry, setTelemetry] = useState({
@@ -315,7 +316,7 @@ export default function SdrLabPanel() {
     }
 
     // -----------------------------------------------------------------------
-    // Canvas 3: Scrolling FFT Spectral Waterfall
+    // Canvas 3: Scrolling FFT Spectral Waterfall / Spectrogram
     // -----------------------------------------------------------------------
     const wfCv = waterfallCanvasRef.current;
     if (wfCv && fftRes.powerDb.length > 0) {
@@ -323,86 +324,152 @@ export default function SdrLabPanel() {
       const w = wfCv.width;
       const h = wfCv.height;
 
-      // Add line to history (fill full canvas height h)
+      const isHorizontal = waterfallOrientation === 'horizontal';
       const history = waterfallHistoryRef.current;
       history.unshift(new Float32Array(fftRes.powerDb));
-      if (history.length > h) history.pop();
+      const maxHistory = isHorizontal ? w : h;
+      if (history.length > maxHistory) history.pop();
 
-      // Render image data across full canvas height
       const imgData = ctx.createImageData(w, h);
       const data = imgData.data;
 
-      for (let row = 0; row < h; row++) {
-        const line = row < history.length ? history[row] : null;
-        const lineLen = line ? line.length : fftRes.powerDb.length;
+      // Colormap helper: Tactical Heatmap (Deep Navy -> Cyan -> Green -> Yellow -> Red)
+      const getColor = (db) => {
+        const tNorm = Math.max(0, Math.min(1, (db + 70) / 60));
+        let r = 0, g = 0, b = 0;
+        if (tNorm < 0.25) {
+          const f = tNorm / 0.25;
+          b = Math.floor(60 + f * 140);
+        } else if (tNorm < 0.5) {
+          const f = (tNorm - 0.25) / 0.25;
+          g = Math.floor(f * 200);
+          b = Math.floor(200 - f * 50);
+        } else if (tNorm < 0.75) {
+          const f = (tNorm - 0.5) / 0.25;
+          r = Math.floor(f * 220);
+          g = Math.floor(200 + f * 55);
+          b = Math.floor(50 - f * 50);
+        } else {
+          const f = (tNorm - 0.75) / 0.25;
+          r = 255;
+          g = Math.floor(255 * (1 - f * 0.7));
+          b = 0;
+        }
+        return [r, g, b];
+      };
 
+      if (isHorizontal) {
+        // HORIZONTAL SPECTROGRAM:
+        // X-axis: Time (scrolls leftward: right edge col = w - 1 is t = 0s [newest], left edge col = 0 is oldest history)
+        // Y-axis: Frequency (bottom row = h - 1 is 0 kHz [DC], top row = 0 is Nyquist limit e.g. 500 kHz)
         for (let col = 0; col < w; col++) {
-          const binIdx = Math.floor((col / w) * lineLen);
-          // If row hasn't been filled by history yet, render realistic ambient RF noise floor
-          const db = line ? (line[binIdx] ?? -80) : -76 + Math.sin(row * 0.15 + col * 0.08) * 2 - Math.random() * 4;
-          // Normalize [-70 dB .. -10 dB] -> [0 .. 1]
-          const tNorm = Math.max(0, Math.min(1, (db + 70) / 60));
+          const historyIdx = (w - 1) - col;
+          const line = historyIdx < history.length ? history[historyIdx] : null;
+          const lineLen = line ? line.length : fftRes.powerDb.length;
 
-          // Tactical Heatmap Colormap: Deep Navy -> Cyan -> Green -> Yellow -> Red
-          let r = 0, g = 0, b = 0;
-          if (tNorm < 0.25) {
-            const f = tNorm / 0.25;
-            b = Math.floor(60 + f * 140);
-          } else if (tNorm < 0.5) {
-            const f = (tNorm - 0.25) / 0.25;
-            g = Math.floor(f * 200);
-            b = Math.floor(200 - f * 50);
-          } else if (tNorm < 0.75) {
-            const f = (tNorm - 0.5) / 0.25;
-            r = Math.floor(f * 220);
-            g = Math.floor(200 + f * 55);
-            b = Math.floor(50 - f * 50);
-          } else {
-            const f = (tNorm - 0.75) / 0.25;
-            r = 255;
-            g = Math.floor(255 * (1 - f * 0.7));
-            b = 0;
+          for (let row = 0; row < h; row++) {
+            // Frequency mapping: 0 at row=h-1 (DC), maxFreq at row=0 (Nyquist)
+            const normFreq = (h - 1 - row) / (h - 1);
+            const binIdx = Math.min(lineLen - 1, Math.floor(normFreq * lineLen));
+            const db = line ? (line[binIdx] ?? -80) : -76 + Math.sin(row * 0.15 + col * 0.08) * 2 - Math.random() * 4;
+
+            const [r, g, b] = getColor(db);
+            const pixelIdx = (row * w + col) * 4;
+            data[pixelIdx] = r;
+            data[pixelIdx + 1] = g;
+            data[pixelIdx + 2] = b;
+            data[pixelIdx + 3] = 255;
           }
+        }
+      } else {
+        // VERTICAL WATERFALL:
+        // X-axis: Frequency (left = 0 kHz, right = Nyquist)
+        // Y-axis: Time (top row = 0 is t = 0s [newest], bottom row = h - 1 is oldest history)
+        for (let row = 0; row < h; row++) {
+          const line = row < history.length ? history[row] : null;
+          const lineLen = line ? line.length : fftRes.powerDb.length;
 
-          const pixelIdx = (row * w + col) * 4;
-          data[pixelIdx] = r;
-          data[pixelIdx + 1] = g;
-          data[pixelIdx + 2] = b;
-          data[pixelIdx + 3] = 255;
+          for (let col = 0; col < w; col++) {
+            const binIdx = Math.floor((col / w) * lineLen);
+            const db = line ? (line[binIdx] ?? -80) : -76 + Math.sin(row * 0.15 + col * 0.08) * 2 - Math.random() * 4;
+
+            const [r, g, b] = getColor(db);
+            const pixelIdx = (row * w + col) * 4;
+            data[pixelIdx] = r;
+            data[pixelIdx + 1] = g;
+            data[pixelIdx + 2] = b;
+            data[pixelIdx + 3] = 255;
+          }
         }
       }
+
       ctx.putImageData(imgData, 0, 0);
 
-      // Highlight 90–110 kHz passband on top of waterfall
+      // Overlays and HUD Markings
       const maxFreq = sampleRate / 2;
-      const x90 = ((90000 / maxFreq) * w);
-      const x110 = ((110000 / maxFreq) * w);
-      const x100 = ((100000 / maxFreq) * w);
 
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.12)';
-      ctx.fillRect(x90, 0, x110 - x90, h);
+      if (isHorizontal) {
+        // Horizontal band for 90–110 kHz eLoran passband
+        // Top row = maxFreq, bottom row = 0
+        const y90 = (1 - (90000 / maxFreq)) * h;
+        const y110 = (1 - (110000 / maxFreq)) * h;
+        const y100 = (1 - (100000 / maxFreq)) * h;
 
-      ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x100, 0);
-      ctx.lineTo(x100, h);
-      ctx.stroke();
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.14)';
+        ctx.fillRect(0, y110, w, y90 - y110);
 
-      // Time axis reference labels
-      ctx.font = '10px monospace';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillText('t = 0s (now)', 8, 14);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.fillText('t ≈ -3.5s', 8, h - 8);
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.75)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, y100);
+        ctx.lineTo(w, y100);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Frequency axis labels on the canvas
+        ctx.font = '10px monospace';
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.9)';
+        ctx.fillText('100 kHz eLoran Carrier (90–110 kHz Passband Rail)', 8, Math.max(16, y100 - 4));
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillText(`${maxFreq / 1000} kHz (Nyquist)`, 8, 14);
+        ctx.fillText('0 kHz (DC)', 8, h - 8);
+
+        // Time axis labels along bottom right
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.fillText('t ≈ -3.5s (Past)', w - 180, h - 8);
+        ctx.fillText('▶ t = 0s (Live)', w - 90, h - 8);
+      } else {
+        // Vertical Waterfall overlays
+        const x90 = ((90000 / maxFreq) * w);
+        const x110 = ((110000 / maxFreq) * w);
+        const x100 = ((100000 / maxFreq) * w);
+
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.12)';
+        ctx.fillRect(x90, 0, x110 - x90, h);
+
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x100, 0);
+        ctx.lineTo(x100, h);
+        ctx.stroke();
+
+        ctx.font = '10px monospace';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillText('t = 0s (now)', 8, 14);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillText('t ≈ -3.5s', 8, h - 8);
+      }
     }
 
-    // Advance playhead
+        // Advance playhead
     if (isPlaying) {
       const stepSamples = Math.round(128 * playbackSpeed);
       playheadRef.current = (playheadRef.current + stepSamples) % totalSamples;
     }
-  }, [firFilterEnabled, matchedFilterEnabled, isPlaying, playbackSpeed, sampleRate, snrDb]);
+  }, [firFilterEnabled, matchedFilterEnabled, isPlaying, playbackSpeed, sampleRate, snrDb, waterfallOrientation]);
 
   // Main animation loop
   useEffect(() => {
@@ -637,28 +704,59 @@ export default function SdrLabPanel() {
           </div>
         </div>
 
-        {/* Right Column: Live Scrolling Spectral Waterfall */}
+        {/* Right Column: Live Scrolling Spectral Waterfall / Spectrogram */}
         <div className="p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span className="font-bold text-[var(--text-secondary)] text-[11px] flex items-center gap-1.5 uppercase">
                 <Cpu className="w-3.5 h-3.5 text-[var(--accent-eloran)]" />
-                <span>Live FFT Spectral Waterfall (0 to {sampleRate / 2000} kHz)</span>
+                <span>
+                  {waterfallOrientation === 'horizontal'
+                    ? `Live Horizontal Spectrogram (0 to ${sampleRate / 2000} kHz)`
+                    : `Live FFT Spectral Waterfall (0 to ${sampleRate / 2000} kHz)`}
+                </span>
               </span>
-              <div className="flex items-center gap-3">
+
+              <div className="flex items-center gap-2">
+                {/* Orientation Selector: Horizontal (Time ->) vs Vertical (Time v) */}
+                <div className="flex items-center bg-[var(--bg-main)] p-0.5 rounded border border-[var(--border-subtle)] text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setWaterfallOrientation('horizontal')}
+                    className={`px-2 py-0.5 rounded font-mono transition-colors ${
+                      waterfallOrientation === 'horizontal'
+                        ? 'bg-[var(--accent-eloran)] text-black font-bold'
+                        : 'text-[var(--text-dim)] hover:text-white'
+                    }`}
+                    title="Horizontal: Time scrolls horizontally, Frequency is vertical"
+                  >
+                    ↔ Horizontal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaterfallOrientation('vertical')}
+                    className={`px-2 py-0.5 rounded font-mono transition-colors ${
+                      waterfallOrientation === 'vertical'
+                        ? 'bg-[var(--accent-eloran)] text-black font-bold'
+                        : 'text-[var(--text-dim)] hover:text-white'
+                    }`}
+                    title="Vertical: Frequency is horizontal, Time cascades downward"
+                  >
+                    ↕ Vertical
+                  </button>
+                </div>
+
+                {/* Colormap Legend */}
                 <div className="hidden sm:flex items-center gap-1 text-[9px] text-[var(--text-dim)]" title="Spectral power color scale: -70 dB to -10 dB">
                   <span>-70dB</span>
                   <div
-                    className="w-14 h-2 rounded-sm"
+                    className="w-12 h-2 rounded-sm"
                     style={{
                       background: 'linear-gradient(to right, #001030, #06b6d4, #10b981, #f59e0b, #ef4444)',
                     }}
                   />
                   <span>-10dB</span>
                 </div>
-                <span className="text-[10px] text-[#06b6d4]">
-                  100 kHz Center Bandpass (90–110 kHz)
-                </span>
               </div>
             </div>
 
@@ -667,10 +765,21 @@ export default function SdrLabPanel() {
             </div>
           </div>
 
+          {/* Footer Axis Description */}
           <div className="flex items-center justify-between text-[10px] text-[var(--text-dim)] pt-2 border-t border-[var(--border-subtle)]">
-            <span>0 kHz (DC)</span>
-            <span className="text-[#06b6d4] font-bold">100 kHz (Carrier Center)</span>
-            <span>{sampleRate / 2000} kHz (Nyquist Limit)</span>
+            {waterfallOrientation === 'horizontal' ? (
+              <>
+                <span>← t ≈ -3.5s (Past History)</span>
+                <span className="text-[#06b6d4] font-bold">100 kHz Center Bandpass (90–110 kHz Rail)</span>
+                <span>Real-Time Live (t = 0s) ▶</span>
+              </>
+            ) : (
+              <>
+                <span>0 kHz (DC)</span>
+                <span className="text-[#06b6d4] font-bold">100 kHz (Carrier Center)</span>
+                <span>{sampleRate / 2000} kHz (Nyquist Limit)</span>
+              </>
+            )}
           </div>
         </div>
       </div>

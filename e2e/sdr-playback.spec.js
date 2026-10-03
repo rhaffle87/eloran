@@ -31,7 +31,17 @@ test.describe('SDR Baseband Ingestion & Waveform Playback Suite', () => {
       await expect(page.getByRole('button', { name: /Play/i })).toBeVisible();
     }
 
-    // 6. Test Preset Selection
+    // 6. Test Horizontal vs Vertical Waterfall Orientation Toggle
+    const vertBtn = page.getByRole('button', { name: /Vertical/i });
+    const horizBtn = page.getByRole('button', { name: /Horizontal/i });
+    if (await vertBtn.isVisible()) {
+      await vertBtn.click();
+      await expect(page.locator('text=0 kHz (DC)')).toBeVisible();
+      await horizBtn.click();
+      await expect(page.locator('text=Real-Time Live (t = 0s)')).toBeVisible();
+    }
+
+    // 7. Test Preset Selection
     const presetSelect = page.locator('select').first();
     await expect(presetSelect).toBeVisible();
     await presetSelect.selectOption('dover_master');

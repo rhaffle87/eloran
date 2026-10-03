@@ -15,7 +15,7 @@ test.describe('Waveforms Revamp & Export Fidelity Verification', () => {
 
     const rxSelect = page.locator('select').first();
     await expect(rxSelect).toBeVisible();
-    await expect(rxSelect).toHaveValue('R1-Vessel');
+    await expect(rxSelect).toHaveValue('R1-EuroportVessel');
 
     const activeBadge = page.locator('text=RF FRONT-END ACTIVE');
     await expect(activeBadge).toBeVisible();

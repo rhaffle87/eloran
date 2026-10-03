@@ -122,8 +122,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     expect(csvData).toContain('role,lat,lng,label');
     expect(csvData).toContain('master');
     expect(csvData).toContain('slave');
-    expect(csvData).toContain('M1-TanjungPriok');
-    expect(csvData).toContain('S1-Tangerang');
+    expect(csvData).toContain('Sylt-M (6731M)');
+    expect(csvData).toContain('Lessay-W (6731W)');
 
     // 2. Clear all stations
     const clearAllBtn = page.locator('button:has-text("Clear all")');
@@ -152,8 +152,8 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     const restoredStationCount = await page.locator('button[aria-label*="Delete station"]').count();
     expect(restoredStationCount).toBe(initialStationCount);
     await expect(page.locator(`text=Active Stations (${initialStationCount})`)).toBeVisible();
-    await expect(page.locator('text=M1-TanjungPriok').first()).toBeVisible();
-    await expect(page.locator('text=S1-Tangerang').first()).toBeVisible();
+    await expect(page.locator('text=Sylt-M (6731M)').first()).toBeVisible();
+    await expect(page.locator('text=Lessay-W (6731W)').first()).toBeVisible();
   });
 
   // ---------------------------------------------------------------------------
@@ -340,7 +340,7 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
   // ---------------------------------------------------------------------------
   // TEST 8: Scenario Presets Switching (All 6 Scenarios)
   // ---------------------------------------------------------------------------
-  test('Scenario Presets: verify clean state switching across all 6 presets', async ({ page }) => {
+  test('Scenario Presets: verify clean state switching across all 7 research presets', async ({ page }) => {
     await page.goto('/eloran', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
 
@@ -348,12 +348,13 @@ test.describe('Phase 4: Full Functional QA Audit Suite', () => {
     await expect(presetSelect).toBeVisible();
 
     const presets = [
-      { name: 'Jakarta Maritime Testbed', minStations: 2 },
-      { name: 'North Sea Chain (Historical)', minStations: 3 },
-      { name: 'North China Sea Chain (GRI 7430)', minStations: 3 },
+      { name: 'Rotterdam Europort Approach', minStations: 3 },
       { name: 'Korea-Yellow Sea Trial (2021)', minStations: 3 },
-      { name: 'Poor Geometry (High GDOP)', minStations: 2 },
-      { name: 'GNSS-Denied Resilience', minStations: 3 },
+      { name: 'Dover Strait TSS', minStations: 3 },
+      { name: 'China East Sea Chain (GRI 8390)', minStations: 3 },
+      { name: 'East Asia Chain (GRI 9930)', minStations: 3 },
+      { name: 'North China Sea Chain (GRI 7430)', minStations: 3 },
+      { name: 'North Sea Chain (Historical)', minStations: 3 },
     ];
 
     for (const preset of presets) {

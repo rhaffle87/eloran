@@ -27,7 +27,7 @@ export default function PulseViewer() {
   const [noiseSnrDb, setNoiseSnrDb] = useState(null); // null = off, or -5 to 30 dB
   const [showProbes, setShowProbes] = useState(true);
 
-  const rx = useMemo(() => receivers.find((r) => r.label === selectedReceiver) || receivers[0] || { label: 'R1-Vessel', lat: -6.15, lng: 106.82 }, [receivers, selectedReceiver]);
+  const rx = useMemo(() => receivers.find((r) => r.label === selectedReceiver) || receivers[0] || { label: 'R1-EuroportVessel', lat: 51.986, lng: 4.075 }, [receivers, selectedReceiver]);
 
   const allStations = useMemo(
     () => [
@@ -379,7 +379,7 @@ export default function PulseViewer() {
 
   <!-- Header Info -->
   <text x="${padX}" y="38" fill="${colors.headerTitle}" font-size="18" font-family="ui-monospace, monospace" font-weight="bold">Loran-C / eLoran Antenna Composite Voltage</text>
-  <text x="${padX}" y="60" fill="${colors.headerSubtitle}" font-size="12" font-family="ui-monospace, monospace">Receiver: ${rx?.label || 'R1-Vessel'} (Lat: ${rx?.lat?.toFixed(4) || '0.0000'}°, Lon: ${rx?.lng?.toFixed(4) || '0.0000'}°) · Window: ${windowTitle} · Gain: ${verticalGain}x · Sample Rate: ${(sampleRate / 1e6).toFixed(1)} MHz</text>
+  <text x="${padX}" y="60" fill="${colors.headerSubtitle}" font-size="12" font-family="ui-monospace, monospace">Receiver: ${rx?.label || 'R1-EuroportVessel'} (Lat: ${rx?.lat?.toFixed(4) || '0.0000'}°, Lon: ${rx?.lng?.toFixed(4) || '0.0000'}°) · Window: ${windowTitle} · Gain: ${verticalGain}x · Sample Rate: ${(sampleRate / 1e6).toFixed(1)} MHz</text>
   <text x="${padX}" y="78" fill="${colors.headerStandards}" font-size="10" font-family="ui-monospace, monospace">Standards: USCG Specification COMDTINST M16562.4A · CCIR Rec. 589 · 100 kHz Groundwave Discrimination</text>
 
   <!-- Scope HUD Box in SVG Header -->
@@ -486,7 +486,7 @@ export default function PulseViewer() {
 
     const header = [
       '# Loran-C / eLoran Antenna Composite Voltage Sample Export',
-      `# Receiver: ${rx?.label || 'R1-Vessel'} (Lat: ${rx?.lat}, Lon: ${rx?.lng})`,
+      `# Receiver: ${rx?.label || 'R1-EuroportVessel'} (Lat: ${rx?.lat}, Lon: ${rx?.lng})`,
       `# Time Window: ${windowDurationMs} ms | Sample Rate: ${(sampleRate / 1e6).toFixed(2)} MHz | Offset: ${timeOffsetUs} us`,
       '# Standards: USCG COMDTINST M16562.4A / CCIR Rec. 589',
       'time_seconds,time_microseconds,carrier_voltage_v,envelope_voltage_v',

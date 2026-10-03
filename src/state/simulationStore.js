@@ -131,7 +131,7 @@ export const useSimulationStore = create((set, get) => {
   gridStatus: { status: 'idle', computedAt: null, message: null },
   receiverFixes: {},
   ddsLogs: [],
-  selectedReceiver: 'R1-Vessel',
+  selectedReceiver: defaultPreset.receivers[0]?.label || 'R1-EuroportVessel',
 
   // Live Operational Telemetry & Uncertainty State
   activityLogs: [

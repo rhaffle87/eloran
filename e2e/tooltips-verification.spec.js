@@ -21,12 +21,13 @@ test.describe('Sidebar Tooltips & Decluttering Verification Suite', () => {
 
     // Verify concise preset labels without ellipsis truncation
     const presetOptions = await presetSelect.locator('option').allTextContents();
-    expect(presetOptions).toContain('Jakarta Maritime Testbed');
+    expect(presetOptions).toContain('Rotterdam Europort Approach');
     expect(presetOptions).toContain('North Sea Chain (Historical)');
     expect(presetOptions).toContain('North China Sea Chain (GRI 7430)');
     expect(presetOptions).toContain('Korea-Yellow Sea Trial (2021)');
-    expect(presetOptions).toContain('Poor Geometry (High GDOP)');
-    expect(presetOptions).toContain('GNSS-Denied Resilience');
+    expect(presetOptions).toContain('Dover Strait TSS');
+    expect(presetOptions).toContain('China East Sea Chain (GRI 8390)');
+    expect(presetOptions).toContain('East Asia Chain (GRI 9930)');
 
     // Verify Delete Station button has accessible aria-label (CR-06)
     const deleteBtn = page.locator('button[aria-label*="Delete station"]').first();

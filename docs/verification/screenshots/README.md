@@ -109,7 +109,7 @@ Below are full-width captures verifying the mathematical signal synthesis and os
 
 - **Artifact**: `export_pulse_trace_dark_mode.png`
 - **Objective**: High-resolution PNG export verification of off-screen SVG-to-Canvas pipeline.
-- **Pass Criteria**: Peak envelope at $t = 65\ \mu\text{s}$, Standard Zero Crossing at $t = 30\ \mu\text{s}$, and crisp axis legends.
+- **Pass Criteria**: Peak envelope at t = 65 µs, Standard Zero Crossing at t = 30 µs, and crisp axis legends.
 
 ---
 
@@ -147,7 +147,7 @@ Below are full-width captures verifying that the simulation engine matches publi
 
 - **Artifact**: `trial_validation_korea.png`
 - **Objective**: Validation against Incheon/Pyeongtaek port trials (Rhee et al., 2021).
-- **Pass Criteria**: SimuLoran reproduces $< 20\text{ m}$ ($95\%$) positioning accuracy with differential ASF corrections enabled.
+- **Pass Criteria**: SimuLoran reproduces < 20 m (95%) positioning accuracy with differential ASF corrections enabled.
 
 ---
 
@@ -157,7 +157,7 @@ Below are full-width captures verifying that the simulation engine matches publi
 
 - **Artifact**: `trial_validation_maoming.png`
 - **Objective**: Validation against Maoming station groundwave and skywave delay profiles (Gao et al., 2025).
-- **Pass Criteria**: Groundwave attenuation and Doherty skywave delay curves align within $1.8\%$ of published empirical measurements.
+- **Pass Criteria**: Groundwave attenuation and Doherty skywave delay curves align within 1.8% of published empirical measurements.
 
 ---
 

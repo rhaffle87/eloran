@@ -1,6 +1,6 @@
 import { spawnSync } from 'child_process';
 
-const result = spawnSync('npx', ['playwright', 'test', 'e2e/capture-*.spec.js'], {
+const result = spawnSync('npx', ['playwright', 'test', 'e2e/capture-user-guide.spec.js'], {
   stdio: 'inherit',
   shell: true,
   env: {

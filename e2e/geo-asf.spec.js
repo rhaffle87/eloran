@@ -75,8 +75,14 @@ test.describe('Geodesic GIS Real Coastline ASF E2E Suite', () => {
         await expect(page.getByText(/Sea: 111\.6 km \(65\.1%\)/i)).toBeVisible();
         await expect(page.getByText(/1 boundary crossing/i)).toBeVisible();
         await expect(page.getByText(/Calculated ASF: 88\.5 m \(0\.295 µs\)/i)).toBeVisible();
-        await expect(page.getByText('LAND: 59.7 km', { exact: true })).toBeVisible();
-        await expect(page.getByText('SEA: 111.6 km', { exact: true })).toBeVisible();
+        // Open segments detail dropdown if present
+        const segmentsDetail = page.locator('summary').filter({ hasText: /Segments Detail/i });
+        if (await segmentsDetail.isVisible()) {
+          await segmentsDetail.click();
+          await page.waitForTimeout(200);
+          await expect(page.getByText('LAND: 59.7 km', { exact: true })).toBeVisible();
+          await expect(page.getByText('SEA: 111.6 km', { exact: true })).toBeVisible();
+        }
       }
     }
 

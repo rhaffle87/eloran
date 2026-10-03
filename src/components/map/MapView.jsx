@@ -969,7 +969,7 @@ export default function MapView({ onMapClick, isELoran = false }) {
     };
   }, [contours, lopsVisible, isELoran, safeRemoveLayerAndSource]);
 
-  // Render Live GDOP Heatmap Layer safely once style is fully loaded
+  // Render Live GDOP Heatmap Layer — viewport-adaptive, seamless fill
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -997,21 +997,39 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
 
       try {
-        const lats = [activeMaster.lat, ...activeSecondaries.map((s) => s.lat)];
-        const lngs = [activeMaster.lng, ...activeSecondaries.map((s) => s.lng)];
-        const minLat = Math.min(...lats) - 3.0;
-        const maxLat = Math.max(...lats) + 3.0;
-        const minLng = Math.min(...lngs) - 4.5;
-        const maxLng = Math.max(...lngs) + 4.5;
-        const bbox = { minLat, maxLat, minLng, maxLng };
+        // Viewport-union bbox: union of map viewport and station extents + 20% padding
+        const _lats = [activeMaster.lat, ...activeSecondaries.map((s) => s.lat)];
+        const _lngs = [activeMaster.lng, ...activeSecondaries.map((s) => s.lng)];
+        const stMinLat = Math.min(..._lats), stMaxLat = Math.max(..._lats);
+        const stMinLng = Math.min(..._lngs), stMaxLng = Math.max(..._lngs);
+        let vpMinLat = stMinLat, vpMaxLat = stMaxLat, vpMinLng = stMinLng, vpMaxLng = stMaxLng;
+        try {
+          const vb = map.getBounds();
+          vpMinLat = vb.getSouth(); vpMaxLat = vb.getNorth();
+          vpMinLng = vb.getWest();  vpMaxLng = vb.getEast();
+        } catch { /* use station extents as fallback */ }
+        const uMinLat = Math.min(stMinLat, vpMinLat), uMaxLat = Math.max(stMaxLat, vpMaxLat);
+        const uMinLng = Math.min(stMinLng, vpMinLng), uMaxLng = Math.max(stMaxLng, vpMaxLng);
+        const latSpan = Math.max(uMaxLat - uMinLat, 1.0);
+        const lngSpan = Math.max(uMaxLng - uMinLng, 1.0);
+        const bbox = {
+          minLat: Math.max(-85,    uMinLat - latSpan * 0.20),
+          maxLat: Math.min(85,     uMaxLat + latSpan * 0.20),
+          minLng: Math.max(-179.9, uMinLng - lngSpan * 0.20),
+          maxLng: Math.min(179.9,  uMaxLng + lngSpan * 0.20),
+        };
+        // Adaptive resolution: target ~18 000 samples keyed to aspect ratio
+        const _aspect = lngSpan / Math.max(latSpan, 0.01);
+        const nx = Math.max(80, Math.min(200, Math.round(Math.sqrt(18000 / _aspect) * _aspect)));
+        const ny = Math.max(60, Math.min(160, Math.round(Math.sqrt(18000 / _aspect))));
 
         // Offload GDOP grid & Iso-GDOP contour generation to dedicated physics worker
         computeGdopAsync({
           master: activeMaster,
           secondaries: activeSecondaries,
           bbox,
-          nx: 100,
-          ny: 100,
+          nx,
+          ny,
           contourLevels: [1.5, 3.0, 7.7, 10.92],
           includeHeatmap: true,
         }).then((result) => {
@@ -1033,43 +1051,35 @@ export default function MapView({ onMapClick, isELoran = false }) {
               type: 'heatmap',
               source: heatmapSourceId,
               paint: {
+                // Weight: good-GDOP zones hot; poor-GDOP dims to zero naturally
                 'heatmap-weight': [
-                  'interpolate',
-                  ['linear'],
-                  ['get', 'gdop'],
-                  1, 1.0,
-                  3, 0.8,
-                  6, 0.5,
-                  15, 0.2,
-                  30, 0.05,
+                  'interpolate', ['linear'], ['get', 'gdop'],
+                  1, 1.00, 2, 0.90, 4, 0.70, 8, 0.40, 16, 0.15, 30, 0.03,
                 ],
+                // Intensity grows with zoom — prevents isolated-dot look at high zoom
                 'heatmap-intensity': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  0, 1,
-                  9, 3,
+                  'interpolate', ['linear'], ['zoom'],
+                  1, 0.6, 4, 1.0, 7, 2.2, 10, 4.0,
                 ],
                 'heatmap-color': [
-                  'interpolate',
-                  ['linear'],
-                  ['heatmap-density'],
-                  0, 'rgba(0, 0, 0, 0)',
-                  0.2, 'rgba(56, 189, 248, 0.3)',
-                  0.4, 'rgba(52, 211, 153, 0.5)',
-                  0.6, 'rgba(250, 204, 21, 0.65)',
-                  0.8, 'rgba(251, 146, 60, 0.75)',
-                  1, 'rgba(248, 113, 113, 0.85)',
+                  'interpolate', ['linear'], ['heatmap-density'],
+                  0,    'rgba(0, 0, 0, 0)',
+                  0.10, 'rgba(56, 189, 248, 0.18)',
+                  0.30, 'rgba(52, 211, 153, 0.45)',
+                  0.55, 'rgba(250, 204, 21, 0.62)',
+                  0.75, 'rgba(251, 146, 60, 0.74)',
+                  0.90, 'rgba(248, 113, 113, 0.84)',
+                  1.00, 'rgba(239, 68, 68, 0.92)',
                 ],
+                // Large overlapping radii → seamless coverage, no hard bbox wall
                 'heatmap-radius': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  2, 18,
-                  6, 36,
-                  10, 70,
+                  'interpolate', ['linear'], ['zoom'],
+                  1, 30, 3, 42, 5, 55, 7, 72, 9, 96, 11, 130,
                 ],
-                'heatmap-opacity': 0.75,
+                'heatmap-opacity': [
+                  'interpolate', ['linear'], ['zoom'],
+                  2, 0.82, 8, 0.70,
+                ],
               },
             });
           }
@@ -1090,7 +1100,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
                   ['==', ['get', 'level'], 1.5], 2.0,
                   1.6,
                 ],
-                'line-opacity': 0.85,
+                'line-opacity': 0.88,
+                'line-blur': 0.4,
               },
             });
           }
@@ -1104,6 +1115,16 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
     };
 
+    // Debounced viewport recompute: re-render 400ms after pan/zoom completes
+    let _gdopDebounce = null;
+    const onViewportChange = () => {
+      if (cancelled) return;
+      clearTimeout(_gdopDebounce);
+      _gdopDebounce = setTimeout(() => { if (!cancelled) render(); }, 400);
+    };
+    map.on('moveend', onViewportChange);
+    map.on('zoomend', onViewportChange);
+
     const renderers = overlayRenderersRef.current;
     renderers.gdop = render;
     render();
@@ -1111,6 +1132,9 @@ export default function MapView({ onMapClick, isELoran = false }) {
     return () => {
       cancelled = true;
       renderers.gdop = null;
+      clearTimeout(_gdopDebounce);
+      map.off('moveend', onViewportChange);
+      map.off('zoomend', onViewportChange);
       map.off('styledata', render);
       map.off('idle', render);
       if (typeof window !== 'undefined') {
@@ -1119,7 +1143,8 @@ export default function MapView({ onMapClick, isELoran = false }) {
       }
       safeRemoveLayerAndSource(map, contoursLayerId, contoursSourceId);
       safeRemoveLayerAndSource(map, heatmapLayerId, heatmapSourceId);
-    };  }, [
+    };
+  }, [
     masters,
     slaves,
     designChain,
